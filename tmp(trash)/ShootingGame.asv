@@ -1,0 +1,58 @@
+classdef ShootingGame < handle
+    properties
+        MainFig
+        StartBtn
+        HelpBtn
+    end
+
+    methods
+        function obj = ShootingGame()
+            % 初始化主畫面
+            obj.MainFig = uifigure('Name', '太空射擊遊戲', 'Position', [100 100 800 600]);
+            obj.MainFig.Color = [0.1 0.1 0.4];
+
+            % 遊戲標題
+            titleLbl = uilabel(obj.MainFig);
+            titleLbl.Text = '太空射擊戰';
+            titleLbl.FontSize = 48;
+            titleLbl.FontColor = 'w';
+            titleLbl.Position = [200 450 400 60];
+
+            % 遊戲開始按鈕
+            obj.StartBtn = uibutton(obj.MainFig, 'push');
+            obj.StartBtn.Text = '開始遊戲';
+            obj.StartBtn.Position = [300 300 200 60];
+            obj.StartBtn.FontSize = 24;
+            obj.StartBtn.ButtonPushedFcn = @(src,event) obj.startGame();
+
+            % 遊戲說明按鈕
+            obj.HelpBtn = uibutton(obj.MainFig, 'push');
+            obj.HelpBtn.Text = '遊戲說明';
+            obj.HelpBtn.Position = [300 200 200 60];
+            obj.HelpBtn.FontSize = 24;
+            obj.HelpBtn.ButtonPushedFcn = @(src,event) obj.showHelp();
+
+            % 設置按鈕互動效果
+            set([obj.StartBtn, obj.HelpBtn],...
+                'BackgroundColor', [0.2 0.6 1],...
+                'FontColor', 'w');
+            obj.StartBtn.ButtonPushedFcn = @(src,event) onButtonInteraction(src, 'down');
+            % obj.StartBtn.ButtonReleasedFcn = @(src,event) onButtonInteraction(src, 'up');
+
+            obj.HelpBtn.ButtonPushedFcn = @(src,event) onButtonInteraction(src, 'down');
+            % obj.HelpBtn.ButtonReleasedFcn = @(src,event) onButtonInteraction(src, 'up');
+        end
+
+
+        function startGame(obj)
+            delete(obj.MainFig);  % 關閉主畫面
+            LevelSelection();     % 跳轉到關卡選擇
+        end
+
+        function showHelp(obj)
+            delete(obj.MainFig);  % 關閉主畫面
+            HelpScreen();         % 跳轉到說明畫面
+        end
+    end
+end
+
