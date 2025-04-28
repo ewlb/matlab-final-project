@@ -30,18 +30,6 @@ classdef GameManager < handle
         HealthLabel
         AttackLabel
 
-        % 暫停界面元素
-        % PauseMenuPanel
-        % ResumeBtn
-        % MainMenuBtn
-        % QuitBtn
-
-        % 死亡界面元素
-        % GameOverMenuPanel
-        % RetryBtn
-        % MainMenuBtn 
-        % QuitBtn 
-
         % 遊戲設定
         isPaused = false
         AxesXLim
@@ -75,7 +63,6 @@ classdef GameManager < handle
             obj.GamePanel = uipanel(obj.MainFig, 'Position', [xOffset yOffset obj.gameWidth obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0.1 0.1 0.4]);
             obj.PausePanel = uipanel(obj.MainFig, 'Position', [xOffset yOffset obj.gameWidth obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0 0 0 0.5]);
             obj.GameOverPanel = uipanel(obj.MainFig, 'Position', [xOffset yOffset obj.gameWidth obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0 0 0 0.8]);
-
 
             % 初始化所有面板內容
             obj.initMainMenu();
@@ -115,11 +102,8 @@ classdef GameManager < handle
             % 共通的狀態轉換處理
             obj.handleStateTransition(obj.GameState, panelName);
 
-            % 隱藏當前面板 不能改
+            % 隱藏當前面板
             obj.CurrentPanel.Visible = 'off';
-
-            % % 保存當前視窗狀態
-            % currentState = obj.MainFig.WindowState;
 
             % 顯示目標面板
             switch panelName
@@ -151,71 +135,8 @@ classdef GameManager < handle
             end
         end
 
-
-        %     % 處理面板切換前的清理工作
-        %     if obj.CurrentPanel == obj.GamePanel && ~strcmp(panelName, 'game')
-        %         % 離開遊戲面板前先檢查狀態
-        %         if strcmp(obj.GameState, 'GAME_OVER')
-        %             % 清理死亡畫面
-        %             if ~isempty(obj.GameOverPanel) && isvalid(obj.GameOverPanel)
-        %                 delete(obj.GameOverPanel);
-        %                 obj.GameOverPanel = [];
-        %             end
-        %         end
-        %
-        %         % 停止遊戲循環
-        %         if ~isempty(obj.Timer) && isvalid(obj.Timer)
-        %             try
-        %                 stop(obj.Timer);
-        %                 delete(obj.Timer);
-        %             catch
-        %                 % 忽略錯誤
-        %             end
-        %             obj.Timer = [];
-        %         end
-        %
-        %         % 徹底清理遊戲狀態
-        %         obj.cleanupGameState();
-        %         obj.GameState = 'MAIN_MENU';
-        %     end
-        %
-        %     % 隱藏當前面板
-        %     obj.CurrentPanel.Visible = 'off';
-        %
-        %     % 顯示目標面板
-        %     switch panelName
-        %         case 'main'
-        %             obj.CurrentPanel = obj.MainPanel;
-        %             obj.GameState = 'MAIN_MENU';
-        %         case 'level'
-        %             obj.CurrentPanel = obj.LevelPanel;
-        %             obj.GameState = 'LEVEL_SELECT';
-        %         case 'game'
-        %             obj.CurrentPanel = obj.GamePanel;
-        %             obj.GameState = 'PLAYING';
-        %
-        %             % 進入遊戲面板時確保計時器存在並運行
-        %             if isempty(obj.Timer) || ~isvalid(obj.Timer)
-        %                 obj.Timer = timer('ExecutionMode', 'fixedRate', 'Period', 0.016,...
-        %                     'TimerFcn', @(src,event) obj.gameLoop());
-        %             end
-        %
-        %             if strcmp(get(obj.Timer, 'Running'), 'off')
-        %                 start(obj.Timer);
-        %             end
-        %         case 'help'
-        %             obj.CurrentPanel = obj.HelpPanel;
-        %             obj.GameState = 'HELP';
-        %     end
-        %
-        %     obj.CurrentPanel.Visible = 'on';
-        %
-        %     % 恢復視窗狀態
-        %     obj.MainFig.WindowState = currentState;
-        % end
-        % 狀態轉換處理（新增）
+        % 狀態轉換處理
         function handleStateTransition(obj, fromState, toPanel)
-            % 處理不同狀態間的轉換邏輯
 
             % 從遊戲中轉移到其他面板
             if strcmp(fromState, 'PLAYING') && ~strcmp(toPanel, 'game') && ~strcmp(toPanel, 'pause') && ~strcmp(toPanel, 'gameover')
@@ -249,67 +170,6 @@ classdef GameManager < handle
             end
         end
 
-        function cleanupGameState(obj)
-            % 重置遊戲狀態
-            obj.isPaused = false;
-
-            % % 清理暫停菜單界面
-            % if ~isempty(obj.PauseMenuPanel) && isfield(obj.PauseMenuPanel, 'Parent') && isvalid(obj.PauseMenuPanel.Parent)
-            %     delete(obj.PauseMenuPanel.Parent);
-            %     obj.PauseMenuPanel = [];
-            % end
-
-            % % 清理死亡畫面
-            % if ~isempty(obj.GameOverPanel) && isvalid(obj.GameOverPanel)
-            %     delete(obj.GameOverPanel);
-            %     obj.GameOverPanel = [];
-            % end
-
-            % 清理遊戲對象
-            if ~isempty(obj.Bullets)
-                for i = 1:length(obj.Bullets)
-                    if isfield(obj.Bullets(i), 'Graphic') && isvalid(obj.Bullets(i).Graphic)
-                        delete(obj.Bullets(i).Graphic);
-                    end
-                end
-                obj.Bullets = struct('Position', {}, 'Velocity', {}, 'Speed', {}, 'Graphic', {});
-            end
-
-            % 清理玩家資訊標籤
-            try
-                if ~isempty(obj.HealthLabel) && isvalid(obj.HealthLabel)
-                    delete(obj.HealthLabel);
-                end
-            catch
-                % 忽略錯誤
-            end
-            obj.HealthLabel = [];
-
-            try
-                if ~isempty(obj.AttackLabel) && isvalid(obj.AttackLabel)
-                    delete(obj.AttackLabel);
-                end
-            catch
-                % 忽略錯誤
-            end
-            obj.AttackLabel = [];
-
-            % 清理敵人與玩家
-            if ~isempty(obj.Enemies)
-                for i = 1:length(obj.Enemies)
-                    if isfield(obj.Enemies(i), 'Graphic') && isvalid(obj.Enemies(i).Graphic)
-                        delete(obj.Enemies(i).Graphic);
-                    end
-                end
-            end
-            obj.Enemies = struct();
-
-            if isfield(obj, 'Player') && ~isempty(obj.Player) && isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
-                delete(obj.Player.Graphic);
-            end
-            obj.Player = [];
-        end
-
 
         % 遊戲關卡控制
         function startLevel(obj, levelNum)
@@ -326,79 +186,6 @@ classdef GameManager < handle
             obj.switchPanel('game');
         end
 
-        
-        
-        % 遊戲結束畫面（新增）
-        % function initGameOverScreen(obj)
-        %     % 清除舊元素
-        %     delete(findobj(obj.GameOverPanel, 'Type', 'UIControl'));
-        %     delete(findobj(obj.GameOverPanel, 'Type', 'UILabel'));
-        % 
-        %     % 確保GameOverPanel在最上層
-        %     uistack(obj.GameOverPanel, 'top');
-        % 
-        %     % 失敗文字
-        %     gameOverLabel = uilabel(obj.GameOverPanel, ...
-        %         'Text', '遊戲結束', ...
-        %         'FontSize', 48, ...
-        %         'FontWeight', 'bold', ...
-        %         'FontColor', [1 0 0], ...
-        %         'Position', [obj.gameWidth/2-150, obj.gameHeight/2+100, 300, 60], ...
-        %         'HorizontalAlignment', 'center', ...
-        %         'Tag', 'GameOverTitle');
-        % 
-        %     % 玩家生命值標籤
-        %     obj.GameOverScoreLabel = uilabel(obj.GameOverPanel, ...
-        %         'Text', '生命值: 0', ...
-        %         'FontSize', 24, ...
-        %         'FontColor', 'w', ...
-        %         'Position', [obj.gameWidth/2-150, obj.gameHeight/2+40, 300, 40], ...
-        %         'HorizontalAlignment', 'center', ...
-        %         'Tag', 'ScoreLabel');
-        % 
-        %     % 按鈕添加Tag以便日後參考
-        %     restartBtn = uibutton(obj.GameOverPanel, 'push', ...
-        %         'Text', '重新開始', ...
-        %         'FontSize', 24, ...
-        %         'BackgroundColor', [0.3 0.6 0.3], ...
-        %         'FontColor', 'w', ...
-        %         'Position', [obj.gameWidth/2-150, obj.gameHeight/2-30, 300, 60], ...
-        %         'ButtonPushedFcn', @(src,event) obj.restartLevel(), ...
-        %         'Tag', 'RestartButton');
-        % 
-        %     % 返回主菜單按鈕
-        %     mainMenuBtn = uibutton(obj.GameOverPanel, 'push', ...
-        %         'Text', '返回主畫面', ...
-        %         'FontSize', 24, ...
-        %         'BackgroundColor', [0.2 0.2 0.6], ...
-        %         'FontColor', 'w', ...
-        %         'Position', [obj.gameWidth/2-150, obj.gameHeight/2-100, 300, 60], ...
-        %         'ButtonPushedFcn', @(src,event) obj.switchPanel('main'), ...
-        %         'Tag', 'MainMenuButton');
-        % end
-
-
-        % % 暫停相關功能
-        % function togglePause(obj)
-        %     % 保存當前窗口狀態
-        %     currentState = obj.MainFig.WindowState;
-        %
-        %     obj.isPaused = ~obj.isPaused;
-        %     if obj.isPaused
-        %         if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'on')
-        %             stop(obj.Timer);
-        %         end
-        %         obj.showPauseMenu();
-        %     else
-        %         if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'off')
-        %             start(obj.Timer);
-        %         end
-        %         obj.hidePauseMenu();
-        %     end
-        %
-        %     % 確保窗口狀態保持不變
-        %     obj.MainFig.WindowState = currentState;
-        % end
         % 暫停功能
         function togglePause(obj)
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
@@ -417,118 +204,10 @@ classdef GameManager < handle
                 end
             end
         end
-        
-        
-
-        % function showPauseMenu(obj)
-        %     % 半透明遮罩層
-        %     mask = uipanel(obj.GamePanel,...
-        %         'BackgroundColor', [0 0 0 0.5],...
-        %         'Position', [0 0 obj.gameWidth obj.gameHeight]);
-        %
-        %     % 暫停選單容器
-        %     obj.PauseMenuPanel = uipanel(mask,...
-        %         'Position', [(obj.gameWidth-300)/2 (obj.gameHeight-300)/2 300 300],...
-        %         'BackgroundColor', [0.3 0.3 0.3]);
-        %
-        %     % 暫停標籤
-        %     uilabel(obj.PauseMenuPanel,...
-        %         'Text', '遊戲已暫停',...
-        %         'Position', [50 250 200 40],...
-        %         'FontSize', 24,...
-        %         'FontColor', 'w',...
-        %         'HorizontalAlignment', 'center');
-        %
-        %     % 按鈕樣式設定
-        %     btnStyle = {'FontSize', 18, 'FontColor', 'w', 'FontWeight', 'bold'};
-        %
-        %     % 繼續按鈕
-        %     obj.ResumeBtn = uibutton(obj.PauseMenuPanel, 'push',...
-        %         'Text', '繼續遊戲',...
-        %         'Position', [50 200 200 60],...
-        %         'BackgroundColor', [0.2 0.6 0.2],...
-        %         'ButtonPushedFcn', @(src,event) obj.togglePause(),...
-        %         btnStyle{:});
-        %
-        %     % 主選單按鈕
-        %     obj.MainMenuBtn = uibutton(obj.PauseMenuPanel, 'push',...
-        %         'Text', '返回主畫面',...
-        %         'Position', [50 110 200 60],...
-        %         'BackgroundColor', [0.2 0.2 0.6],...
-        %         'ButtonPushedFcn', @(src,event) obj.backToMainMenu(),...
-        %         btnStyle{:});
-        %
-        %     % 離開遊戲按鈕
-        %     obj.QuitBtn = uibutton(obj.PauseMenuPanel, 'push',...
-        %         'Text', '離開遊戲',...
-        %         'Position', [50 20 200 60],...
-        %         'BackgroundColor', [0.6 0.2 0.2],...
-        %         'ButtonPushedFcn', @(src,event) obj.quitGame(),...
-        %         btnStyle{:});
-        % end
-
-        % function hidePauseMenu(obj)
-        %     if ~isempty(obj.PauseMenuPanel) && isfield(obj.PauseMenuPanel, 'Parent') && isvalid(obj.PauseMenuPanel.Parent)
-        %         delete(obj.PauseMenuPanel.Parent);
-        %         obj.PauseMenuPanel = [];
-        %     end
-        % end
-
-        % function backToMainMenu(obj)
-        %     % 先隱藏暫停菜單
-        %     obj.hidePauseMenu();
-        %
-        %     % 改變狀態為非暫停
-        %     obj.isPaused = false;
-        %
-        %     % 切換到主畫面
-        %     obj.switchPanel('main');
-        % end
 
         function quitGame(obj)
             obj.cleanup();
         end
-
-        % 遊戲內容初始化
-        function initPlayer(obj)
-            % 玩家角色初始化
-            obj.Player = struct(...
-                'Position', [400 50],...
-                'Size', 30,...
-                'Health', 1314,...
-                'Attack', 520,...
-                'Graphic', []);
-
-            % 創建玩家圖形
-            obj.Player.Graphic = rectangle(obj.GameAxes, 'Position',[0 0 30 30],...
-                'FaceColor','b');
-
-            % 更新位置
-            updatePosition(obj.Player.Graphic, obj.Player.Position);
-        end
-
-        function initEnemies(obj, levelNum)
-            obj.Enemies = struct();
-
-            switch levelNum
-                case 1
-                    % 近戰敵人配置
-                    for i = 1:3
-                        obj.Enemies(i).Type = 'melee';
-                        obj.Enemies(i).Position = [randi([50 750]), 550];
-                        obj.Enemies(i).AwarenessDistance = 300;
-                        obj.Enemies(i).Health = 1314;
-                        obj.Enemies(i).Attack = 520;
-                        obj.Enemies(i).AttackRange = 50;
-                        obj.Enemies(i).AttackCooldown = 0;
-                        obj.Enemies(i).Graphic = rectangle(obj.GameAxes,...
-                            'Position',[0 0 30 30], 'FaceColor','r');
-                        updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
-                    end
-            end
-        end
-
-        
 
         function trackMousePosition(obj)
             % 只在遊戲面板可見時更新滑鼠位置
@@ -617,67 +296,7 @@ classdef GameManager < handle
             end
             obj.switchPanel('gameover');
         end
-        
-        %     % 更新遊戲狀態
-        %     obj.GameState = 'GAME_OVER';
-        %     obj.isPaused = true;
-        % 
-        %     % 停止計時器
-        %     if ~isempty(obj.Timer) && isvalid(obj.Timer)
-        %         stop(obj.Timer);
-        %     end
-        % 
-        %     % 確保GameOverPanel存在且有效
-        %     if ~isfield(obj, 'GameOverPanel') || ~isobject(obj.GameOverPanel) || isempty(obj.GameOverPanel)
-        %         % 重新創建GameOverPanel
-        %         xOffset = (obj.ScreenWidth - obj.gameWidth) / 2;
-        %         yOffset = (obj.ScreenHeight - obj.gameHeight) / 2;
-        %         obj.GameOverPanel = uipanel(obj.MainFig, 'Position', [xOffset yOffset obj.gameWidth obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0 0 0 0.8]);
-        %         obj.initGameOverScreen(); % 重新初始化
-        %     else
-        %         try
-        %             % 嘗試檢查有效性
-        %             if ~isvalid(obj.GameOverPanel)
-        %                 obj.GameOverPanel = uipanel(obj.MainFig, 'Position', [xOffset yOffset obj.gameWidth obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0 0 0 0.8]);
-        %                 obj.initGameOverScreen();
-        %             end
-        %         catch
-        %             % 捕獲任何錯誤並重新創建
-        %             xOffset = (obj.ScreenWidth - obj.gameWidth) / 2;
-        %             yOffset = (obj.ScreenHeight - obj.gameHeight) / 2;
-        %             obj.GameOverPanel = uipanel(obj.MainFig, 'Position', [xOffset yOffset obj.gameWidth obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0 0 0 0.8]);
-        %             obj.initGameOverScreen();
-        %         end
-        %     end
-        % 
-        % 
-        %     % 先將GameOverPanel帶到最前面
-        %     uistack(obj.GameOverPanel, 'top');
-        % 
-        %     % 直接使用GameOverScoreLabel更新生命值
-        %     if isfield(obj, 'GameOverScoreLabel') && isvalid(obj.GameOverScoreLabel)
-        %         obj.GameOverScoreLabel.Text = sprintf('生命值: %d', obj.Player.Health);
-        %     else
-        %         % 若標籤無效，重新初始化死亡畫面
-        %         obj.initGameOverScreen();
-        %         if isfield(obj, 'GameOverScoreLabel') && isvalid(obj.GameOverScoreLabel)
-        %             obj.GameOverScoreLabel.Text = sprintf('生命值: %d', obj.Player.Health);
-        %         end
-        %     end
-        % 
-        %     % 重置所有面板可見性
-        %     obj.MainPanel.Visible = 'off';
-        %     obj.LevelPanel.Visible = 'off';
-        %     obj.HelpPanel.Visible = 'off';
-        %     obj.GamePanel.Visible = 'off';
-        %     obj.PausePanel.Visible = 'off';
-        % 
-        %     % 明確設置GameOverPanel為可見
-        %     obj.GameOverPanel.Visible = 'on';
-        %     obj.CurrentPanel = obj.GameOverPanel;
-        % 
-        %     % 強制更新UI
-        %     drawnow;
+
         end
 
         function retry(obj)
@@ -687,80 +306,6 @@ classdef GameManager < handle
             % obj.Timer = [];
 
         end
-        % % 重新開始遊戲
-        % function restartLevel(obj)
-        %     try
-        %         % 記錄要重新開始的關卡
-        %         levelToRestart = obj.CurrentLevel;
-        % 
-        %         % 先轉換狀態再清理內容
-        %         obj.GameState = 'PLAYING';
-        % 
-        %         % 保留GamePanel的引用並使其可見
-        %         gamePanel = obj.GamePanel;
-        % 
-        %         % 停止舊計時器
-        %         if ~isempty(obj.Timer) && isvalid(obj.Timer)
-        %             stop(obj.Timer);
-        %             delete(obj.Timer);
-        %             obj.Timer = [];
-        %         end
-        % 
-        %         % 隱藏當前面板，而不刪除
-        %         if isvalid(obj.CurrentPanel)
-        %             obj.CurrentPanel.Visible = 'off';
-        %         end
-        % 
-        %         % 清理之前的狀態 - 先更新引用
-        %         obj.CurrentPanel = gamePanel;
-        % 
-        %         % 現在安全清理遊戲狀態
-        %         obj.cleanupGameState();
-        % 
-        %         % 重新初始化遊戲畫面
-        %         obj.initGameScreen(levelToRestart);
-        % 
-        %         % 確保顯示遊戲面板
-        %         obj.GamePanel.Visible = 'on';
-        %         obj.CurrentPanel = obj.GamePanel;
-        % 
-        %         % 創建和啟動新計時器
-        %         obj.Timer = timer('ExecutionMode', 'fixedRate', 'Period', 0.016,...
-        %             'TimerFcn', @(src,event) obj.gameLoop());
-        %         start(obj.Timer);
-        %     catch ME
-        %         % 錯誤處理
-        %         disp(['重啟遊戲錯誤: ' ME.message]);
-        %         disp(getReport(ME));
-        %     end
-        % end
-
-
-        % function gameOverToMainMenu(obj)
-        %     try
-        %         % 隱藏當前面板
-        %         if isvalid(obj.CurrentPanel)
-        %             obj.CurrentPanel.Visible = 'off';
-        %         end
-        % 
-        %         % 設置主菜單面板
-        %         obj.MainPanel.Visible = 'on';
-        %         obj.CurrentPanel = obj.MainPanel;
-        % 
-        %         % 設置狀態
-        %         obj.GameState = 'MAIN_MENU';
-        % 
-        %         % 清理遊戲狀態
-        %         obj.cleanupGameState();
-        % 
-        %         % 強制更新UI
-        %         drawnow;
-        %     catch ME
-        %         disp(['返回主菜單錯誤: ' ME.message]);
-        %         disp(getReport(ME));
-        %     end
-        % end
-
 
         % 碰撞檢測
         function collision = checkAABBCollision(obj, pos1, size1, pos2, size2)
@@ -776,8 +321,10 @@ classdef GameManager < handle
         initHelpScreen(obj)
         initLevelSelect(obj)
         initGameScreen(obj, levelNum)
-        initGameOverScreen(obj)
         initPauseMenu(obj)
+        initGameOverScreen(obj)   
+        initPlayer(obj)
+        initEnemies(obj, levelNum)
         handleKeyPress(obj, event)
         updateBullets(obj)
         updateEnemies(obj)
@@ -787,6 +334,7 @@ classdef GameManager < handle
         fireBullet(obj, startPos, direction)
         removeBullets(obj, indices)
         removeEnemies(obj, indices)
+        cleanupGameState(obj)
     end
 end
 
