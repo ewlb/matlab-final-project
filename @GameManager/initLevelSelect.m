@@ -31,20 +31,20 @@ function initLevelSelect(obj)
         btn.ButtonPushedFcn = @(src,event) obj.startLevel(i);
     end
     
-    % 返回按鈕區域
-    backPanel = uipanel(mainGrid);
-    backPanel.BackgroundColor = [0.1 0.1 0.4];
-    backPanel.Layout.Row = 3;
-    backPanel.Layout.Column = 1;
-    
-    % 獲取backPanel的寬度
-    backPanelWidth = obj.ScreenWidth;
-    
-    backBtn = uibutton(backPanel, 'push');
+    % % 返回按鈕區域
+    backGrid = uigridlayout(mainGrid, [1 3]);
+    backGrid.Padding = [0 100 0 100];
+    backGrid.BackgroundColor = [0.1 0.1 0.4];
+    backGrid.Layout.Row = 3;
+    backGrid.Layout.Column = 1;
+
+    backBtn = uibutton(backGrid, 'push');
     backBtn.Text = '返回主畫面';
-    backBtn.Position = [(backPanelWidth/2)-100 10 200 40];
-    backBtn.FontSize = 18;
+    backBtn.Layout.Column = 2; % important
+    backBtn.FontSize = 1*-1+45-14; % 30
     backBtn.BackgroundColor = [0.8 0.2 0.2];
     backBtn.FontColor = 'w';
     backBtn.ButtonPushedFcn = @(src,event) obj.switchPanel('main');
+
+
 end
