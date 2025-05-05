@@ -8,7 +8,7 @@ classdef GameManager < handle
         HelpPanel       % 說明面板
         PausePanel      % 暫停面板 (新增)
         GameOverPanel   % 遊戲結束面板 (新增)
-        
+        VictoryPanel
 
         CurrentPanel    % 當前顯示的面板
         GameState = 'MAIN_MENU' % 遊戲狀態追蹤
@@ -44,6 +44,9 @@ classdef GameManager < handle
         TimeStr = '00:00' % 時間顯示字串
 
         BossAdded = false
+        BossWarningGraphic = []   % 預警標記圖形物件
+        BossWarningActive = false % 預警狀態標記
+        BlinkTimer = []           % 閃爍效果計時器
 
     end
 
@@ -63,7 +66,8 @@ classdef GameManager < handle
             obj.MainPanel = uipanel(obj.MainFig, 'Position', [0 0 obj.ScreenWidth obj.ScreenHeight], 'Visible', 'on', 'BackgroundColor', [0.1 0.1 0.4]);
             obj.LevelPanel = uipanel(obj.MainFig, 'Position', [0 0 obj.ScreenWidth obj.ScreenHeight], 'Visible', 'off', 'BackgroundColor', [0.1 0.1 0.4]);
             obj.HelpPanel = uipanel(obj.MainFig, 'Position', [0 0 obj.ScreenWidth obj.ScreenHeight], 'Visible', 'off', 'BackgroundColor', [0.1 0.1 0.4]);
-
+            obj.VictoryPanel = uipanel(obj.MainFig, 'Position', [0 0 obj.ScreenWidth obj.ScreenHeight],'Visible', 'off','BackgroundColor', [0.1 0.1 0.4]); % 綠色背景
+           
             % 計算位置
             xOffset = (obj.ScreenWidth - obj.gameWidth) / 2;
             yOffset = (obj.ScreenHeight - obj.gameHeight) / 2;
@@ -77,8 +81,9 @@ classdef GameManager < handle
             obj.initMainMenu();
             obj.initLevelSelect();
             obj.initHelpScreen();
-            obj.initPauseMenu();    % 新增
-            obj.initGameOverScreen(); % 新增
+            obj.initPauseMenu();    
+            obj.initGameOverScreen(); 
+            obj.initVictoryScreen();
 
             % 設置當前面板
             obj.CurrentPanel = obj.MainPanel;
@@ -347,15 +352,44 @@ classdef GameManager < handle
             collision = abs(pos1(1) - pos2(1)) < (halfSize1 + halfSize2) && ...
                 abs(pos1(2) - pos2(2)) < (halfSize1 + halfSize2);
         end
+
+        function startBlink(obj)
+            % 停止現有計時器
+            if ~isempty(obj.BlinkTimer) && isvalid(obj.BlinkTimer)
+                stop(obj.BlinkTimer);
+                delete(obj.BlinkTimer);
+            end
+
+            % 創建新計時器
+            obj.BlinkTimer = timer(...
+                'ExecutionMode', 'fixedRate',...
+                'Period', 0.5,...
+                'TasksToExecute', 6,... % 閃爍3秒=6*0.5
+                'TimerFcn', @(src,event) obj.toggleBlink());
+
+            start(obj.BlinkTimer);
+        end
+
+        function toggleBlink(obj)
+            if isvalid(obj.BossWarningGraphic)
+                if(obj.BossWarningGraphic.FaceAlpha<0.5)
+                    obj.BossWarningGraphic.FaceAlpha=0.8;
+                else
+                    obj.BossWarningGraphic.FaceAlpha=0.4;
+                end
+            end
+        end
         
         initMainMenu(obj)
         initHelpScreen(obj)
         initLevelSelect(obj)
         initGameScreen(obj, levelNum)
         initPauseMenu(obj)
-        initGameOverScreen(obj)   
+        initGameOverScreen(obj)  
+        initVictoryScreen(obj)
         initPlayer(obj)
         initEnemies(obj, levelNum)
+        initBOSS(obj)
         handleKeyPress(obj, event)
         updateBullets(obj)
         updateEnemies(obj)
@@ -366,6 +400,8 @@ classdef GameManager < handle
         removeBullets(obj, indices)
         removeEnemies(obj, indices)
         cleanupGameState(obj)
+        showVictoryScreen(obj)
+        BossWarning(obj, state)
     end
 end
 
