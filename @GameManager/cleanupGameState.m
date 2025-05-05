@@ -65,4 +65,5 @@ function cleanupGameState(obj)
         delete(obj.Player.Graphic);
     end
     obj.Player = [];
+    obj.BossAdded = false;
 end

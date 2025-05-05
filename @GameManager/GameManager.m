@@ -8,6 +8,8 @@ classdef GameManager < handle
         HelpPanel       % 說明面板
         PausePanel      % 暫停面板 (新增)
         GameOverPanel   % 遊戲結束面板 (新增)
+        
+
         CurrentPanel    % 當前顯示的面板
         GameState = 'MAIN_MENU' % 遊戲狀態追蹤
         % 可能值: MAIN_MENU, LEVEL_SELECT, PLAYING, PAUSED, GAME_OVER, HELP
@@ -40,6 +42,8 @@ classdef GameManager < handle
         GameTimer       % 遊戲計時器
         ElapsedTime = 0 % 累計時間(秒)
         TimeStr = '00:00' % 時間顯示字串
+
+        BossAdded = false
 
     end
 

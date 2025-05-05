@@ -28,6 +28,8 @@ function updateEnemies(obj)
             % 執行攻擊
             obj.Player.Health = obj.Player.Health - obj.Enemies(i).Attack;
             
+            % TODO:修改BOSS的攻擊
+            
             % 設置攻擊冷卻（約2秒，取決於FPS）
             obj.Enemies(i).AttackCooldown = 120;
             
@@ -44,7 +46,10 @@ function updateEnemies(obj)
             end
         end
 
-
+        % 跳過 BOSS 移動
+        if strcmp(obj.Enemies(i).Type, 'boss')
+            continue; 
+        end
         % 僅在感知範圍內追蹤玩家
         if distanceToPlayer <= obj.Enemies(i).AwarenessDistance
             % 標準化方向向量
