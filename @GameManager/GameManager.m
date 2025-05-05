@@ -36,6 +36,11 @@ classdef GameManager < handle
         AxesYLim
         CurrentLevel
 
+        TimeLabel       % 時間顯示標籤
+        GameTimer       % 遊戲計時器
+        ElapsedTime = 0 % 累計時間(秒)
+        TimeStr = '00:00' % 時間顯示字串
+
     end
 
     methods
@@ -184,6 +189,19 @@ classdef GameManager < handle
             % 初始化遊戲畫面
             obj.initGameScreen(levelNum);
             obj.switchPanel('game');
+            
+            % 重置計時器狀態
+            obj.ElapsedTime = 0;
+            obj.TimeStr = '00:00';
+            obj.TimeLabel.Text = obj.TimeStr;
+
+            % 創建遊戲計時器（與現有遊戲循環計時器分離）
+            obj.GameTimer = timer(...
+                'ExecutionMode', 'fixedRate',...
+                'Period', 1,...
+                'TimerFcn', @(src,event) obj.updateTimer(),...
+                'BusyMode', 'drop');
+            start(obj.GameTimer);
         end
 
         % 暫停功能
@@ -194,6 +212,9 @@ classdef GameManager < handle
                 if ~isempty(obj.Timer) && isvalid(obj.Timer)
                     stop(obj.Timer);
                 end
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    stop(obj.GameTimer);
+                end
                 obj.switchPanel('pause');
             elseif obj.isPaused && strcmp(obj.GameState, 'PAUSED')
                 % 恢復遊戲
@@ -201,6 +222,9 @@ classdef GameManager < handle
                 obj.switchPanel('game');
                 if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'off')
                     start(obj.Timer);  % 只有計時器未運行時才啟動
+                end
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    start(obj.GameTimer);
                 end
             end
         end
@@ -276,8 +300,7 @@ classdef GameManager < handle
                         obj.showGameOverScreen();
                         return;
                     end
-
-                    drawnow limitrate
+                    drawnow 
                 end
             catch ME
                 disp(['遊戲循環錯誤: ' ME.message]);
@@ -289,13 +312,17 @@ classdef GameManager < handle
         % should be modified from togglePause
         function showGameOverScreen(obj)
 
-        if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
-            obj.isPaused = true;
-            if ~isempty(obj.Timer) && isvalid(obj.Timer)
-                stop(obj.Timer);
+            if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                obj.isPaused = true;
+                if ~isempty(obj.Timer) && isvalid(obj.Timer)
+                    stop(obj.Timer);
+                end
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    stop(obj.GameTimer);
+
+                end
+                obj.switchPanel('gameover');
             end
-            obj.switchPanel('gameover');
-        end
 
         end
 

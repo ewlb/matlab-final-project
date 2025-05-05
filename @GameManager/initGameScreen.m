@@ -40,6 +40,15 @@ function initGameScreen(obj, levelNum)
     obj.initPlayer();
     obj.initEnemies(levelNum);
     
+    % 添加時間標籤
+    obj.TimeLabel = uilabel(obj.MainFig);
+    obj.TimeLabel.Text = '時間: 00:00';
+    obj.TimeLabel.Position = [50 obj.ScreenHeight-50 200 30]; 
+    obj.TimeLabel.FontSize = 18;
+    obj.TimeLabel.FontColor = 'w';
+    obj.TimeLabel.BackgroundColor = [0.1 0.1 0.4];
+
+
     % 創建玩家生命與攻擊力顯示
     obj.HealthLabel = uilabel(obj.MainFig);
     obj.HealthLabel.Text = sprintf('生命值: %d', obj.Player.Health);

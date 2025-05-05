@@ -21,7 +21,7 @@ function cleanupGameState(obj)
         % 忽略錯誤
     end
     obj.HealthLabel = [];
-    
+
     try
         if ~isempty(obj.AttackLabel) && isvalid(obj.AttackLabel)
             delete(obj.AttackLabel);
@@ -30,6 +30,26 @@ function cleanupGameState(obj)
         % 忽略錯誤
     end
     obj.AttackLabel = [];
+
+    % 清理計時器
+    try
+        if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+            stop(obj.GameTimer);
+            delete(obj.GameTimer);
+        end
+    catch
+    end
+    obj.GameTimer = [];
+    
+    % 清理時間標籤
+    try 
+        if ~isempty(obj.TimeLabel) && isvalid(obj.TimeLabel)
+            delete(obj.TimeLabel);
+        end
+    catch
+
+    end
+    obj.TimeLabel = [];
     
     % 清理敵人與玩家
     if ~isempty(obj.Enemies)

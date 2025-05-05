@@ -1,7 +1,7 @@
 function fireBullet(obj, startPos, direction)
     % 子彈速度
-    bulletSpeed = 15;
-    
+    bulletSpeed = 15; % 單位/秒
+    deltaTime = 1;
     % 確保保持圖形
     hold(obj.GameAxes, 'on');
     
@@ -12,7 +12,7 @@ function fireBullet(obj, startPos, direction)
     % 新建子彈資料結構
     newBullet = struct(...
         'Position', startPos, ...
-        'Velocity', direction * bulletSpeed, ...
+        'Velocity', direction * bulletSpeed * deltaTime, ...
         'Speed', bulletSpeed, ...
         'Graphic', bulletGraphic);
     
