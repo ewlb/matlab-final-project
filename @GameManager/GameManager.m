@@ -261,7 +261,7 @@ classdef GameManager < handle
                     direction = direction / norm(direction);
 
                     % 創建並發射子彈
-                    obj.fireBullet(obj.Player.Position, direction);
+                    obj.fireBullet(obj.Player.Position, direction, false, obj.Player.Attack);
                 end
             end
         end
@@ -396,7 +396,7 @@ classdef GameManager < handle
         checkBulletCollisions(obj)
         resolveEnemyCollisions(obj)
         checkPlayerEnemyCollision(obj)
-        fireBullet(obj, startPos, direction)
+        fireBullet(obj, startPos, direction, isBossBullet, attackerAttack)
         removeBullets(obj, indices)
         removeEnemies(obj, indices)
         cleanupGameState(obj)

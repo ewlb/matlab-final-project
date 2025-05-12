@@ -1,22 +1,31 @@
-function fireBullet(obj, startPos, direction)
-    % 子彈速度
-    bulletSpeed = 15; % 單位/秒
-    deltaTime = 1;
-    % 確保保持圖形
-    hold(obj.GameAxes, 'on');
+% 修改後 fireBullet.m
+function fireBullet(obj, startPos, direction, isBossBullet, attackerAttack)
     
-    % 創建子彈圖形（黑色圓形）
-    bulletGraphic = plot(obj.GameAxes, startPos(1), startPos(2), 'ko', ...
-        'MarkerSize', 8, 'MarkerFaceColor', 'k');
-    
-    % 新建子彈資料結構
+    if isBossBullet
+        markerSize = 12;
+        color = [1 0 0]; % 紅色
+        bulletSpeed = 15;
+    else
+        markerSize = 8;
+        color = [0 0 0]; % 黑色
+        bulletSpeed = 15;
+    end
+
+    % 創建子彈圖形
+    bulletGraphic = plot(obj.GameAxes, startPos(1), startPos(2), 'o',...
+        'MarkerSize', markerSize,...
+        'MarkerFaceColor', color,...
+        'MarkerEdgeColor', color);
+
+    % 子彈資料結構
     newBullet = struct(...
-        'Position', startPos, ...
-        'Velocity', direction * bulletSpeed * deltaTime, ...
-        'Speed', bulletSpeed, ...
+        'Position', startPos,...
+        'Velocity', direction * bulletSpeed,...
+        'Damage', attackerAttack,...       
+        'IsBossBullet', isBossBullet,...
         'Graphic', bulletGraphic);
-    
-    % 加入到子彈陣列
+
+    % 加入子彈陣列
     if isempty(obj.Bullets)
         obj.Bullets = newBullet;
     else

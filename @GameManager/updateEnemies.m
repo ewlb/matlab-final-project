@@ -1,24 +1,42 @@
 function updateEnemies(obj)
-    % 若無敵人則跳過
-    if isempty(obj.Enemies)
-        return;
+% 若無敵人則跳過
+if isempty(obj.Enemies)
+    return;
+end
+
+% 處理每個敵人
+for i = 1:length(obj.Enemies)
+    % 確保敵人圖形有效
+    if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
+        continue;
     end
 
-    % 處理每個敵人
-    for i = 1:length(obj.Enemies)
-        % 確保敵人圖形有效
-        if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
-            continue;
+    % 計算朝向玩家的方向向量
+    directionToPlayer = obj.Player.Position - obj.Enemies(i).Position;
+    distanceToPlayer = norm(directionToPlayer);
+    % 標準化方向向量
+    if distanceToPlayer > 0
+        normalizedDirection = directionToPlayer / distanceToPlayer;
+    else
+        normalizedDirection = [0, 0];
+    end
+
+    if strcmp(obj.Enemies(i).Type, 'boss')
+        % BOSS專用邏輯
+        obj.Enemies(i).AttackCooldown = max(0, obj.Enemies(i).AttackCooldown-0.016);
+
+        % 冷卻結束時射擊
+        if obj.Enemies(i).AttackCooldown <= 0
+
+            % 發射BOSS子彈
+            obj.fireBullet(obj.Enemies(i).Position, normalizedDirection, true, obj.Enemies(i).Attack);
+            % 重置冷卻(2秒)
+            obj.Enemies(i).AttackCooldown = 2; 
+
         end
+    else
 
-        % 計算朝向玩家的方向向量
-        directionToPlayer = obj.Player.Position - obj.Enemies(i).Position;
-
-        % 計算到玩家的距離
-        distanceToPlayer = norm(directionToPlayer);
-
-
-         % 處理敵人攻擊冷卻
+        % 處理敵人攻擊冷卻
         if obj.Enemies(i).AttackCooldown > 0
             obj.Enemies(i).AttackCooldown = obj.Enemies(i).AttackCooldown - 1;
         end
@@ -27,18 +45,18 @@ function updateEnemies(obj)
         if distanceToPlayer <= obj.Enemies(i).AttackRange && obj.Enemies(i).AttackCooldown <= 0
             % 執行攻擊
             obj.Player.Health = obj.Player.Health - obj.Enemies(i).Attack;
-            
+
             % TODO:修改BOSS的攻擊
-            
-            % 設置攻擊冷卻（約2秒，取決於FPS）
+
+            % 設置攻擊冷卻（120幀）
             obj.Enemies(i).AttackCooldown = 120;
-            
+
             % 視覺效果 - 閃爍敵人顏色表示攻擊
             originalColor = obj.Enemies(i).Graphic.FaceColor;
-            obj.Enemies(i).Graphic.FaceColor = [1 1 0]; % 黃色閃爍
+            obj.Enemies(i).Graphic.FaceColor = [1, 1, 0]; % 黃色閃爍
             pause(0.05);
             obj.Enemies(i).Graphic.FaceColor = originalColor;
-            
+
             % 檢查玩家是否死亡
             if obj.Player.Health <= 0
                 obj.showGameOverScreen();
@@ -46,18 +64,12 @@ function updateEnemies(obj)
             end
         end
 
-        % 跳過 BOSS 移動
-        if strcmp(obj.Enemies(i).Type, 'boss')
-            continue; 
-        end
+        % % 跳過 BOSS 移動
+        % if strcmp(obj.Enemies(i).Type, 'boss')
+        %     continue;
+        % end
         % 僅在感知範圍內追蹤玩家
         if distanceToPlayer <= obj.Enemies(i).AwarenessDistance
-            % 標準化方向向量
-            if distanceToPlayer > 0
-                normalizedDirection = directionToPlayer / distanceToPlayer;
-            else
-                normalizedDirection = [0, 0];
-            end
 
             % 設定移動速度
             switch obj.Enemies(i).Type
