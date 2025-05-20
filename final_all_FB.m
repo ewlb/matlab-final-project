@@ -1,0 +1,1503 @@
+classdef final_all_FB < handle
+    properties
+        % 遊戲狀態與視窗管理
+        MainFig % 主視窗
+        MainPanel % 主選單面板
+        LevelPanel % 關卡選擇面板
+        GamePanel % 遊戲面板
+        HelpPanel % 說明面板
+        PausePanel % 暫停面板 (新增)
+        GameOverPanel % 遊戲結束面板 (新增)
+        VictoryPanel
+
+        CurrentPanel % 當前顯示的面板
+        GameState = 'MAIN_MENU' % 遊戲狀態追蹤
+        % 可能值: MAIN_MENU, LEVEL_SELECT, PLAYING, PAUSED, GAME_OVER, HELP
+
+        % 螢幕尺寸
+        ScreenWidth
+        ScreenHeight
+        gameWidth = 1000
+        gameHeight = 700
+
+        % 遊戲核心元素
+        GameAxes
+        Player
+        Enemies = struct()
+        Bullets = struct('Position', {}, 'Velocity', {}, 'Damage', {}, 'IsBossBullet', {}, ...
+            'Graphic', {}, 'AnimationFrame', {}, 'FrameCount', {}, ...
+            'AnimationTimer', {}, 'AnimationSpeed', {}, 'Angle', {}, 'Size', {})
+
+        Timer
+        MousePos = [0, 0]
+
+        % 玩家資訊標籤
+        HealthLabel
+        AttackLabel
+
+        % 遊戲設定
+        isPaused = false
+        AxesXLim
+        AxesYLim
+        CurrentLevel
+
+        TimeLabel % 時間顯示標籤
+        GameTimer % 遊戲計時器
+        ElapsedTime = 0 % 累計時間(秒)
+        TimeStr = '00:00' % 時間顯示字串
+
+        BossAdded = false
+        BossWarningGraphic = [] % 預警標記圖形物件
+        BossWarningActive = false % 預警狀態標記
+        BlinkTimer = [] % 閃爍效果計時器
+
+        FireballFrames = {} % Store the fireball animation frames
+
+    end
+
+    methods
+        function obj = final_all_FB()
+            % 創建唯一的主視窗並設置背景
+            obj.MainFig = uifigure('Name', '太空射擊遊戲');
+            obj.MainFig.WindowState = 'fullscreen';
+            obj.MainFig.Color = [0.1, 0.1, 0.4];
+
+            % 取得螢幕大小
+            screenSize = get(0, 'ScreenSize');
+            obj.ScreenWidth = screenSize(3);
+            obj.ScreenHeight = screenSize(4);
+
+            % 預加載所有面板
+            obj.MainPanel = uipanel(obj.MainFig, 'Position', [0, 0, obj.ScreenWidth, obj.ScreenHeight], 'Visible', 'on', 'BackgroundColor', [0.1, 0.1, 0.4]);
+            obj.LevelPanel = uipanel(obj.MainFig, 'Position', [0, 0, obj.ScreenWidth, obj.ScreenHeight], 'Visible', 'off', 'BackgroundColor', [0.1, 0.1, 0.4]);
+            obj.HelpPanel = uipanel(obj.MainFig, 'Position', [0, 0, obj.ScreenWidth, obj.ScreenHeight], 'Visible', 'off', 'BackgroundColor', [0.1, 0.1, 0.4]);
+            obj.VictoryPanel = uipanel(obj.MainFig, 'Position', [0, 0, obj.ScreenWidth, obj.ScreenHeight], 'Visible', 'off', 'BackgroundColor', [0.1, 0.1, 0.4]); % 綠色背景
+
+            % 計算位置
+            xOffset = (obj.ScreenWidth - obj.gameWidth) / 2;
+            yOffset = (obj.ScreenHeight - obj.gameHeight) / 2;
+
+            % 遊戲相關面板
+            obj.GamePanel = uipanel(obj.MainFig, 'Position', [xOffset, yOffset, obj.gameWidth, obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0.1, 0.1, 0.4]);
+            obj.PausePanel = uipanel(obj.MainFig, 'Position', [xOffset, yOffset, obj.gameWidth, obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0, 0, 0, 0.5]);
+            obj.GameOverPanel = uipanel(obj.MainFig, 'Position', [xOffset, yOffset, obj.gameWidth, obj.gameHeight], 'Visible', 'off', 'BackgroundColor', [0, 0, 0, 0.8]);
+
+            % 初始化所有面板內容
+            obj.initMainMenu();
+            obj.initLevelSelect();
+            obj.initHelpScreen();
+            obj.initPauseMenu();
+            obj.initGameOverScreen();
+            obj.initVictoryScreen();
+
+            % 設置當前面板
+            obj.CurrentPanel = obj.MainPanel;
+
+            % 設置窗口關閉時的清理函數
+            obj.MainFig.CloseRequestFcn = @(src, event) obj.cleanup();
+        end
+
+        function cleanup(obj)
+            % 停止並刪除定時器
+            if ~isempty(obj.Timer) && isvalid(obj.Timer)
+                try
+                    stop(obj.Timer);
+                    delete(obj.Timer);
+                catch
+                    % 忽略錯誤
+                end
+            end
+
+            % 清理遊戲資源
+            obj.cleanupGameState();
+
+            % 關閉視窗
+            delete(obj.MainFig);
+        end
+
+        % 狀態管理核心函數
+        function switchPanel(obj, panelName)
+
+            % 共通的狀態轉換處理
+            obj.handleStateTransition(obj.GameState, panelName);
+
+            % 隱藏當前面板
+            obj.CurrentPanel.Visible = 'off';
+
+            % 顯示目標面板
+            switch panelName
+                case 'main'
+                    obj.cleanupGameState();
+                    obj.CurrentPanel = obj.MainPanel;
+                    obj.GameState = 'MAIN_MENU';
+                case 'level'
+                    obj.CurrentPanel = obj.LevelPanel;
+                    obj.GameState = 'LEVEL_SELECT';
+                case 'game'
+                    obj.CurrentPanel = obj.GamePanel;
+                    obj.GameState = 'PLAYING';
+                case 'pause'
+                    obj.CurrentPanel = obj.PausePanel;
+                    obj.GameState = 'PAUSED';
+                case 'gameover'
+                    obj.CurrentPanel = obj.GameOverPanel;
+                    obj.GameState = 'GAME_OVER';
+                case 'help'
+                    obj.CurrentPanel = obj.HelpPanel;
+                    obj.GameState = 'HELP';
+            end
+
+            % 確保新面板有效
+            if isvalid(obj.CurrentPanel)
+                obj.CurrentPanel.Visible = 'on';
+                drawnow;
+            end
+        end
+
+        % 狀態轉換處理
+        function handleStateTransition(obj, fromState, toPanel)
+
+            % 從遊戲中轉移到其他面板
+            if strcmp(fromState, 'PLAYING') && ~strcmp(toPanel, 'game') && ~strcmp(toPanel, 'pause') && ~strcmp(toPanel, 'gameover')
+                % 離開遊戲時，停止計時器並清理資源
+                if ~isempty(obj.Timer) && isvalid(obj.Timer)
+                    try
+                        stop(obj.Timer);
+                        delete(obj.Timer);
+                    catch
+                        % 忽略錯誤
+                    end
+                    obj.Timer = [];
+                end
+                obj.cleanupGameState();
+            end
+
+            % 從暫停狀態轉移
+            if strcmp(fromState, 'PAUSED')
+                if strcmp(toPanel, 'game')
+                    % 從暫停返回遊戲，重啟計時器
+                    if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'off')
+                        start(obj.Timer);
+                    end
+                end
+            end
+            % 從遊戲結束狀態轉移
+            if strcmp(fromState, 'GAME_OVER')
+                % 離開遊戲結束畫面時，確保徹底清理
+                fprintf('test')
+                obj.isPaused = false;
+            end
+        end
+
+
+        % 遊戲關卡控制
+        function startLevel(obj, levelNum)
+            % 重置遊戲狀態
+            obj.GameState = 'PLAYING';
+            obj.CurrentLevel = levelNum;
+            obj.isPaused = false;
+
+            % 確保舊的遊戲元素被清理
+            obj.cleanupGameState();
+
+            % 初始化遊戲畫面
+            obj.initGameScreen(levelNum);
+            obj.switchPanel('game');
+
+            % 重置計時器狀態
+            obj.ElapsedTime = 0;
+            obj.TimeStr = '00:00';
+            obj.TimeLabel.Text = obj.TimeStr;
+
+            % 創建遊戲計時器（與現有遊戲循環計時器分離）
+            obj.GameTimer = timer( ...
+                'ExecutionMode', 'fixedRate', ...
+                'Period', 1, ...
+                'TimerFcn', @(src, event) obj.updateTimer(), ...
+                'BusyMode', 'drop');
+            start(obj.GameTimer);
+        end
+
+        % 暫停功能
+        function togglePause(obj)
+            if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                % 暫停遊戲
+                obj.isPaused = true;
+                if ~isempty(obj.Timer) && isvalid(obj.Timer)
+                    stop(obj.Timer);
+                end
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    stop(obj.GameTimer);
+                end
+                obj.switchPanel('pause');
+            elseif obj.isPaused && strcmp(obj.GameState, 'PAUSED')
+                % 恢復遊戲
+                obj.isPaused = false;
+                obj.switchPanel('game');
+                if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'off')
+                    start(obj.Timer); % 只有計時器未運行時才啟動
+                end
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    start(obj.GameTimer);
+                end
+            end
+        end
+
+        function quitGame(obj)
+            obj.cleanup();
+        end
+
+        function trackMousePosition(obj)
+            % 只在遊戲面板可見時更新滑鼠位置
+            if strcmp(obj.GameState, 'PLAYING') && isvalid(obj.GameAxes)
+                cp = obj.GameAxes.CurrentPoint;
+                obj.MousePos = cp(1, 1:2);
+            end
+        end
+
+        function handleMouseClick(obj)
+            % 只處理左鍵點擊且遊戲未暫停時
+            if strcmp(obj.GameState, 'PLAYING') && ~obj.isPaused && strcmp(obj.MainFig.SelectionType, 'normal')
+                % 計算發射方向
+                direction = obj.MousePos - obj.Player.Position;
+
+                % 標準化方向向量
+                if norm(direction) > 0
+                    direction = direction / norm(direction);
+
+                    % 創建並發射子彈
+                    obj.fireBullet(obj.Player.Position, direction, false, obj.Player.Attack);
+                end
+            end
+        end
+
+        function gameLoop(obj)
+            try
+                % 只在遊戲狀態且非暫停時執行
+                if strcmp(obj.GameState, 'PLAYING') && ~obj.isPaused
+                    % 檢查玩家圖形是否有效
+                    if ~isfield(obj.Player, 'Graphic') || ~isvalid(obj.Player.Graphic)
+                        % 重建玩家圖形
+                        obj.Player.Graphic = rectangle(obj.GameAxes, 'Position', [0, 0, 30, 30], ...
+                            'FaceColor', 'b');
+                        updatePosition(obj.Player.Graphic, obj.Player.Position);
+                    end
+
+                    % 檢查敵人圖形是否有效
+                    for i = 1:length(obj.Enemies)
+                        if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
+                            % 根據敵人類型重建圖形
+                            if strcmp(obj.Enemies(i).Type, 'boss')
+                                % 特殊處理BOSS圖形
+                                obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                                    'Position', [0, 0, 60, 60], ... % 更大尺寸
+                                    'FaceColor', [1, 0, 1], ... % 洋紅色
+                                    'Curvature', 0.3); % 圓角矩形
+                            else
+                                % 普通敵人圖形
+                                obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                                    'Position', [0, 0, 30, 30], ...
+                                    'FaceColor', 'r');
+                            end
+                            updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+                        end
+                    end
+
+                    % 更新遊戲邏輯
+                    obj.updateBullets();
+                    obj.checkBulletCollisions();
+                    obj.updateEnemies();
+                    obj.resolveEnemyCollisions();
+                    obj.checkPlayerEnemyCollision();
+
+                    % 更新玩家資訊顯示
+                    if isvalid(obj.HealthLabel)
+                        obj.HealthLabel.Text = sprintf('生命值: %d', obj.Player.Health);
+                    end
+                    if isvalid(obj.AttackLabel)
+                        obj.AttackLabel.Text = sprintf('攻擊力: %d', obj.Player.Attack);
+                    end
+
+                    % 檢查玩家是否死亡
+                    if obj.Player.Health <= 0
+                        fprintf('Player died! Health: %d\n', obj.Player.Health); % 添加調試輸出
+                        obj.showGameOverScreen();
+                        return;
+                    end
+                    drawnow
+                end
+            catch ME
+                disp(['遊戲循環錯誤: ', ME.message]);
+                disp(getReport(ME));
+            end
+        end
+
+        % 顯示遊戲結束畫面
+        % should be modified from togglePause
+        function showGameOverScreen(obj)
+
+            if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                obj.isPaused = true;
+                if ~isempty(obj.Timer) && isvalid(obj.Timer)
+                    stop(obj.Timer);
+                end
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    stop(obj.GameTimer);
+
+                end
+                obj.switchPanel('gameover');
+            end
+
+        end
+
+        function retry(obj)
+
+            obj.startLevel(obj.CurrentLevel);
+            % delete(obj.Timer);
+            % obj.Timer = [];
+
+        end
+
+        % 碰撞檢測
+        function collision = checkAABBCollision(obj, pos1, size1, pos2, size2)
+            % AABB 碰撞檢測
+            halfSize1 = size1 / 2;
+            halfSize2 = size2 / 2;
+
+            collision = abs(pos1(1)-pos2(1)) < (halfSize1 + halfSize2) && ...
+                abs(pos1(2)-pos2(2)) < (halfSize1 + halfSize2);
+        end
+
+        function startBlink(obj)
+            % 停止現有計時器
+            if ~isempty(obj.BlinkTimer) && isvalid(obj.BlinkTimer)
+                stop(obj.BlinkTimer);
+                delete(obj.BlinkTimer);
+            end
+
+            % 創建新計時器
+            obj.BlinkTimer = timer( ...
+                'ExecutionMode', 'fixedRate', ...
+                'Period', 0.5, ...
+                'TasksToExecute', 6, ... % 閃爍3秒=6*0.5
+                'TimerFcn', @(src, event) obj.toggleBlink());
+
+            start(obj.BlinkTimer);
+        end
+
+        function toggleBlink(obj)
+            if isvalid(obj.BossWarningGraphic)
+                if (obj.BossWarningGraphic.FaceAlpha < 0.5)
+                    obj.BossWarningGraphic.FaceAlpha = 0.8;
+                else
+                    obj.BossWarningGraphic.FaceAlpha = 0.4;
+                end
+            end
+        end
+
+        function initMainMenu(obj)
+            % 計算中央位置
+            centerX = obj.ScreenWidth / 2;
+            centerY = obj.ScreenHeight / 2;
+
+            % 遊戲標題
+            titleLbl = uilabel(obj.MainPanel);
+            titleLbl.Text = '太空射擊戰';
+            titleLbl.FontSize = 48;
+            titleLbl.FontColor = 'w';
+            titleLbl.Position = [centerX - 200, centerY + 150, 400, 60];
+
+            % 遊戲開始按鈕
+            startBtn = uibutton(obj.MainPanel, 'push');
+            startBtn.Text = '開始遊戲';
+            startBtn.Position = [centerX - 100, centerY, 200, 60];
+            startBtn.FontSize = 24;
+            startBtn.BackgroundColor = [0.2, 0.6, 1];
+            startBtn.FontColor = 'w';
+            startBtn.ButtonPushedFcn = @(src, event) obj.switchPanel('level');
+
+            % 遊戲說明按鈕
+            helpBtn = uibutton(obj.MainPanel, 'push');
+            helpBtn.Text = '遊戲說明';
+            helpBtn.Position = [centerX - 100, centerY - 100, 200, 60];
+            helpBtn.FontSize = 24;
+            helpBtn.BackgroundColor = [0.2, 0.6, 1];
+            helpBtn.FontColor = 'w';
+            helpBtn.ButtonPushedFcn = @(src, event) obj.switchPanel('help');
+        end
+        function initHelpScreen(obj)
+            % 計算中央位置
+            centerX = obj.ScreenWidth / 2;
+            centerY = obj.ScreenHeight / 2;
+
+            % 說明標題
+            titleLbl = uilabel(obj.HelpPanel);
+            titleLbl.Text = '遊戲說明';
+            titleLbl.FontSize = 36;
+            titleLbl.FontColor = 'w';
+            titleLbl.Position = [centerX - 100, centerY + 150, 200, 40];
+
+            % 說明內容
+            instructLbl = uilabel(obj.HelpPanel);
+            instructLbl.Text = sprintf('%s\n%s\n%s', '移動: WASD鍵', '射擊: 滑鼠左鍵', '暫停: p鍵');
+            instructLbl.WordWrap = 'on';
+            instructLbl.FontSize = 24;
+            instructLbl.FontColor = 'w';
+            instructLbl.Position = [centerX - 150, centerY - 50, 300, 300];
+
+            % 返回按鈕
+            backBtn = uibutton(obj.HelpPanel, 'push');
+            backBtn.Text = '返回主畫面';
+            backBtn.Position = [centerX - 100, centerY - 150, 200, 50];
+            backBtn.FontSize = 18;
+            backBtn.BackgroundColor = [0.8, 0.2, 0.2];
+            backBtn.FontColor = 'w';
+            backBtn.ButtonPushedFcn = @(src, event) obj.switchPanel('main');
+        end
+        function initLevelSelect(obj)
+            % 主網格佈局
+            mainGrid = uigridlayout(obj.LevelPanel, [3, 1]);
+            mainGrid.RowHeight = {'fit', '1x', 'fit'};
+            mainGrid.ColumnWidth = {'1x'};
+            mainGrid.BackgroundColor = [0.1, 0.1, 0.4];
+
+            % 標題區域
+            titleLbl = uilabel(mainGrid);
+            titleLbl.Text = '選擇關卡';
+            titleLbl.FontSize = 36;
+            titleLbl.FontColor = 'w';
+            titleLbl.HorizontalAlignment = 'center';
+            titleLbl.Layout.Row = 1;
+            titleLbl.Layout.Column = 1;
+
+            % 關卡按鈕容器
+            btnGrid = uigridlayout(mainGrid, [1, 3]);
+            btnGrid.Padding = [50, 0, 50, 0];
+            btnGrid.Layout.Row = 2;
+            btnGrid.Layout.Column = 1;
+            btnGrid.BackgroundColor = [0.1, 0.1, 0.4];
+
+            % 三個關卡按鈕
+            for i = 1:3
+                btn = uibutton(btnGrid, 'push');
+                btn.Text = sprintf('第 %d 關', i);
+                btn.FontSize = 24;
+                btn.BackgroundColor = [0.3, 0.7, 0.5];
+                btn.FontColor = 'w';
+                btn.ButtonPushedFcn = @(src, event) obj.startLevel(i);
+            end
+
+            % % 返回按鈕區域
+            backGrid = uigridlayout(mainGrid, [1, 3]);
+            backGrid.Padding = [0, 100, 0, 100];
+            backGrid.BackgroundColor = [0.1, 0.1, 0.4];
+            backGrid.Layout.Row = 3;
+            backGrid.Layout.Column = 1;
+
+            backBtn = uibutton(backGrid, 'push');
+            backBtn.Text = '返回主畫面';
+            backBtn.Layout.Column = 2; % important
+            backBtn.FontSize = 1 * -1 + 45 - 14; % 30
+            backBtn.BackgroundColor = [0.8, 0.2, 0.2];
+            backBtn.FontColor = 'w';
+            backBtn.ButtonPushedFcn = @(src, event) obj.switchPanel('main');
+
+
+        end
+        function initGameScreen(obj, levelNum)
+            % 清理舊的遊戲元素
+            obj.cleanupGameState();
+            delete(findobj(obj.GamePanel, 'Type', 'UIAxes'));
+
+            % 創建遊戲畫布
+            obj.GameAxes = uiaxes(obj.GamePanel);
+            obj.GameAxes.Position = [0, 0, obj.gameWidth, obj.gameHeight];
+
+            % 更新遊戲限制範圍
+            obj.AxesXLim = [0, obj.gameWidth];
+            obj.AxesYLim = [0, obj.gameHeight];
+
+            % 設定固定顯示範圍
+            axis(obj.GameAxes, 'equal');
+            xlim(obj.GameAxes, obj.AxesXLim);
+            ylim(obj.GameAxes, obj.AxesYLim);
+            hold(obj.GameAxes, 'on');
+            set(obj.GameAxes, 'XLimMode', 'manual', 'YLimMode', 'manual');
+
+            % 禁用默認交互
+            disableDefaultInteractivity(obj.GameAxes);
+            obj.GameAxes.Interactions = [];
+            obj.GameAxes.Toolbar = [];
+
+            % 暫停按鈕
+            pauseBtn = uibutton(obj.GamePanel, 'push');
+            pauseBtn.Text = '⏸';
+            pauseBtn.Position = [obj.gameWidth - 70, obj.gameHeight - 50, 40, 40];
+            pauseBtn.FontSize = 24;
+            pauseBtn.BackgroundColor = [0.9, 0.9, 0.9];
+            pauseBtn.ButtonPushedFcn = @(src, event) obj.togglePause();
+
+            % 設置控制監聽
+            set(obj.MainFig, 'KeyPressFcn', @(src, event) obj.handleKeyPress(event));
+            set(obj.MainFig, 'WindowButtonMotionFcn', @(src, event) obj.trackMousePosition());
+            set(obj.MainFig, 'WindowButtonDownFcn', @(src, event) obj.handleMouseClick());
+
+            % 初始化遊戲元素
+            obj.initPlayer();
+            obj.initEnemies(levelNum);
+
+            % 添加時間標籤
+            obj.TimeLabel = uilabel(obj.MainFig);
+            obj.TimeLabel.Text = '時間: 00:00';
+            obj.TimeLabel.Position = [50, obj.ScreenHeight - 50, 200, 30];
+            obj.TimeLabel.FontSize = 18;
+            obj.TimeLabel.FontColor = 'w';
+            obj.TimeLabel.BackgroundColor = [0.1, 0.1, 0.4];
+
+
+            % 創建玩家生命與攻擊力顯示
+            obj.HealthLabel = uilabel(obj.MainFig);
+            obj.HealthLabel.Text = sprintf('生命值: %d', obj.Player.Health);
+            obj.HealthLabel.Position = [50, obj.ScreenHeight - 100, 200, 30];
+            obj.HealthLabel.FontSize = 18;
+            obj.HealthLabel.FontColor = 'w';
+            obj.HealthLabel.BackgroundColor = [0.1, 0.1, 0.4];
+
+            obj.AttackLabel = uilabel(obj.MainFig);
+            obj.AttackLabel.Text = sprintf('攻擊力: %d', obj.Player.Attack);
+            obj.AttackLabel.Position = [50, obj.ScreenHeight - 150, 200, 30];
+            obj.AttackLabel.FontSize = 18;
+            obj.AttackLabel.FontColor = 'w';
+            obj.AttackLabel.BackgroundColor = [0.1, 0.1, 0.4];
+            obj.FireballFrames = cell(1, 5);
+            for i = 1:5
+                try
+                    % Load fireball image
+                    % 定義基礎路徑
+                    basePath = 'C:\Users\User\Desktop\matlab_\final';
+                    % 構建完整的圖片路徑
+                    imagePath = fullfile(basePath, 'images', 'FB00', sprintf('FB00%d.png', i));
+
+                    [img, ~, alpha] = imread(imagePath);
+                    img = im2double(img); % 轉換為雙精度，保持色彩一致性
+                    obj.FireballFrames{i} = struct('Image', img, 'Alpha', alpha);
+                catch e
+                    warning('Failed to load fireball image %d: %s', i, e.message);
+                    % Create a fallback orange circle as fireball
+                    img = ones(30, 30, 3, 'uint8');
+                    img(:,:,1) = 255; % Red
+                    img(:,:,2) = 165; % Green (make orange)
+                    img(:,:,3) = 0;   % Blue
+                    obj.FireballFrames{i} = struct('Image', img, 'Alpha', []);
+                end
+            end
+            % 確保計時器處於運行狀態
+            if isempty(obj.Timer) || ~isvalid(obj.Timer)
+                obj.Timer = timer('ExecutionMode', 'fixedRate', 'Period', 0.016, ...
+                    'TimerFcn', @(src, event) obj.gameLoop());
+            end
+
+            if strcmp(get(obj.Timer, 'Running'), 'off')
+                start(obj.Timer);
+            end
+        end
+        % 初始化暫停選單（新增）
+        function initPauseMenu(obj)
+            % 半透明背景面板已在構造函數中建立
+
+            % 暫停選單容器
+            menuContainer = uipanel(obj.PausePanel, ...
+                'Position', [(obj.gameWidth - 300) / 2, (obj.gameHeight - 300) / 2, 300, 300], ...
+                'BackgroundColor', [0.3, 0.3, 0.3]);
+
+            % 暫停標籤
+            uilabel(menuContainer, ...
+                'Text', '遊戲已暫停', ...
+                'Position', [50, 250, 200, 40], ...
+                'FontSize', 24, ...
+                'FontColor', 'w', ...
+                'HorizontalAlignment', 'center');
+
+            % 按鈕樣式
+            btnStyle = {'FontSize', 18, 'FontColor', 'w', 'FontWeight', 'bold'};
+
+            % 繼續按鈕
+            resumeBtn = uibutton(menuContainer, 'push', ...
+                'Text', '繼續遊戲', ...
+                'Position', [50, 200, 200, 60], ...
+                'BackgroundColor', [0.2, 0.6, 0.2], ...
+                'ButtonPushedFcn', @(src, event) obj.togglePause(), ...
+                btnStyle{:});
+
+            % 主選單按鈕
+            mainMenuBtn = uibutton(menuContainer, 'push', ...
+                'Text', '返回主畫面', ...
+                'Position', [50, 110, 200, 60], ...
+                'BackgroundColor', [0.2, 0.2, 0.6], ...
+                'ButtonPushedFcn', @(src, event) obj.switchPanel('main'), ...
+                btnStyle{:});
+
+            % 離開遊戲按鈕
+            quitBtn = uibutton(menuContainer, 'push', ...
+                'Text', '離開遊戲', ...
+                'Position', [50, 20, 200, 60], ...
+                'BackgroundColor', [0.6, 0.2, 0.2], ...
+                'ButtonPushedFcn', @(src, event) obj.quitGame(), ...
+                btnStyle{:});
+        end
+        %  modify from initpausemenu
+        function initGameOverScreen(obj)
+            % 半透明背景面板已在構造函數中建立
+
+            % 暫停選單容器
+            gameOverContainer = uipanel(obj.GameOverPanel, ...
+                'Position', [(obj.gameWidth - 300) / 2, (obj.gameHeight - 300) / 2, 300, 300], ...
+                'BackgroundColor', [0.3, 0.3, 0.3]);
+
+            % 暫停標籤
+            uilabel(gameOverContainer, ...
+                'Text', 'YOU ARE SO DEAD', ...
+                'Position', [0, 250, 300, 40], ...
+                'FontSize', 24, ...
+                'FontColor', 'w', ...
+                'HorizontalAlignment', 'center');
+
+            % 按鈕樣式
+            btnStyle = {'FontSize', 18, 'FontColor', 'w', 'FontWeight', 'bold'};
+
+            % 重新按鈕
+            retryBtn = uibutton(gameOverContainer, 'push', ...
+                'Text', '重玩', ...
+                'Position', [50, 200, 200, 60], ...
+                'BackgroundColor', [0.2, 0.6, 0.2], ...
+                'ButtonPushedFcn', @(src, event) obj.retry(), ... % TODO: add retry()/restart() at gamemanager
+                btnStyle{:});
+
+            % 主選單按鈕
+            mainMenuBtn = uibutton(gameOverContainer, 'push', ...
+                'Text', '返回主畫面', ...
+                'Position', [50, 110, 200, 60], ...
+                'BackgroundColor', [0.2, 0.2, 0.6], ...
+                'ButtonPushedFcn', @(src, event) obj.switchPanel('main'), ...
+                btnStyle{:});
+
+            % 離開遊戲按鈕
+            quitBtn = uibutton(gameOverContainer, 'push', ...
+                'Text', '離開遊戲', ...
+                'Position', [50, 20, 200, 60], ...
+                'BackgroundColor', [0.6, 0.2, 0.2], ...
+                'ButtonPushedFcn', @(src, event) obj.quitGame(), ...
+                btnStyle{:});
+        end
+        function initVictoryScreen(obj)
+            % 計算中央位置
+            centerX = obj.ScreenWidth / 2;
+            centerY = obj.ScreenHeight / 2;
+
+            vicLbl = uilabel(obj.VictoryPanel);
+            vicLbl.Text = 'victory!!!';
+            vicLbl.FontSize = 48;
+            vicLbl.FontColor = 'w';
+            vicLbl.Position = [centerX - 100, centerY + 150, 200, 100];
+            vicLbl.HorizontalAlignment = 'center'; % maybe unnecessary
+
+            % 按鈕基礎樣式
+            btnStyle = {; ...
+                'FontSize', 24, ...
+                'BackgroundColor', [0.2, 0.6, 1], ... % 主畫面按鈕藍色
+                'FontColor', 'w'};
+
+            % 選擇關卡按鈕
+            levelBtn = uibutton(obj.VictoryPanel, 'push', ...
+                'Text', '選擇關卡', ...
+                'Position', [centerX - 100, centerY, 200, 60], ...
+                'ButtonPushedFcn', @(src, event) obj.switchPanel('level'), ...
+                btnStyle{:});
+
+            % 返回主畫面按鈕
+            mainBtn = uibutton(obj.VictoryPanel, 'push', ...
+                'Text', '主畫面', ...
+                'Position', [centerX - 100, centerY - 100, 200, 60], ...
+                'ButtonPushedFcn', @(src, event) obj.switchPanel('main'), ...
+                btnStyle{:});
+
+            % 退出遊戲按鈕(紅色突出)
+            quitBtn = uibutton(obj.VictoryPanel, 'push', ...
+                'Text', '退出遊戲', ...
+                'Position', [centerX - 100, centerY - 200, 200, 60], ...
+                'ButtonPushedFcn', @(src, event) obj.quitGame(), ...
+                'FontSize', 24, ...
+                'FontColor', 'w', ...
+                'BackgroundColor', [0.8, 0.2, 0.2]); % 紅色
+        end
+        function initPlayer(obj)
+            % 玩家角色初始化
+            obj.Player = struct( ...
+                'Position', [400, 50], ...
+                'Size', 30, ...
+                'Health', 1314, ...
+                'Attack', 520, ...
+                'Graphic', []);
+
+            % 創建玩家圖形
+            obj.Player.Graphic = rectangle(obj.GameAxes, 'Position', [0, 0, 30, 30], ...
+                'FaceColor', 'b');
+
+            % 更新位置
+            updatePosition(obj.Player.Graphic, obj.Player.Position);
+        end
+        function initEnemies(obj, levelNum)
+            obj.Enemies = struct();
+
+            switch levelNum
+                case 1
+                    % 近戰敵人配置
+                    for i = 1:3
+                        obj.Enemies(i).Type = 'melee';
+                        obj.Enemies(i).Position = [randi([50, 750]), 550];
+                        obj.Enemies(i).AwarenessDistance = 300;
+                        obj.Enemies(i).Health = 1314;
+                        obj.Enemies(i).Attack = 520;
+                        obj.Enemies(i).AttackRange = 50;
+                        obj.Enemies(i).AttackCooldown = 0;
+                        obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                            'Position', [0, 0, 30, 30], 'FaceColor', 'r');
+                        updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+                    end
+            end
+        end
+        function initBOSS(obj)
+            % 創建 BOSS 數據結構
+            newBoss = struct( ...
+                'Type', 'boss', ...
+                'Position', [obj.gameWidth / 2, obj.gameHeight - 100], ...
+                'AwarenessDistance', 114514, ... % not used but hove to add or have error:
+                'Health', 100, ...
+                'Attack', 100, ...
+                'AttackRange', 114514, ... % Subscripted assignment between dissimilar structures
+                'AttackCooldown', 0, ...
+                'Graphic', [] ...
+                );
+
+            % 創建 BOSS 圖形（不同顏色和大小）
+            newBoss.Graphic = rectangle(obj.GameAxes, ...
+                'Position', [0, 0, 60, 60], ... % 更大尺寸
+                'FaceColor', [1, 0, 1], ... % 洋紅色
+                'Curvature', 0.3); % 圓角矩形
+
+            % 加入敵人陣列
+            if isempty(obj.Enemies)
+                obj.Enemies = newBoss;
+            else
+                obj.Enemies(end+1) = newBoss;
+            end
+
+            % 更新標記
+            obj.BossAdded = true;
+            fprintf('BOSS 已登場！\n'); % 調試用輸出
+            updatePosition(newBoss.Graphic, newBoss.Position);
+        end
+        % 遊戲控制與輸入處理
+        function handleKeyPress(obj, event)
+            % 暫停切換
+            if strcmp(event.Key, 'p')
+                currentState = obj.MainFig.WindowState;
+                obj.togglePause();
+                obj.MainFig.WindowState = currentState;
+                return;
+            end
+
+            % 遊戲進行中才處理移動
+            if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                speed = 10;
+                originalPos = obj.Player.Position;
+                newPos = originalPos;
+
+                switch event.Key
+                    case 'w', newPos(2) = min(obj.gameHeight-30, originalPos(2)+speed);
+                    case 's', newPos(2) = max(30, originalPos(2)-speed);
+                    case 'a', newPos(1) = max(30, originalPos(1)-speed);
+                    case 'd', newPos(1) = min(obj.gameWidth-30, originalPos(1)+speed);
+                end
+
+                % 檢查新位置是否有碰撞
+                canMove = true;
+
+                % 必須確保敵人數組存在並有內容
+                if isfield(obj, 'Enemies') && ~isempty(obj.Enemies)
+                    for i = 1:length(obj.Enemies)
+                        % 必須確保每個敵人都有Position字段
+                        if isfield(obj.Enemies(i), 'Position')
+                            if obj.checkAABBCollision(newPos, obj.Player.Size, obj.Enemies(i).Position, 30)
+                                canMove = false;
+                                break;
+                            end
+                        end
+                    end
+                end
+
+                % 只有在不碰撞時才移動
+                if canMove
+                    obj.Player.Position = newPos;
+                end
+
+                % 更新玩家圖形
+                if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                    updatePosition(obj.Player.Graphic, obj.Player.Position);
+                end
+            end
+        end
+        function updateBullets(obj)
+            % 若無子彈則跳過
+            if isempty(obj.Bullets)
+                return;
+            end
+
+            % 用於標記要刪除的子彈
+            bulletsToRemove = false(1, length(obj.Bullets));
+
+            % 遍歷所有子彈
+            for i = 1:length(obj.Bullets)
+                obj.Bullets(i).Position = obj.Bullets(i).Position + obj.Bullets(i).Velocity;
+                if obj.Bullets(i).IsBossBullet && isfield(obj.Bullets(i), 'AnimationFrame')
+                    % Update fireball animation
+                    try
+                        % Get current size
+                        w = diff(obj.Bullets(i).Graphic.XData);
+                        h = diff(obj.Bullets(i).Graphic.YData);
+
+                        % Update position
+                        obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1)-w/2, obj.Bullets(i).Position(1)+w/2];
+                        obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2)-h/2, obj.Bullets(i).Position(2)+h/2];
+
+                        % Update animation frame
+                        obj.Bullets(i).AnimationTimer = obj.Bullets(i).AnimationTimer + 0.016; % Assuming 60 FPS
+                        if obj.Bullets(i).AnimationTimer >= obj.Bullets(i).AnimationSpeed
+                            % Reset timer
+                            obj.Bullets(i).AnimationTimer = 0;
+
+                            % Advance frame
+                            obj.Bullets(i).AnimationFrame = mod(obj.Bullets(i).AnimationFrame, obj.Bullets(i).FrameCount) + 1;
+
+                            % Get next frame and rotate it
+                            frame = obj.FireballFrames{obj.Bullets(i).AnimationFrame};
+                            img = frame.Image;
+                            alpha = frame.Alpha;
+
+                            % Rotate image for direction
+                            rotatedImg = imrotate(img, -obj.Bullets(i).Angle, 'bicubic');
+                            if ~isempty(alpha)
+                                rotatedAlpha = imrotate(alpha, -obj.Bullets(i).Angle, 'bicubic');
+                                obj.Bullets(i).Graphic.AlphaData = rotatedAlpha;
+                            end
+
+                            % Update image
+                            obj.Bullets(i).Graphic.CData = rotatedImg;
+
+                            % Recalculate size and position after rotation
+                            [h, w, ~] = size(rotatedImg);
+                            obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1)-w/2, obj.Bullets(i).Position(1)+w/2];
+                            obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2)-h/2, obj.Bullets(i).Position(2)+h/2];
+                        end
+                    catch e
+                        % Failed to update graphic, mark for removal
+                        bulletsToRemove(i) = true;
+                        continue;
+                    end
+                else
+                    % Regular bullet update (unchanged)
+                    try
+                        obj.Bullets(i).Graphic.XData = obj.Bullets(i).Position(1);
+                        obj.Bullets(i).Graphic.YData = obj.Bullets(i).Position(2);
+                    catch
+                        bulletsToRemove(i) = true;
+                        continue;
+                    end
+
+                end
+                if obj.Bullets(i).Position(1) < obj.AxesXLim(1) || ...
+                        obj.Bullets(i).Position(1) > obj.AxesXLim(2) || ...
+                        obj.Bullets(i).Position(2) < obj.AxesYLim(1) || ...
+                        obj.Bullets(i).Position(2) > obj.AxesYLim(2)
+                    bulletsToRemove(i) = true;
+                end
+            end
+
+            % 刪除無效或超出範圍的子彈
+            obj.removeBullets(bulletsToRemove);
+        end
+        function updateEnemies(obj)
+            % 若無敵人則跳過
+            if isempty(obj.Enemies)
+                return;
+            end
+
+            % 處理每個敵人
+            for i = 1:length(obj.Enemies)
+                % 確保敵人圖形有效
+                if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
+                    % 根據敵人類型重建圖形
+                    if strcmp(obj.Enemies(i).Type, 'boss')
+                        % 特殊處理BOSS圖形
+                        obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                            'Position', [0, 0, 60, 60], ... % 更大尺寸
+                            'FaceColor', [1, 0, 1], ... % 洋紅色
+                            'Curvature', 0.3); % 圓角矩形
+                    else
+                        % 普通敵人圖形
+                        obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                            'Position', [0, 0, 30, 30], ...
+                            'FaceColor', 'r');
+                    end
+                    updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+                end
+
+                % 計算朝向玩家的方向向量
+                directionToPlayer = obj.Player.Position - obj.Enemies(i).Position;
+                distanceToPlayer = norm(directionToPlayer);
+                % 標準化方向向量
+                if distanceToPlayer > 0
+                    normalizedDirection = directionToPlayer / distanceToPlayer;
+                else
+                    normalizedDirection = [0, 0];
+                end
+
+                if strcmp(obj.Enemies(i).Type, 'boss')
+                    % BOSS專用邏輯
+                    obj.Enemies(i).AttackCooldown = max(0, obj.Enemies(i).AttackCooldown-0.016);
+
+                    % 冷卻結束時射擊
+                    if obj.Enemies(i).AttackCooldown <= 0
+
+                        % 發射BOSS子彈
+                        obj.fireBullet(obj.Enemies(i).Position, normalizedDirection, true, obj.Enemies(i).Attack);
+                        % 重置冷卻(2秒)
+                        obj.Enemies(i).AttackCooldown = 0.5;
+
+                    end
+                else
+
+                    % 處理敵人攻擊冷卻
+                    if obj.Enemies(i).AttackCooldown > 0
+                        obj.Enemies(i).AttackCooldown = obj.Enemies(i).AttackCooldown - 1;
+                    end
+
+                    % 檢查是否在攻擊範圍內且冷卻結束
+                    if distanceToPlayer <= obj.Enemies(i).AttackRange && obj.Enemies(i).AttackCooldown <= 0
+                        % 執行攻擊
+                        obj.Player.Health = obj.Player.Health - obj.Enemies(i).Attack;
+
+                        % TODO:修改BOSS的攻擊
+
+                        % 設置攻擊冷卻（120幀）
+                        obj.Enemies(i).AttackCooldown = 120;
+
+                        % 視覺效果 - 閃爍敵人顏色表示攻擊
+                        originalColor = obj.Enemies(i).Graphic.FaceColor;
+                        obj.Enemies(i).Graphic.FaceColor = [1, 1, 0]; % 黃色閃爍
+                        pause(0.05);
+                        obj.Enemies(i).Graphic.FaceColor = originalColor;
+
+                        % 檢查玩家是否死亡
+                        if obj.Player.Health <= 0
+                            obj.showGameOverScreen();
+                            return;
+                        end
+                    end
+
+                    % % 跳過 BOSS 移動
+                    % if strcmp(obj.Enemies(i).Type, 'boss')
+                    %     continue;
+                    % end
+                    % 僅在感知範圍內追蹤玩家
+                    if distanceToPlayer <= obj.Enemies(i).AwarenessDistance
+
+                        % 設定移動速度
+                        switch obj.Enemies(i).Type
+                            case 'melee'
+                                moveSpeed = 2;
+                            case 'ranged'
+                                moveSpeed = 1;
+                            otherwise
+                                moveSpeed = 1.5;
+                        end
+
+                        % 保存原始位置
+                        originalPos = obj.Enemies(i).Position;
+
+                        % 計算潛在的新位置
+                        newPos = originalPos + normalizedDirection * moveSpeed;
+
+                        % 檢查是否會與玩家碰撞
+                        willCollideWithPlayer = obj.checkAABBCollision(newPos, 30, obj.Player.Position, obj.Player.Size);
+
+                        % 檢查是否會與其他敵人碰撞
+                        willCollideWithEnemy = false;
+                        for j = 1:length(obj.Enemies)
+                            if i ~= j && obj.checkAABBCollision(newPos, 30, obj.Enemies(j).Position, 30)
+                                willCollideWithEnemy = true;
+                                break;
+                            end
+                        end
+
+                        % 只有在沒有碰撞時才移動
+                        if ~willCollideWithPlayer && ~willCollideWithEnemy
+                            obj.Enemies(i).Position = newPos;
+                        end
+
+                        % 更新敵人圖形位置
+                        updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+                    end
+                end
+            end
+        end
+        function checkBulletCollisions(obj)
+            % 無子彈或敵人則跳過
+            if isempty(obj.Bullets) || isempty(obj.Enemies)
+                return;
+            end
+
+            % 標記要刪除的子彈
+            bulletsToRemove = false(1, length(obj.Bullets));
+            % 標記要刪除的敵人
+            enemiesToRemove = false(1, length(obj.Enemies));
+
+            % 檢查每顆子彈與每個敵人是否碰撞
+            for b = 1:length(obj.Bullets)
+                % 確保子彈圖形有效
+                if ~isfield(obj.Bullets(b), 'Graphic') || ~isvalid(obj.Bullets(b).Graphic)
+                    bulletsToRemove(b) = true;
+                    continue;
+                end
+                if obj.Bullets(b).IsBossBullet
+                    % Handle fireball collision with player
+                    dist = norm(obj.Bullets(b).Position - obj.Player.Position);
+                    collisionRadius = obj.Player.Size / 2;
+
+                    % Determine collision size based on bullet type
+                    if isfield(obj.Bullets(b), 'Size')
+                        bulletSize = obj.Bullets(b).Size;
+                    else
+                        bulletSize = 15; % Default size for old-style boss bullets
+                    end
+
+                    if dist < (collisionRadius + bulletSize)
+                        obj.Player.Health = obj.Player.Health - obj.Bullets(b).Damage;
+                        bulletsToRemove(b) = true;
+                    end
+                else
+                    for e = 1:length(obj.Enemies)
+                        % 確保敵人圖形有效
+                        if ~isfield(obj.Enemies(e), 'Graphic') || ~isvalid(obj.Enemies(e).Graphic)
+                            continue;
+                        end
+
+                        dist = norm(obj.Bullets(b).Position-obj.Enemies(e).Position);
+
+                        % 若距離小於敵人半徑，判定為碰撞
+                        if dist < 15
+
+                            bulletsToRemove(b) = true;
+
+                            obj.Enemies(e).Health = obj.Enemies(e).Health - obj.Player.Attack;
+
+                            if obj.Enemies(e).Health <= 0
+                                enemiesToRemove(e) = true;
+                            end
+
+                            break; % 一顆子彈只碰撞一次
+                        end
+                    end
+                end
+            end
+
+            % 刪除碰撞的子彈
+            obj.removeBullets(bulletsToRemove);
+
+            % 刪除死亡的敵人
+            obj.removeEnemies(enemiesToRemove);
+        end
+        function resolveEnemyCollisions(obj)
+            % 若怪物數量小於2，則不需檢查碰撞
+            if length(obj.Enemies) < 2
+                return;
+            end
+
+            % 檢查每對怪物
+            for i = 1:length(obj.Enemies) - 1
+                for j = i + 1:length(obj.Enemies)
+                    % 檢查碰撞
+                    if obj.checkAABBCollision(obj.Enemies(i).Position, 30, ...
+                            obj.Enemies(j).Position, 30)
+                        % 計算從怪物j到怪物i的方向向量
+                        direction = obj.Enemies(i).Position - obj.Enemies(j).Position;
+
+                        % 標準化方向向量
+                        if norm(direction) > 0
+                            direction = direction / norm(direction);
+                        else
+                            % 如果在同一點，隨機推開
+                            angle = rand() * 2 * pi;
+                            direction = [cos(angle), sin(angle)];
+                        end
+
+                        % 增加分離距離
+                        separation = 5.0; % 增加至5.0（原為2.0）
+
+                        % 分離兩個敵人
+                        obj.Enemies(i).Position = obj.Enemies(i).Position + direction * separation;
+                        obj.Enemies(j).Position = obj.Enemies(j).Position - direction * separation;
+
+                        % 更新圖形位置
+                        updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+                        updatePosition(obj.Enemies(j).Graphic, obj.Enemies(j).Position);
+                    end
+                end
+            end
+        end
+        function checkPlayerEnemyCollision(obj)
+            % 檢查玩家與敵人碰撞
+            if isempty(obj.Enemies)
+                return;
+            end
+
+            % 檢查每個敵人
+            for i = 1:length(obj.Enemies)
+                if obj.checkAABBCollision(obj.Player.Position, obj.Player.Size, ...
+                        obj.Enemies(i).Position, 30)
+                    % 計算從敵人到玩家的方向向量
+                    direction = obj.Player.Position - obj.Enemies(i).Position;
+
+                    % 標準化方向向量
+                    if norm(direction) > 0
+                        direction = direction / norm(direction);
+                    else
+                        direction = [0, 1]; % 預設方向
+                    end
+
+                    % 計算所需的最小分離距離
+                    minDistance = (obj.Player.Size + 30) / 2 + 2; % 半尺寸和加上緩衝
+
+                    % 計算目前距離
+                    currentDistance = norm(obj.Player.Position-obj.Enemies(i).Position);
+
+                    % 計算需要推開的距離
+                    pushDistance = minDistance - currentDistance;
+
+                    % 只有需要分離時才移動
+                    if pushDistance > 0
+                        obj.Player.Position = obj.Player.Position + direction * pushDistance;
+                        updatePosition(obj.Player.Graphic, obj.Player.Position);
+                    end
+
+                    return; % 處理完一個碰撞後返回
+                end
+            end
+        end
+        function fireBullet(obj, startPos, direction, isBossBullet, attackerAttack)
+            wasHeld = ishold(obj.GameAxes);
+            hold(obj.GameAxes, 'on');
+            if isBossBullet && ~isempty(obj.FireballFrames)
+                % Calculate angle for rotation (in degrees, 0 = right)
+                angle = atan2(direction(2), direction(1)) * 180 / pi;
+
+                % Get the first frame
+                frame = obj.FireballFrames{1};
+                img = frame.Image;
+                alpha = frame.Alpha;
+
+                % Rotate the image to point in direction of travel
+                rotatedImg = imrotate(img, -angle);
+                if ~isempty(alpha)
+                    rotatedAlpha = imrotate(alpha, -angle);
+                else
+                    rotatedAlpha = [];
+                end
+
+                % Calculate size and positioning
+                [h, w, ~] = size(rotatedImg);
+
+                % Create fireball image
+                hold(obj.GameAxes, 'on');
+                if ~isempty(rotatedAlpha)
+                    h_img = image(obj.GameAxes, [startPos(1)-w/2, startPos(1)+w/2], ...
+                        [startPos(2)-h/2, startPos(2)+h/2], ...
+                        rotatedImg, 'AlphaData', rotatedAlpha);
+                else
+                    h_img = image(obj.GameAxes, [startPos(1)-w/2, startPos(1)+w/2], ...
+                        [startPos(2)-h/2, startPos(2)+h/2], ...
+                        rotatedImg);
+                end
+                hold(obj.GameAxes, 'off');
+
+                % Create new bullet with all fields
+                newBullet = struct( ...
+                    'Position', startPos, ...
+                    'Velocity', direction * 3, ...
+                    'Damage', attackerAttack, ...
+                    'IsBossBullet', true, ...
+                    'Graphic', h_img, ...
+                    'AnimationFrame', 1, ...
+                    'FrameCount', length(obj.FireballFrames), ...
+                    'AnimationTimer', 0, ...
+                    'AnimationSpeed', 0.1, ...
+                    'Angle', angle, ...
+                    'Size', 20);
+            else
+                % Regular bullet parameters
+                markerSize = 8;
+                color = [0, 0, 0]; % Black
+                bulletSpeed = 15;
+
+                % Create bullet graphic
+                bulletGraphic = plot(obj.GameAxes, startPos(1), startPos(2), 'o', ...
+                    'MarkerSize', markerSize, ...
+                    'MarkerFaceColor', color, ...
+                    'MarkerEdgeColor', color);
+
+                % Create regular bullet with all fields (default values for animation fields)
+                newBullet = struct( ...
+                    'Position', startPos, ...
+                    'Velocity', direction*bulletSpeed, ...
+                    'Damage', attackerAttack, ...
+                    'IsBossBullet', isBossBullet, ...
+                    'Graphic', bulletGraphic, ...
+                    'AnimationFrame', 0, ... % Default value
+                    'FrameCount', 1, ... % Default value
+                    'AnimationTimer', 0, ... % Default value
+                    'AnimationSpeed', 0, ... % Default value
+                    'Angle', 0, ... % Default value
+                    'Size', markerSize); % Use marker size
+            end
+
+            % Add to bullets array
+            if isempty(obj.Bullets)
+                obj.Bullets = newBullet;
+            else
+                obj.Bullets(end+1) = newBullet;
+            end
+            if ~wasHeld
+                hold(obj.GameAxes, 'off');
+            end
+        end
+
+        function removeBullets(obj, indices)
+            % 若沒有要刪除的子彈，直接返回
+            if ~any(indices)
+                return;
+            end
+
+            % 刪除圖形對象
+            for i = find(indices)
+                delete(obj.Bullets(i).Graphic);
+            end
+
+            % 從陣列中刪除
+            obj.Bullets(indices) = [];
+        end
+        function removeEnemies(obj, indices)
+            % 若沒有要刪除的敵人，直接返回
+            if ~any(indices)
+                return;
+            end
+            boss_dead = false;
+
+            % 刪除圖形對象
+            for i = find(indices)
+                delete(obj.Enemies(i).Graphic);
+                if strcmp(obj.Enemies(i).Type, 'boss')
+                    boss_dead = true;
+                end
+
+            end
+
+            % 從陣列中刪除
+            obj.Enemies(indices) = [];
+            if (boss_dead)
+                obj.showVictoryScreen();
+            end
+
+        end
+        function cleanupGameState(obj)
+            % 重置遊戲狀態
+            obj.isPaused = false;
+
+            % 清理遊戲對象
+            if ~isempty(obj.Bullets)
+                for i = 1:length(obj.Bullets)
+                    if isfield(obj.Bullets(i), 'Graphic') && isvalid(obj.Bullets(i).Graphic)
+                        delete(obj.Bullets(i).Graphic);
+                    end
+                end
+                obj.Bullets = struct('Position', {}, 'Velocity', {}, 'Damage', {}, 'IsBossBullet', {}, ...
+                    'Graphic', {}, 'AnimationFrame', {}, 'FrameCount', {}, ...
+                    'AnimationTimer', {}, 'AnimationSpeed', {}, 'Angle', {}, 'Size', {});
+
+            end
+
+            % 清理玩家資訊標籤
+            try
+                if ~isempty(obj.HealthLabel) && isvalid(obj.HealthLabel)
+                    delete(obj.HealthLabel);
+                end
+            catch
+                % 忽略錯誤
+            end
+            obj.HealthLabel = [];
+
+            try
+                if ~isempty(obj.AttackLabel) && isvalid(obj.AttackLabel)
+                    delete(obj.AttackLabel);
+                end
+            catch
+                % 忽略錯誤
+            end
+            obj.AttackLabel = [];
+
+            % 清理計時器
+            try
+                if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                    stop(obj.GameTimer);
+                    delete(obj.GameTimer);
+                end
+            catch
+            end
+            obj.GameTimer = [];
+
+            % 清理時間標籤
+            try
+                if ~isempty(obj.TimeLabel) && isvalid(obj.TimeLabel)
+                    delete(obj.TimeLabel);
+                end
+            catch
+
+            end
+            obj.TimeLabel = [];
+
+            % 清理敵人與玩家
+            if ~isempty(obj.Enemies)
+                for i = 1:length(obj.Enemies)
+                    if isfield(obj.Enemies(i), 'Graphic') && isvalid(obj.Enemies(i).Graphic)
+                        delete(obj.Enemies(i).Graphic);
+                    end
+                end
+            end
+            obj.Enemies = struct();
+
+            if isfield(obj, 'Player') && ~isempty(obj.Player) && isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                delete(obj.Player.Graphic);
+            end
+            obj.Player = [];
+            obj.BossAdded = false;
+        end
+        function showVictoryScreen(obj)
+            % 停止遊戲循環
+            if ~isempty(obj.Timer) && isvalid(obj.Timer)
+                stop(obj.Timer);
+            end
+            if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
+                stop(obj.GameTimer);
+            end
+
+            % 隱藏其他面板
+            obj.CurrentPanel.Visible = 'off';
+
+            % 顯示勝利畫面
+            obj.VictoryPanel.Visible = 'on';
+            obj.CurrentPanel = obj.VictoryPanel;
+
+            % 強制更新畫面
+            drawnow;
+        end
+        function BossWarning(obj, state)
+            switch state
+                case 'start'
+                    % 只在未激活狀態下執行
+                    % if ~obj.BossWarningActive
+                    % obj.BossWarningActive = true;
+
+                    % 計算BOSS生成位置
+                    bossPos = [obj.gameWidth / 2, obj.gameHeight - 100];
+
+                    % 創建半透明紅色標記
+                    obj.BossWarningGraphic = rectangle(obj.GameAxes, ...
+                        'Position', [bossPos(1) - 50, bossPos(2) - 50, 100, 100], ...
+                        'FaceColor', [1, 0, 0], ...
+                        'FaceAlpha', 0.3, ...
+                        'EdgeColor', 'none', ...
+                        'Curvature', 0.3);
+
+                    % 啟動閃爍效果
+                    obj.startBlink();
+                    % end
+
+                case 'end'
+                    % 清除預警狀態
+                    % obj.BossWarningActive = false;
+
+                    % 移除閃爍計時器
+                    if ~isempty(obj.BlinkTimer) && isvalid(obj.BlinkTimer)
+                        stop(obj.BlinkTimer);
+                        delete(obj.BlinkTimer);
+                        obj.BlinkTimer = [];
+                    end
+
+                    % 移除預警圖形
+                    if isvalid(obj.BossWarningGraphic)
+                        delete(obj.BossWarningGraphic);
+                        obj.BossWarningGraphic = [];
+                    end
+            end
+        end
+        function updateTimer(obj)
+            THESHOWTIME = 10;
+            % % 檢查
+            % if ~isvalid(obj.TimeLabel)
+            %     return;
+            % end
+
+            % 更新計時
+            obj.ElapsedTime = obj.ElapsedTime + 1;
+            minutes = floor(obj.ElapsedTime / 60);
+            seconds = mod(obj.ElapsedTime, 60);
+
+            % 格式化顯示
+            obj.TimeStr = sprintf('%02d:%02d', minutes, seconds);
+
+            % 更新UI（確保在主線程執行）
+            if isvalid(obj.TimeLabel)
+                obj.TimeLabel.Text = ['時間: ' obj.TimeStr];
+            end
+            if (obj.ElapsedTime == THESHOWTIME - 3) && ~obj.BossAdded
+                obj.BossWarning('start');
+            end
+
+            if ~obj.BossAdded && obj.ElapsedTime >= THESHOWTIME && strcmp(obj.GameState, 'PLAYING')
+                obj.BossWarning('end');
+                obj.initBOSS()
+            end
+        end
+
+    end
+end
+
+% 更新位置輔助函數
+function updatePosition(graphicObj, pos)
+try
+    if ~isvalid(graphicObj)
+        warning('嘗試更新無效的圖形對象');
+
+        return;
+    end
+
+    % 取得目前的寬高
+    rectPos = graphicObj.Position;
+    width = rectPos(3);
+    height = rectPos(4);
+
+    % 設定新位置
+    graphicObj.Position = [pos(1) - width / 2, pos(2) - height / 2, width, height];
+catch
+    % 忽略錯誤，防止崩潰
+end
+end
