@@ -578,8 +578,8 @@ classdef final_all_FB < handle
                     % 構建完整的圖片路徑
                     imagePath = fullfile(basePath, 'images', 'FB00', sprintf('FB00%d.png', i));
 
-                    [img, ~, alpha] = imread(imagePath);
-                    img = im2double(img); % 轉換為雙精度，保持色彩一致性
+                    [img, map, alpha] = imread(imagePath);
+                    img = ind2rgb(img, map); % 轉換為雙精度，保持色彩一致性
                     obj.FireballFrames{i} = struct('Image', img, 'Alpha', alpha);
                 catch e
                     warning('Failed to load fireball image %d: %s', i, e.message);
@@ -865,6 +865,7 @@ classdef final_all_FB < handle
                         % Get current size
                         w = diff(obj.Bullets(i).Graphic.XData);
                         h = diff(obj.Bullets(i).Graphic.YData);
+                        
 
                         % Update position
                         obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1)-w/2, obj.Bullets(i).Position(1)+w/2];
@@ -1240,9 +1241,9 @@ classdef final_all_FB < handle
                     'AnimationFrame', 1, ...
                     'FrameCount', length(obj.FireballFrames), ...
                     'AnimationTimer', 0, ...
-                    'AnimationSpeed', 0.1, ...
+                    'AnimationSpeed', 0.075, ...
                     'Angle', angle, ...
-                    'Size', 20);
+                    'Size', 25);
             else
                 % Regular bullet parameters
                 markerSize = 8;
