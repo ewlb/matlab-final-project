@@ -364,8 +364,11 @@ classdef final_all_FB < handle
 
                 % 更新角色圖形
                 if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
-                    obj.Player.Graphic.CData = frame.Image;
-                    obj.Player.Graphic.AlphaData = frame.Alpha;
+                    flippedImage = flipud(frame.Image);
+    flippedAlpha = flipud(frame.Alpha);
+    
+    obj.Player.Graphic.CData = flippedImage;
+    obj.Player.Graphic.AlphaData = flippedAlpha;
                 end
             end
         end
@@ -880,7 +883,7 @@ classdef final_all_FB < handle
                 speed = 10;
                 originalPos = obj.Player.Position;
                 newPos = originalPos;
-                obj.IsMoving = true; % 假設開始移動
+                obj.Player.IsMoving = true; % 假設開始移動
                 switch event.Key
                     case 'w'
                         newPos(2) = min(obj.gameHeight-30, originalPos(2)+speed);
@@ -1577,7 +1580,7 @@ classdef final_all_FB < handle
         idleFrameHeight = floor(size(idleSheet, 1) / 4); % 確保整數
         idleFrameWidth = floor(size(idleSheet, 2) / 2);  % 確保整數
         
-        % idle取第2列
+        % 只取第2列的幀
         idleCol = 2;
         obj.IdleFrames = cell(numDirections, 1);
         
@@ -1596,10 +1599,6 @@ classdef final_all_FB < handle
             % 提取單一幀
             frame = idleSheet(startY:endY, startX:endX, :);
             alpha = idleAlpha(startY:endY, startX:endX);
-
-            frame = flipud(frame);
-            alpha = flipud(alpha);
-
             obj.IdleFrames{dir} = struct('Image', frame, 'Alpha', alpha);
         end
         
@@ -1625,10 +1624,7 @@ classdef final_all_FB < handle
                 % 提取幀和Alpha通道
                 frameImg = runSheet(startY:endY, startX:endX, :);
                 frameAlpha = runAlpha(startY:endY, startX:endX);
-
-                frameImg = flipud(frameImg);
-                frameAlpha = flipud(frameAlpha);
-
+                
                 obj.RunFrames{dir, frame} = struct('Image', frameImg, 'Alpha', frameAlpha);
             end
         end
@@ -1655,7 +1651,7 @@ end
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
                 switch event.Key
                     case {'w', 's', 'a', 'd'}
-                        obj.IsMoving = false;
+                        obj.Player.IsMoving = false;
                 end
             end
         end
