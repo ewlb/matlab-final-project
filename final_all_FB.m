@@ -55,13 +55,15 @@ classdef final_all_FB < handle
         % 圖片的基礎路徑
         basePath = 'C:\Users\User\Desktop\matlab_\final';
         % player animation property
-        IdleFrames      
-        RunFrames        
-        CurrentDirection = 3  % 1=上，2=左，3=下，4=右
-        IsMoving = false      
-        CurrentFrame = 1      
-        AnimationTimer = 0    
-        AnimationSpeed = 0.1  
+        IdleFrames
+        RunFrames
+        CurrentDirection = 3 % 1=上，2=左，3=下，4=右
+        IsMoving = false
+        CurrentFrame = 1
+        AnimationTimer = 0
+        AnimationSpeed = 0.1
+        % used to fix input latency
+        KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false)
     end
 
     methods
@@ -291,6 +293,7 @@ classdef final_all_FB < handle
                             'FaceColor', 'b');
                         updatePosition(obj.Player.Graphic, obj.Player.Position);
                     end
+                    obj.updatePlayerMovement();
 
                     % 檢查敵人圖形是否有效
                     for i = 1:length(obj.Enemies)
@@ -334,11 +337,64 @@ classdef final_all_FB < handle
                         obj.showGameOverScreen();
                         return;
                     end
-                    drawnow
+                    drawnow limitrate;
                 end
             catch ME
                 disp(['遊戲循環錯誤: ', ME.message]);
                 disp(getReport(ME));
+            end
+        end
+
+        function updatePlayerMovement(obj)
+            if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                speed = 5;
+                originalPos = obj.Player.Position;
+                newPos = originalPos;
+                moved = false;
+
+                % 根據按鍵狀態更新位置
+                if obj.KeysPressed.w
+                    newPos(2) = min(obj.gameHeight-30, originalPos(2)+speed);
+                    moved = true;
+                end
+                if obj.KeysPressed.s
+                    newPos(2) = max(30, originalPos(2)-speed);
+                    moved = true;
+                end
+                if obj.KeysPressed.a
+                    newPos(1) = max(30, originalPos(1)-speed);
+                    moved = true;
+                end
+                if obj.KeysPressed.d
+                    newPos(1) = min(obj.gameWidth-30, originalPos(1)+speed);
+                    moved = true;
+                end
+
+                % 只有在實際移動時才更新IsMoving狀態
+                obj.IsMoving = moved;
+
+                % 檢查碰撞
+                if moved
+                    canMove = true;
+
+                    % 敵人碰撞檢測...
+                    if isfield(obj, 'Enemies') && ~isempty(obj.Enemies)
+                        for i = 1:length(obj.Enemies)
+                            if isfield(obj.Enemies(i), 'Position')
+                                if obj.checkAABBCollision(newPos, obj.Player.Size, obj.Enemies(i).Position, 30)
+                                    canMove = false;
+                                    break;
+                                end
+                            end
+                        end
+                    end
+
+                    % 只有在不碰撞時才移動
+                    if canMove
+                        obj.Player.Position = newPos;
+                        obj.updatePlayerPosition();
+                    end
+                end
             end
         end
 
@@ -623,9 +679,9 @@ classdef final_all_FB < handle
                     warning('Failed to load fireball image %d: %s', i, e.message);
                     % Create a fallback orange circle as fireball
                     img = ones(30, 30, 3, 'uint8');
-                    img(:,:,1) = 255; % Red
-                    img(:,:,2) = 165; % Green (make orange)
-                    img(:,:,3) = 0;   % Blue
+                    img(:, :, 1) = 255; % Red
+                    img(:, :, 2) = 165; % Green (make orange)
+                    img(:, :, 3) = 0; % Blue
                     obj.FireballFrames{i} = struct('Image', img, 'Alpha', []);
                 end
             end
@@ -770,24 +826,24 @@ classdef final_all_FB < handle
         end
         function initPlayer(obj)
             % 玩家角色初始化
-            obj.Player = struct(...
-                'Position', [400, 50],...
-                'Size', 30,...
-                'Health', 1314,...
-                'Attack', 520,...
+            obj.Player = struct( ...
+                'Position', [400, 50], ...
+                'Size', 30, ...
+                'Health', 1314, ...
+                'Attack', 520, ...
                 'Graphic', []);
 
             obj.loadPlayerAnimations();
             % 如果動畫載入失敗，使用原有的矩形
             if ~isempty(obj.IdleFrames)
                 initialFrame = obj.IdleFrames{3}; % 向下idle
-                width = 60;  % 跟 updatePlayerPosition 一起改
+                width = 60; % 跟 updatePlayerPosition 一起改
                 height = 60;
-                obj.Player.Graphic = image(obj.GameAxes,...
-                    'CData', initialFrame.Image,...
-                    'AlphaData', initialFrame.Alpha,...
-                    'XData', [obj.Player.Position(1)-width/2, obj.Player.Position(1)+width/2],...
-                    'YData', [obj.Player.Position(2)-height/2, obj.Player.Position(2)+height/2]);
+                obj.Player.Graphic = image(obj.GameAxes, ...
+                    'CData', initialFrame.Image, ...
+                    'AlphaData', initialFrame.Alpha, ...
+                    'XData', [obj.Player.Position(1) - width / 2, obj.Player.Position(1) + width / 2], ...
+                    'YData', [obj.Player.Position(2) - height / 2, obj.Player.Position(2) + height / 2]);
             else
                 % 備用方案 - 藍色矩形
                 obj.Player.Graphic = rectangle(obj.GameAxes, 'Position', [0, 0, 30, 30], ...
@@ -801,12 +857,12 @@ classdef final_all_FB < handle
 
         function updatePlayerPosition(obj)
             if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
-                if ~isempty(obj.IdleFrames)&~isempty(obj.RunFrames)
+                if ~isempty(obj.IdleFrames) & ~isempty(obj.RunFrames)
                     % 使用圖像動畫時的更新
                     width = 60; % TODO:根據實際需要調整
                     height = 60;
-                    obj.Player.Graphic.XData = [obj.Player.Position(1)-width/2, obj.Player.Position(1)+width/2];
-                    obj.Player.Graphic.YData = [obj.Player.Position(2)-height/2, obj.Player.Position(2)+height/2];
+                    obj.Player.Graphic.XData = [obj.Player.Position(1) - width / 2, obj.Player.Position(1) + width / 2];
+                    obj.Player.Graphic.YData = [obj.Player.Position(2) - height / 2, obj.Player.Position(2) + height / 2];
                 else
                     % 使用矩形時的原有更新
                     updatePosition(obj.Player.Graphic, obj.Player.Position);
@@ -865,7 +921,7 @@ classdef final_all_FB < handle
             fprintf('BOSS 已登場！\n'); % 調試用輸出
             updatePosition(newBoss.Graphic, newBoss.Position);
         end
-        % 遊戲控制與輸入處理
+
         function handleKeyPress(obj, event)
             % 暫停切換
             if strcmp(event.Key, 'p')
@@ -877,54 +933,19 @@ classdef final_all_FB < handle
 
             % 遊戲進行中才處理移動
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
-                speed = 10;
-                originalPos = obj.Player.Position;
-                newPos = originalPos;
-                obj.IsMoving = true; % 假設開始移動
-                switch event.Key
-                    case 'w'
-                        newPos(2) = min(obj.gameHeight-30, originalPos(2)+speed);
-                        obj.CurrentDirection = 1; % 上
-                    case 'a'
-                        newPos(1) = max(30, originalPos(1)-speed);
-                        obj.CurrentDirection = 2; % 左
-                    case 's'
-                        newPos(2) = max(30, originalPos(2)-speed);
-                        obj.CurrentDirection = 3; % 下
-                    case 'd'
-                        newPos(1) = min(obj.gameWidth-30, originalPos(1)+speed);
-                        obj.CurrentDirection = 4; % 右
-                    otherwise
-                        obj.IsMoving = false;
-                end
+                % 更新按鍵狀態
+                if ismember(event.Key, {'w', 'a', 's', 'd'})
+                    obj.KeysPressed.(event.Key) = true;
 
-                % 檢查新位置是否有碰撞
-                canMove = true;
-
-                % 必須確保敵人數組存在並有內容
-                if isfield(obj, 'Enemies') && ~isempty(obj.Enemies)
-                    for i = 1:length(obj.Enemies)
-                        % 必須確保每個敵人都有Position字段
-                        if isfield(obj.Enemies(i), 'Position')
-                            if obj.checkAABBCollision(newPos, obj.Player.Size, obj.Enemies(i).Position, 30)
-                                canMove = false;
-                                break;
-                            end
-                        end
+                    % 設置移動狀態和方向
+                    obj.IsMoving = true;
+                    switch event.Key
+                        case 'w', obj.CurrentDirection = 1; % 上
+                        case 'a', obj.CurrentDirection = 2; % 左
+                        case 's', obj.CurrentDirection = 3; % 下
+                        case 'd', obj.CurrentDirection = 4; % 右
                     end
                 end
-
-                % 只有在不碰撞時才移動
-                if canMove
-                    obj.Player.Position = newPos;
-                end
-
-                % 更新玩家圖形
-                if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
-                    obj.updatePlayerPosition();
-                    % updatePosition(obj.Player.Graphic, obj.Player.Position);
-                end
-                obj.updatePlayerAnimation(0.016);
             end
         end
 
@@ -949,8 +970,8 @@ classdef final_all_FB < handle
 
 
                         % Update position
-                        obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1)-w/2, obj.Bullets(i).Position(1)+w/2];
-                        obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2)-h/2, obj.Bullets(i).Position(2)+h/2];
+                        obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1) - w / 2, obj.Bullets(i).Position(1) + w / 2];
+                        obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2) - h / 2, obj.Bullets(i).Position(2) + h / 2];
 
                         % Update animation frame
                         obj.Bullets(i).AnimationTimer = obj.Bullets(i).AnimationTimer + 0.016; % Assuming 60 FPS
@@ -978,8 +999,8 @@ classdef final_all_FB < handle
 
                             % Recalculate size and position after rotation
                             [h, w, ~] = size(rotatedImg);
-                            obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1)-w/2, obj.Bullets(i).Position(1)+w/2];
-                            obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2)-h/2, obj.Bullets(i).Position(2)+h/2];
+                            obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1) - w / 2, obj.Bullets(i).Position(1) + w / 2];
+                            obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2) - h / 2, obj.Bullets(i).Position(2) + h / 2];
                         end
                     catch e
                         % Failed to update graphic, mark for removal
@@ -1153,7 +1174,7 @@ classdef final_all_FB < handle
                 end
                 if obj.Bullets(b).IsBossBullet
                     % Handle fireball collision with player
-                    dist = norm(obj.Bullets(b).Position - obj.Player.Position);
+                    dist = norm(obj.Bullets(b).Position-obj.Player.Position);
                     collisionRadius = obj.Player.Size / 2;
 
                     % Determine collision size based on bullet type
@@ -1302,12 +1323,12 @@ classdef final_all_FB < handle
                 % Create fireball image
                 hold(obj.GameAxes, 'on');
                 if ~isempty(rotatedAlpha)
-                    h_img = image(obj.GameAxes, [startPos(1)-w/2, startPos(1)+w/2], ...
-                        [startPos(2)-h/2, startPos(2)+h/2], ...
+                    h_img = image(obj.GameAxes, [startPos(1) - w / 2, startPos(1) + w / 2], ...
+                        [startPos(2) - h / 2, startPos(2) + h / 2], ...
                         rotatedImg, 'AlphaData', rotatedAlpha);
                 else
-                    h_img = image(obj.GameAxes, [startPos(1)-w/2, startPos(1)+w/2], ...
-                        [startPos(2)-h/2, startPos(2)+h/2], ...
+                    h_img = image(obj.GameAxes, [startPos(1) - w / 2, startPos(1) + w / 2], ...
+                        [startPos(2) - h / 2, startPos(2) + h / 2], ...
                         rotatedImg);
                 end
                 hold(obj.GameAxes, 'off');
@@ -1315,7 +1336,7 @@ classdef final_all_FB < handle
                 % Create new bullet with all fields
                 newBullet = struct( ...
                     'Position', startPos, ...
-                    'Velocity', direction * 3, ...
+                    'Velocity', direction*3, ...
                     'Damage', attackerAttack, ...
                     'IsBossBullet', true, ...
                     'Graphic', h_img, ...
@@ -1540,7 +1561,7 @@ classdef final_all_FB < handle
 
             % 更新計時
             obj.ElapsedTime = obj.ElapsedTime + 1;
-            minutes = floor(obj.ElapsedTime / 60);
+            minutes = floor(obj.ElapsedTime/60);
             seconds = mod(obj.ElapsedTime, 60);
 
             % 格式化顯示
@@ -1548,7 +1569,7 @@ classdef final_all_FB < handle
 
             % 更新UI（確保在主線程執行）
             if isvalid(obj.TimeLabel)
-                obj.TimeLabel.Text = ['時間: ' obj.TimeStr];
+                obj.TimeLabel.Text = ['時間: ', obj.TimeStr];
             end
             if (obj.ElapsedTime == THESHOWTIME - 3) && ~obj.BossAdded
                 obj.BossWarning('start');
@@ -1561,101 +1582,115 @@ classdef final_all_FB < handle
         end
 
         function loadPlayerAnimations(obj)
-    % 加載靜止(idle)動畫
-    idlePath = fullfile(obj.basePath, 'images', 'body', 'idle.png');
-    runPath = fullfile(obj.basePath, 'images', 'body', 'run.png');
-    
-    try
-        % 載入靜止精靈表
-        [idleSheet, ~, idleAlpha] = imread(idlePath);
-        [runSheet, ~, runAlpha] = imread(runPath);
-        
-        % 設定幀數和方向數
-        numDirections = 4; % 上、左、下、右
-        
-        % 正確分割 idle 精靈表 (第2列的圖片)
-        idleFrameHeight = floor(size(idleSheet, 1) / 4); % 確保整數
-        idleFrameWidth = floor(size(idleSheet, 2) / 2);  % 確保整數
-        
-        % idle取第2列
-        idleCol = 2;
-        obj.IdleFrames = cell(numDirections, 1);
-        
-        % 分配4個方向的靜態幀 (上、左、下、右)
-        for dir = 1:numDirections
-            % 計算當前方向幀的位置 (第2列的位置)
-            startY = floor((dir-1) * idleFrameHeight) + 1;
-            startX = floor((idleCol-1) * idleFrameWidth) + 1;
-            endY = floor(startY + idleFrameHeight - 1);
-            endX = floor(startX + idleFrameWidth - 1);
-            
-            % 範圍安全檢查
-            endY = min(endY, size(idleSheet, 1));
-            endX = min(endX, size(idleSheet, 2));
-            
-            % 提取單一幀
-            frame = idleSheet(startY:endY, startX:endX, :);
-            alpha = idleAlpha(startY:endY, startX:endX);
+            % 加載靜止(idle)動畫
+            idlePath = fullfile(obj.basePath, 'images', 'body', 'idle.png');
+            runPath = fullfile(obj.basePath, 'images', 'body', 'run.png');
 
-            frame = flipud(frame);
-            alpha = flipud(alpha);
+            try
+                % 載入靜止精靈表
+                [idleSheet, ~, idleAlpha] = imread(idlePath);
+                [runSheet, ~, runAlpha] = imread(runPath);
 
-            obj.IdleFrames{dir} = struct('Image', frame, 'Alpha', alpha);
-        end
-        
-        % 處理運行動畫 - 每個方向有8幀
-        runFrameHeight = floor(size(runSheet, 1) / 4); % 確保整數
-        runFrameWidth = floor(size(runSheet, 2) / 8);  % 確保整數
-        
-        obj.RunFrames = cell(numDirections, 8); % 4個方向，每個方向8幀
-        
-        % 分配每個方向的運行幀
-        for dir = 1:numDirections
-            for frame = 1:8
-                % 計算當前幀的位置
-                startY = floor((dir-1) * runFrameHeight) + 1;
-                startX = floor((frame-1) * runFrameWidth) + 1;
-                endY = floor(startY + runFrameHeight - 1);
-                endX = floor(startX + runFrameWidth - 1);
-                
-                % 範圍安全檢查
-                endY = min(endY, size(runSheet, 1));
-                endX = min(endX, size(runSheet, 2));
-                
-                % 提取幀和Alpha通道
-                frameImg = runSheet(startY:endY, startX:endX, :);
-                frameAlpha = runAlpha(startY:endY, startX:endX);
+                % 設定幀數和方向數
+                numDirections = 4; % 上、左、下、右
 
-                frameImg = flipud(frameImg);
-                frameAlpha = flipud(frameAlpha);
+                % 正確分割 idle 精靈表 (第2列的圖片)
+                idleFrameHeight = floor(size(idleSheet, 1)/4); % 確保整數
+                idleFrameWidth = floor(size(idleSheet, 2)/2); % 確保整數
 
-                obj.RunFrames{dir, frame} = struct('Image', frameImg, 'Alpha', frameAlpha);
+                % idle取第2列
+                idleCol = 2;
+                obj.IdleFrames = cell(numDirections, 1);
+
+                % 分配4個方向的靜態幀 (上、左、下、右)
+                for dir = 1:numDirections
+                    % 計算當前方向幀的位置 (第2列的位置)
+                    startY = floor((dir - 1)*idleFrameHeight) + 1;
+                    startX = floor((idleCol - 1)*idleFrameWidth) + 1;
+                    endY = floor(startY+idleFrameHeight-1);
+                    endX = floor(startX + idleFrameWidth - 1);
+
+                    % 範圍安全檢查
+                    endY = min(endY, size(idleSheet, 1));
+                    endX = min(endX, size(idleSheet, 2));
+
+                    % 提取單一幀
+                    frame = idleSheet(startY:endY, startX:endX, :);
+                    alpha = idleAlpha(startY:endY, startX:endX);
+
+                    frame = flipud(frame);
+                    alpha = flipud(alpha);
+
+                    obj.IdleFrames{dir} = struct('Image', frame, 'Alpha', alpha);
+                end
+
+                % 處理運行動畫 - 每個方向有8幀
+                runFrameHeight = floor(size(runSheet, 1)/4); % 確保整數
+                runFrameWidth = floor(size(runSheet, 2)/8); % 確保整數
+
+                obj.RunFrames = cell(numDirections, 8); % 4個方向，每個方向8幀
+
+                % 分配每個方向的運行幀
+                for dir = 1:numDirections
+                    for frame = 1:8
+                        % 計算當前幀的位置
+                        startY = floor((dir - 1)*runFrameHeight) + 1;
+                        startX = floor((frame - 1)*runFrameWidth) + 1;
+                        endY = floor(startY+runFrameHeight-1);
+                        endX = floor(startX + runFrameWidth - 1);
+
+                        % 範圍安全檢查
+                        endY = min(endY, size(runSheet, 1));
+                        endX = min(endX, size(runSheet, 2));
+
+                        % 提取幀和Alpha通道
+                        frameImg = runSheet(startY:endY, startX:endX, :);
+                        frameAlpha = runAlpha(startY:endY, startX:endX);
+
+                        frameImg = flipud(frameImg);
+                        frameAlpha = flipud(frameAlpha);
+
+                        obj.RunFrames{dir, frame} = struct('Image', frameImg, 'Alpha', frameAlpha);
+                    end
+                end
+
+                % 設置初始狀態
+                obj.CurrentDirection = 1; % 預設向下
+                obj.IsMoving = false;
+                obj.CurrentFrame = 1;
+                obj.AnimationTimer = 0;
+                obj.AnimationSpeed = 0.1; % 動畫速度
+
+            catch ME
+                warning(ME.identifier, '載入動畫失敗：%s', ME.message);
+                obj.IdleFrames = {};
+                obj.RunFrames = {};
             end
         end
-        
-        % 設置初始狀態
-        obj.CurrentDirection = 1; % 預設向下
-        obj.IsMoving = false;
-        obj.CurrentFrame = 1;
-        obj.AnimationTimer = 0;
-        obj.AnimationSpeed = 0.1; % 動畫速度
-        
-    catch ME
-        warning(ME.identifier,'載入動畫失敗：%s', ME.message);
-        obj.IdleFrames = {};
-        obj.RunFrames = {};
-    end
-end
-
-
 
 
         function handleKeyRelease(obj, event)
-            % 當按鍵釋放時，停止移動
+            % 遊戲進行中才處理按鍵釋放
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
-                switch event.Key
-                    case {'w', 's', 'a', 'd'}
+                % 更新按鍵狀態
+                if ismember(event.Key, {'w', 'a', 's', 'd'})
+                    obj.KeysPressed.(event.Key) = false;
+
+                    % 檢查是否還有其他方向鍵被按下
+                    if ~any(structfun(@(x) x, obj.KeysPressed))
                         obj.IsMoving = false;
+                    else
+                        % 更新移動方向為最後一個還在按下的方向鍵
+                        if obj.KeysPressed.w
+                            obj.CurrentDirection = 1; % 上
+                        elseif obj.KeysPressed.a
+                            obj.CurrentDirection = 2; % 左
+                        elseif obj.KeysPressed.s
+                            obj.CurrentDirection = 3; % 下
+                        elseif obj.KeysPressed.d
+                            obj.CurrentDirection = 4; % 右
+                        end
+                    end
                 end
             end
         end
