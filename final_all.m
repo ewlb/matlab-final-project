@@ -1,4 +1,4 @@
-classdef final_all_FB < handle
+classdef final_all < handle
     properties
         % 遊戲狀態與視窗管理
         MainFig % 主視窗
@@ -75,7 +75,7 @@ classdef final_all_FB < handle
     end
 
     methods
-        function obj = final_all_FB()
+        function obj = final_all()
             % 創建唯一的主視窗並設置背景
             obj.MainFig = uifigure('Name', '太空射擊遊戲');
             obj.MainFig.WindowState = 'fullscreen';
@@ -218,11 +218,10 @@ classdef final_all_FB < handle
 
             % 確保舊的遊戲元素被清理
             obj.cleanupGameState();
-
+            
             % 初始化遊戲畫面
             obj.initGameScreen(levelNum);
             obj.switchPanel('game');
-
             % 重置計時器狀態
             obj.ElapsedTime = 0;
             obj.TimeStr = '00:00';
@@ -240,8 +239,13 @@ classdef final_all_FB < handle
         % 暫停功能
         function togglePause(obj)
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
-                % 暫停遊戲
+                
                 obj.isPaused = true;
+
+                % 重置所有按鍵 
+                obj.KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false);
+                obj.IsMoving = false;
+
                 if ~isempty(obj.Timer) && isvalid(obj.Timer)
                     stop(obj.Timer);
                 end
@@ -249,6 +253,7 @@ classdef final_all_FB < handle
                     stop(obj.GameTimer);
                 end
                 obj.switchPanel('pause');
+
             elseif obj.isPaused && strcmp(obj.GameState, 'PAUSED')
                 % 恢復遊戲
                 obj.isPaused = false;
@@ -261,6 +266,7 @@ classdef final_all_FB < handle
                 end
             end
         end
+
 
         function quitGame(obj)
             obj.cleanup();
@@ -438,22 +444,24 @@ classdef final_all_FB < handle
 
 
         % 顯示遊戲結束畫面
-        % should be modified from togglePause
         function showGameOverScreen(obj)
-
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
                 obj.isPaused = true;
+
+                % 重置按鍵狀態 
+                obj.KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false);
+                obj.IsMoving = false;
+
                 if ~isempty(obj.Timer) && isvalid(obj.Timer)
                     stop(obj.Timer);
                 end
                 if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
                     stop(obj.GameTimer);
-
                 end
                 obj.switchPanel('gameover');
             end
-
         end
+
 
         function retry(obj)
 
@@ -798,7 +806,7 @@ classdef final_all_FB < handle
                 'Text', '重玩', ...
                 'Position', [50, 200, 200, 60], ...
                 'BackgroundColor', [0.2, 0.6, 0.2], ...
-                'ButtonPushedFcn', @(src, event) obj.retry(), ... 
+                'ButtonPushedFcn', @(src, event) obj.retry(), ...
                 btnStyle{:});
 
             % 主選單按鈕
@@ -866,8 +874,8 @@ classdef final_all_FB < handle
                 'Health', 1314, ...
                 'Attack', 520, ...
                 'Graphic', []);
-
             obj.loadPlayerAnimations();
+
             % 如果動畫載入失敗，使用原有的矩形
             if ~isempty(obj.IdleFrames)
                 initialFrame = obj.IdleFrames{3}; % 向下idle
@@ -883,10 +891,16 @@ classdef final_all_FB < handle
                 obj.Player.Graphic = rectangle(obj.GameAxes, 'Position', [0, 0, 30, 30], ...
                     'FaceColor', 'b');
             end
+            % 重置玩家狀態
+            obj.CurrentDirection = 3; % 預設向下
+            obj.IsMoving = false;
+            obj.CurrentFrame = 1;
+            obj.AnimationTimer = 0;
 
+            % 重置按鍵狀態
+            obj.KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false);
             % 更新位置
             obj.updatePlayerPosition();
-            % updatePosition(obj.Player.Graphic, obj.Player.Position);
         end
 
         function updatePlayerPosition(obj)
@@ -905,26 +919,39 @@ classdef final_all_FB < handle
         end
 
         function initEnemies(obj, levelNum)
-            obj.Enemies = struct();
-
+             obj.Enemies = struct('Type', {}, 'Position', {}, 'AwarenessDistance', {}, ...
+                        'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
+                        'AttackCooldown', {}, 'SkillCooldown', {}, ...
+                        'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
+                        'SkillWarningTimer', {}, 'Graphic', {});
+    
             switch levelNum
                 case 1
                     % 近戰敵人配置
                     for i = 1:3
-                        obj.Enemies(i).Type = 'melee';
-                        obj.Enemies(i).Position = [randi([50, 750]), 550];
-                        obj.Enemies(i).AwarenessDistance = 300;
-                        obj.Enemies(i).Health = 1314;
-                        obj.Enemies(i).Attack = 520;
-                        obj.Enemies(i).AttackRange = 50;
-                        obj.Enemies(i).AttackCooldown = 0;
+                        obj.Enemies(i) = struct( ...
+                            'Type', 'melee', ...
+                            'Position', [randi([50, 750]), 550], ...
+                            'AwarenessDistance', 300, ...
+                            'Health', 1314, ...
+                            'Attack', 520, ...
+                            'AttackRange', 50, ...
+                            'AttackCooldown', 0, ...
+                            'SkillCooldown', 0, ...        % 一般小怪不使用技能，設為0
+                            'SkillMaxCooldown', 0, ...     % 一般小怪不使用技能，設為0
+                            'SkillWarning', [], ...        % 一般小怪不使用技能警示
+                            'SkillWarningTimer', 0, ...    % 一般小怪不使用技能警示
+                            'Graphic', [] ...
+                            );
+
+                        % 創建圖形
                         obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
                             'Position', [0, 0, 30, 30], 'FaceColor', 'r');
                         updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
                     end
             end
         end
-        
+
         function initBOSS(obj)
             % 創建 BOSS 數據結構
             newBoss = struct( ...
@@ -935,10 +962,14 @@ classdef final_all_FB < handle
                 'Attack', 100, ...
                 'AttackRange', 114514, ... % Subscripted assignment between dissimilar structures
                 'AttackCooldown', 0, ...
+                'SkillCooldown', 0, ...        % 技能冷卻
+                'SkillMaxCooldown', 2, ...     % boss技能冷卻為2秒
+                'SkillWarning', [], ...        % 技能警示圖形
+                'SkillWarningTimer', 0, ...    % 警示計時器
                 'Graphic', [] ...
                 );
 
-            % 創建 BOSS 圖形（不同顏色和大小）
+            % 創建 BOSS 圖形
             newBoss.Graphic = rectangle(obj.GameAxes, ...
                 'Position', [0, 0, 60, 60], ... % 更大尺寸
                 'FaceColor', [1, 0, 1], ... % 洋紅色
@@ -988,7 +1019,7 @@ classdef final_all_FB < handle
                 end
             end
         end
-        
+
         function updateBullets(obj)
             % 若無子彈則跳過
             if isempty(obj.Bullets)
@@ -1108,15 +1139,51 @@ classdef final_all_FB < handle
                 if strcmp(obj.Enemies(i).Type, 'boss')
                     % BOSS專用邏輯
                     obj.Enemies(i).AttackCooldown = max(0, obj.Enemies(i).AttackCooldown-0.016);
+                    obj.Enemies(i).SkillCooldown = max(0, obj.Enemies(i).SkillCooldown-0.016);
 
-                    % 冷卻結束時射擊
+                    % 更新技能警示計時器
+                    if obj.Enemies(i).SkillWarningTimer > 0
+                        obj.Enemies(i).SkillWarningTimer = obj.Enemies(i).SkillWarningTimer - 0.016;
+
+                        % 閃爍效果
+                        if ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning)
+                            % 創建閃爍效果
+                            blinkInterval = 0.2; % 每0.2秒閃爍一次
+                            blinkPhase = mod(obj.Enemies(i).SkillWarningTimer, blinkInterval);
+                            if blinkPhase < blinkInterval/2
+                                obj.Enemies(i).SkillWarning.FaceAlpha = 0.5;
+                            else
+                                obj.Enemies(i).SkillWarning.FaceAlpha = 0.1;
+                            end
+                        end
+
+                        % 警示結束，執行技能傷害
+                        if obj.Enemies(i).SkillWarningTimer <= 0
+                            % 移除警示圖形
+                            if ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning)
+                                warningCenter = [mean(obj.Enemies(i).SkillWarning.XData), ...
+                                    mean(obj.Enemies(i).SkillWarning.YData)];
+                                delete(obj.Enemies(i).SkillWarning);
+                                obj.Enemies(i).SkillWarning = [];
+
+                                % 執行技能傷害
+                                obj.executeBossSkillDamage(i, warningCenter, 60);
+                            end
+                        end
+                    end
+
+                    % 普通攻擊（火球）
                     if obj.Enemies(i).AttackCooldown <= 0
-
-                        % 發射BOSS子彈
                         obj.fireBullet(obj.Enemies(i).Position, normalizedDirection, true, obj.Enemies(i).Attack);
-                        % 重置冷卻(2秒)
                         obj.Enemies(i).AttackCooldown = 0.5;
+                    end
 
+                    % 技能攻擊邏輯
+                    if obj.Enemies(i).SkillCooldown <= 0 && obj.Enemies(i).SkillWarningTimer <= 0
+                        % 隨機決定是否使用技能（30%機率）
+                        % if rand() < 0.3
+                        obj.useBossSkill(i);
+                        % end
                     end
                 else
 
@@ -1447,14 +1514,18 @@ classdef final_all_FB < handle
             % 刪除圖形對象
             for i = find(indices)
                 delete(obj.Enemies(i).Graphic);
+
                 if strcmp(obj.Enemies(i).Type, 'boss')
                     boss_dead = true;
+                    % 使用 isgraphics 並先檢查是否為空
+                    if ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning)
+                        delete(obj.Enemies(i).SkillWarning);
+                    end
                 end
-
             end
 
-            % 從陣列中刪除
             obj.Enemies(indices) = [];
+
             if (boss_dead)
                 obj.showVictoryScreen();
             end
@@ -1519,8 +1590,14 @@ classdef final_all_FB < handle
             % 清理敵人與玩家
             if ~isempty(obj.Enemies)
                 for i = 1:length(obj.Enemies)
-                    if isfield(obj.Enemies(i), 'Graphic') && isvalid(obj.Enemies(i).Graphic)
+                    if isfield(obj.Enemies(i), 'Graphic') && isgraphics(obj.Enemies(i).Graphic)
                         delete(obj.Enemies(i).Graphic);
+                    end
+                    % 清理boss技能警示 
+                    if isfield(obj.Enemies(i), 'SkillWarning') && ...
+                            ~isempty(obj.Enemies(i).SkillWarning) && ...
+                            isgraphics(obj.Enemies(i).SkillWarning)
+                        delete(obj.Enemies(i).SkillWarning);
                     end
                 end
             end
@@ -1561,7 +1638,10 @@ classdef final_all_FB < handle
 
             % 清理技能動畫效果
             for i = 1:length(obj.SkillEffects)
-                if isvalid(obj.SkillEffects{i}.Graphic)
+                if ~isempty(obj.SkillEffects{i}) && ...
+                        isfield(obj.SkillEffects{i}, 'Graphic') && ...
+                        ~isempty(obj.SkillEffects{i}.Graphic) && ...
+                        isvalid(obj.SkillEffects{i}.Graphic)
                     delete(obj.SkillEffects{i}.Graphic);
                 end
             end
@@ -1733,7 +1813,7 @@ classdef final_all_FB < handle
                 end
 
                 % 設置初始狀態
-                obj.CurrentDirection = 1; % 預設向下
+                obj.CurrentDirection = 3; % 預設向下
                 obj.IsMoving = false;
                 obj.CurrentFrame = 1;
                 obj.AnimationTimer = 0;
@@ -1782,7 +1862,7 @@ classdef final_all_FB < handle
             % 使用技能
             skillDamage = obj.Player.Attack * 1.5;
             skillRadius = 60; % 技能範圍半徑
-            
+
             % 在鼠標位置創建範圍傷害
             obj.createAreaDamage(obj.MousePos, skillRadius, skillDamage);
 
@@ -1873,7 +1953,7 @@ classdef final_all_FB < handle
                     effectsToRemove(end+1) = i;
                 else
                     % 更新透明度（淡出效果）
-                    if isvalid(obj.SkillEffects{i}.Graphic)
+                    if ~isempty(obj.SkillEffects{i}.Graphic) && isgraphics(obj.SkillEffects{i}.Graphic)
                         alpha = obj.SkillEffects{i}.Timer / 0.5; % 原始持續時間
                         obj.SkillEffects{i}.Graphic.FaceAlpha = alpha * 0.6;
                     end
@@ -1908,6 +1988,77 @@ classdef final_all_FB < handle
                 end
             end
         end
+
+        function useBossSkill(obj, bossIndex)
+            % boss使用技能
+            if obj.Enemies(bossIndex).SkillCooldown > 0
+                return; % 技能在冷卻中
+            end
+
+            % 目標位置：玩家當前位置
+            targetPos = obj.Player.Position;
+            skillRadius = 60; % 技能範圍半徑
+
+            % 開始警示效果
+            obj.createBossSkillWarning(bossIndex, targetPos, skillRadius);
+
+            % 設置冷卻時間
+            obj.Enemies(bossIndex).SkillCooldown = obj.Enemies(bossIndex).SkillMaxCooldown;
+        end
+
+        function createBossSkillWarning(obj, bossIndex, center, radius)
+            % 創建紅色警示效果
+            wasHeld = ishold(obj.GameAxes);
+            hold(obj.GameAxes, 'on');
+
+            % 創建紅色圓形警示指示器
+            theta = linspace(0, 2*pi, 50);
+            x = center(1) + radius * cos(theta);
+            y = center(2) + radius * sin(theta);
+
+            % 創建填充圓形警示
+            warningEffect = fill(obj.GameAxes, x, y, [1, 0, 0], ... % 紅色
+                'FaceAlpha', 0.3, ...
+                'EdgeColor', [1, 0, 0], ...
+                'LineWidth', 2);
+
+            % 存儲警示效果到boss
+            obj.Enemies(bossIndex).SkillWarning = warningEffect;
+            obj.Enemies(bossIndex).SkillWarningTimer = 1.0; % 警示持續1秒
+
+            if ~wasHeld
+                hold(obj.GameAxes, 'off');
+            end
+        end
+
+        function executeBossSkillDamage(obj, bossIndex, center, radius)
+            % 執行boss技能傷害
+            skillDamage = obj.Enemies(bossIndex).Attack * 1.5; % boss攻擊力的1.5倍
+
+            % 檢查玩家是否在範圍內
+            distance = norm(obj.Player.Position - center);
+            if distance <= radius
+                obj.Player.Health = obj.Player.Health - skillDamage;
+
+                % 視覺效果 - 玩家受傷閃爍
+                if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                    % 創建受傷閃爍效果
+                    if ~isempty(obj.IdleFrames)
+                        % 如果使用圖像動畫，暫時改變透明度
+                        originalAlpha = obj.Player.Graphic.AlphaData;
+                        obj.Player.Graphic.AlphaData = originalAlpha * 0.5; % 半透明
+                        pause(0.1);
+                        obj.Player.Graphic.AlphaData = originalAlpha;
+                    end
+                end
+
+                fprintf('玩家受到Boss技能攻擊，傷害：%.1f\n', skillDamage);
+            end
+
+            % 創建技能傷害動畫效果
+            obj.createSkillAnimation(center, radius);
+        end
+
 
 
 
