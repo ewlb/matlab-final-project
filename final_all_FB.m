@@ -64,6 +64,14 @@ classdef final_all_FB < handle
         AnimationSpeed = 0.1
         % used to fix input latency
         KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false)
+
+        % 技能系統
+        SkillCooldown = 0  % 技能冷卻時間(秒)
+        SkillMaxCooldown = 3  % 最大冷卻時間
+        SkillLabel  % 技能冷卻顯示標籤
+        SkillEffects = {}  % 存儲技能動畫效果
+        SkillDescLabel  % 技能說明標籤
+        SkillIcon       % 技能圖標
     end
 
     methods
@@ -293,7 +301,6 @@ classdef final_all_FB < handle
                             'FaceColor', 'b');
                         updatePosition(obj.Player.Graphic, obj.Player.Position);
                     end
-                    obj.updatePlayerMovement();
 
                     % 檢查敵人圖形是否有效
                     for i = 1:length(obj.Enemies)
@@ -316,12 +323,15 @@ classdef final_all_FB < handle
                     end
 
                     % 更新遊戲邏輯
+                    obj.updatePlayerMovement();
                     obj.updateBullets();
                     obj.checkBulletCollisions();
                     obj.updateEnemies();
                     obj.resolveEnemyCollisions();
                     obj.checkPlayerEnemyCollision();
                     obj.updatePlayerAnimation(0.016);
+                    obj.updateSkillSystem(0.016);
+                    obj.updateSkillUI();
 
                     % 更新玩家資訊顯示
                     if isvalid(obj.HealthLabel)
@@ -651,7 +661,7 @@ classdef final_all_FB < handle
             obj.TimeLabel.BackgroundColor = [0.1, 0.1, 0.4];
 
 
-            % 創建玩家生命與攻擊力顯示
+            % 創建玩家標籤
             obj.HealthLabel = uilabel(obj.MainFig);
             obj.HealthLabel.Text = sprintf('生命值: %d', obj.Player.Health);
             obj.HealthLabel.Position = [50, obj.ScreenHeight - 100, 200, 30];
@@ -665,6 +675,30 @@ classdef final_all_FB < handle
             obj.AttackLabel.FontSize = 18;
             obj.AttackLabel.FontColor = 'w';
             obj.AttackLabel.BackgroundColor = [0.1, 0.1, 0.4];
+
+            % skill
+            obj.SkillIcon = uiimage(obj.MainFig);
+            obj.SkillIcon.ImageSource = 'C:\Users\User\Desktop\matlab_\final\images\skill\mikunani.png';
+            obj.SkillIcon.Position = [65, obj.ScreenHeight - 205, 30, 30]; % 調整大小和位置
+            obj.SkillIcon.Visible = 'off'; % 初始隱藏
+
+            obj.SkillLabel = uilabel(obj.MainFig);
+            obj.SkillLabel.Text = '';
+            obj.SkillLabel.Position = [50, obj.ScreenHeight - 200, 80, 40];
+            obj.SkillLabel.FontSize = 18;
+            obj.SkillLabel.FontColor = 'w';
+            obj.SkillLabel.BackgroundColor = [0.1, 0.1, 0.4];
+            obj.SkillLabel.HorizontalAlignment = 'center';
+            obj.SkillLabel.Visible = 'off';
+
+            % 技能說明 - 存儲到屬性中以便清理
+            obj.SkillDescLabel = uilabel(obj.MainFig);
+            obj.SkillDescLabel.Text = '技能(1)';
+            obj.SkillDescLabel.Position = [135, obj.ScreenHeight - 200, 100, 40];
+            obj.SkillDescLabel.FontSize = 14;
+            obj.SkillDescLabel.FontColor = 'w';
+            obj.SkillDescLabel.BackgroundColor = [0.1, 0.1, 0.4];
+
             obj.FireballFrames = cell(1, 5);
             for i = 1:5
                 try
@@ -764,7 +798,7 @@ classdef final_all_FB < handle
                 'Text', '重玩', ...
                 'Position', [50, 200, 200, 60], ...
                 'BackgroundColor', [0.2, 0.6, 0.2], ...
-                'ButtonPushedFcn', @(src, event) obj.retry(), ... % TODO: add retry()/restart() at gamemanager
+                'ButtonPushedFcn', @(src, event) obj.retry(), ... 
                 btnStyle{:});
 
             % 主選單按鈕
@@ -890,6 +924,7 @@ classdef final_all_FB < handle
                     end
             end
         end
+        
         function initBOSS(obj)
             % 創建 BOSS 數據結構
             newBoss = struct( ...
@@ -931,6 +966,11 @@ classdef final_all_FB < handle
                 return;
             end
 
+            if strcmp(event.Key, '1') && ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                obj.useSkill();
+                return;
+            end
+
             % 遊戲進行中才處理移動
             if ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
                 % 更新按鍵狀態
@@ -948,7 +988,7 @@ classdef final_all_FB < handle
                 end
             end
         end
-
+        
         function updateBullets(obj)
             % 若無子彈則跳過
             if isempty(obj.Bullets)
@@ -1090,8 +1130,6 @@ classdef final_all_FB < handle
                         % 執行攻擊
                         obj.Player.Health = obj.Player.Health - obj.Enemies(i).Attack;
 
-                        % TODO:修改BOSS的攻擊
-
                         % 設置攻擊冷卻（120幀）
                         obj.Enemies(i).AttackCooldown = 120;
 
@@ -1198,7 +1236,7 @@ classdef final_all_FB < handle
                         dist = norm(obj.Bullets(b).Position-obj.Enemies(e).Position);
 
                         % 若距離小於敵人半徑，判定為碰撞
-                        if dist < 15
+                        if dist < obj.Enemies(e).Graphic.Position(3)/2
 
                             bulletsToRemove(b) = true;
 
@@ -1220,6 +1258,7 @@ classdef final_all_FB < handle
             % 刪除死亡的敵人
             obj.removeEnemies(enemiesToRemove);
         end
+
         function resolveEnemyCollisions(obj)
             % 若怪物數量小於2，則不需檢查碰撞
             if length(obj.Enemies) < 2
@@ -1492,7 +1531,46 @@ classdef final_all_FB < handle
             end
             obj.Player = [];
             obj.BossAdded = false;
+
+            % 清理技能UI標籤
+            try
+                if ~isempty(obj.SkillLabel) && isvalid(obj.SkillLabel)
+                    delete(obj.SkillLabel);
+                end
+            catch
+            end
+            obj.SkillLabel = [];
+
+            % 清理技能說明標籤
+            try
+                if ~isempty(obj.SkillDescLabel) && isvalid(obj.SkillDescLabel)
+                    delete(obj.SkillDescLabel);
+                end
+            catch
+            end
+            obj.SkillDescLabel = [];
+
+            % 清理技能圖標
+            try
+                if ~isempty(obj.SkillIcon) && isvalid(obj.SkillIcon)
+                    delete(obj.SkillIcon);
+                end
+            catch
+            end
+            obj.SkillIcon = [];
+
+            % 清理技能動畫效果
+            for i = 1:length(obj.SkillEffects)
+                if isvalid(obj.SkillEffects{i}.Graphic)
+                    delete(obj.SkillEffects{i}.Graphic);
+                end
+            end
+            obj.SkillEffects = {};
+
+            % 重置技能冷卻
+            obj.SkillCooldown = 0;
         end
+
         function showVictoryScreen(obj)
             % 停止遊戲循環
             if ~isempty(obj.Timer) && isvalid(obj.Timer)
@@ -1694,6 +1772,145 @@ classdef final_all_FB < handle
                 end
             end
         end
+
+        function useSkill(obj)
+            % 檢查技能是否可用
+            if obj.SkillCooldown > 0
+                return; % 技能在冷卻中
+            end
+            obj.SkillIcon.Visible='off';
+            % 使用技能
+            skillDamage = obj.Player.Attack * 1.5;
+            skillRadius = 60; % 技能範圍半徑
+            
+            % 在鼠標位置創建範圍傷害
+            obj.createAreaDamage(obj.MousePos, skillRadius, skillDamage);
+
+            % 創建動畫效果
+            obj.createSkillAnimation(obj.MousePos, skillRadius);
+
+            % 設置冷卻時間
+            obj.SkillCooldown = obj.SkillMaxCooldown;
+            obj.SkillLabel.Visible = 'on';
+        end
+
+        function createAreaDamage(obj, center, radius, damage)
+            % 檢查範圍內的敵人
+            if isempty(obj.Enemies)
+                return;
+            end
+
+            enemiesToRemove = false(1, length(obj.Enemies));
+
+            for i = 1:length(obj.Enemies)
+                % 計算敵人與技能中心的距離
+                distance = norm(obj.Enemies(i).Position - center);
+
+                % 如果在範圍內，造成傷害
+                if distance <= radius
+                    obj.Enemies(i).Health = obj.Enemies(i).Health - damage;
+
+                    % 標記死亡的敵人
+                    if obj.Enemies(i).Health <= 0
+                        enemiesToRemove(i) = true;
+                    end
+
+                    % 視覺效果 - 敵人受傷閃爍
+                    if isvalid(obj.Enemies(i).Graphic)
+                        originalColor = obj.Enemies(i).Graphic.FaceColor;
+                        obj.Enemies(i).Graphic.FaceColor = [1, 1, 0]; % 黃色閃爍
+                        pause(0.05);
+                        obj.Enemies(i).Graphic.FaceColor = originalColor;
+                    end
+                end
+            end
+
+            % 移除死亡的敵人
+            obj.removeEnemies(enemiesToRemove);
+        end
+
+        function createSkillAnimation(obj, center, radius)
+            % 創建黃色圓形動畫效果
+            wasHeld = ishold(obj.GameAxes);
+            hold(obj.GameAxes, 'on');
+
+            % 創建圓形範圍指示器
+            theta = linspace(0, 2*pi, 50);
+            x = center(1) + radius * cos(theta);
+            y = center(2) + radius * sin(theta);
+
+            % 創建填充圓形
+            skillEffect = fill(obj.GameAxes, x, y, [1, 1, 0], ... % 黃色
+                'FaceAlpha', 0.6, ...
+                'EdgeColor', [1, 0.8, 0], ...
+                'LineWidth', 3);
+
+            % 存儲動畫效果
+            obj.SkillEffects{end+1} = struct('Graphic', skillEffect, 'Timer', 0.5);
+
+            if ~wasHeld
+                hold(obj.GameAxes, 'off');
+            end
+        end
+
+        function updateSkillSystem(obj, deltaTime)
+            % 更新技能冷卻
+            if obj.SkillCooldown > 0
+                obj.SkillCooldown = max(0, obj.SkillCooldown - deltaTime);
+            end
+
+
+            % 更新技能動畫效果
+            effectsToRemove = [];
+            for i = 1:length(obj.SkillEffects)
+                obj.SkillEffects{i}.Timer = obj.SkillEffects{i}.Timer - deltaTime;
+
+                if obj.SkillEffects{i}.Timer <= 0
+                    % 動畫結束，移除效果
+                    if isvalid(obj.SkillEffects{i}.Graphic)
+                        delete(obj.SkillEffects{i}.Graphic);
+                    end
+                    effectsToRemove(end+1) = i;
+                else
+                    % 更新透明度（淡出效果）
+                    if isvalid(obj.SkillEffects{i}.Graphic)
+                        alpha = obj.SkillEffects{i}.Timer / 0.5; % 原始持續時間
+                        obj.SkillEffects{i}.Graphic.FaceAlpha = alpha * 0.6;
+                    end
+                end
+            end
+
+            % 移除已結束的動畫效果
+            obj.SkillEffects(effectsToRemove) = [];
+        end
+
+        function updateSkillUI(obj)
+            if isvalid(obj.SkillLabel)
+                if obj.SkillCooldown > 0
+                    % 冷卻中 - 顯示剩餘時間，灰暗色，隱藏圖片
+                    obj.SkillLabel.Text = sprintf('%.1f', obj.SkillCooldown);
+                    obj.SkillLabel.FontColor = [0.5, 0.5, 0.5]; % 灰色
+                    obj.SkillLabel.BackgroundColor = [0.3, 0.3, 0.3]; % 灰暗背景
+
+                    % 隱藏技能圖標
+                    if isvalid(obj.SkillIcon)
+                        obj.SkillIcon.Visible = 'off';
+                    end
+                else
+                    % 可用 - 不顯示數字，顯示圖片
+                    obj.SkillLabel.Text = '';
+                    obj.SkillLabel.BackgroundColor = [0.1, 0.1, 0.4]; % 正常背景
+                    obj.SkillLabel.Visible = 'off';
+                    % 顯示技能圖標
+                    if isvalid(obj.SkillIcon)
+                        obj.SkillIcon.Visible = 'on';
+                    end
+                end
+            end
+        end
+
+
+
 
 
     end
