@@ -2770,17 +2770,37 @@ classdef final_all < handle
 
             obj.Skill3Icon.Visible = 'off';
 
-            % 在畫面中央創建超級大爆炸
+            % 記錄技能使用
+            fprintf('使用技能3：超級大爆炸\n');
+
+            % 畫面中央創建
             centerPos = [obj.gameWidth / 2, obj.gameHeight / 2];
             obj.createSuperExplosion(centerPos);
 
             % 立即清除所有敵人
             obj.destroyAllEnemies();
 
+            % 確保沒有遺漏的敵人
+            if ~isempty(obj.Enemies)
+                fprintf('警告：技能3後仍有 %d 個敵人存在，進行二次清理\n', length(obj.Enemies));
+                % 強制清除
+                for i = 1:length(obj.Enemies)
+                    try
+                        if isfield(obj.Enemies(i), 'Graphic') && isgraphics(obj.Enemies(i).Graphic)
+                            delete(obj.Enemies(i).Graphic);
+                        end
+                    catch
+                        % 忽略錯誤
+                    end
+                end
+                obj.Enemies = [];
+            end
+
             % 設置冷卻時間
             obj.Skill3Cooldown = obj.Skill3MaxCooldown;
             obj.Skill3Label.Visible = 'on';
         end
+
 
         function createSuperExplosion(obj, center)
             % 創建超級大爆炸動畫
@@ -2916,51 +2936,111 @@ classdef final_all < handle
             end
         end
         function destroyAllEnemies(obj)
-            % 清除所有敵人
+            % 清除所有敵人 - 強化版本
             if isempty(obj.Enemies)
                 return;
             end
 
-            % 創建視覺效果 - 所有敵人同時閃爍
-            for i = 1:length(obj.Enemies)
-                if isvalid(obj.Enemies(i).Graphic)
-                    originalColor = obj.Enemies(i).Graphic.FaceColor;
-                    obj.Enemies(i).Graphic.FaceColor = [1, 1, 1]; % 白色閃爍
+            % 暫停敵人生成，避免競爭條件
+            oldSpawnInterval = obj.EnemySpawnInterval;
+            obj.EnemySpawnInterval = 999999; % 臨時停止生成
+
+            try
+                % 記錄要刪除的敵人數量
+                enemyCount = length(obj.Enemies);
+                fprintf('技能3：準備清除 %d 個敵人\n', enemyCount);
+
+                % 檢查是否有boss
+                hasBoss = false;
+                for i = 1:length(obj.Enemies)
+                    if isfield(obj.Enemies(i), 'Type') && strcmp(obj.Enemies(i).Type, 'boss')
+                        hasBoss = true;
+                        break;
+                    end
+                end
+
+                % 創建視覺效果 - 所有敵人同時閃爍
+                for i = 1:length(obj.Enemies)
+                    try
+                        if isfield(obj.Enemies(i), 'Graphic') && ...
+                                ~isempty(obj.Enemies(i).Graphic) && ...
+                                isgraphics(obj.Enemies(i).Graphic) && ...
+                                isvalid(obj.Enemies(i).Graphic)
+
+                            originalColor = obj.Enemies(i).Graphic.FaceColor;
+                            obj.Enemies(i).Graphic.FaceColor = [1, 1, 1]; % 白色閃爍
+                        end
+                    catch ME
+                        % 忽略閃爍錯誤，繼續處理
+                        fprintf('敵人 %d 閃爍效果失敗：%s\n', i, ME.message);
+                    end
+                end
+
+                % 短暫停頓顯示效果
+                pause(0.1);
+
+                % 逐個安全刪除敵人
+                deletedCount = 0;
+                for i = 1:length(obj.Enemies)
+                    try
+                        % 刪除主要圖形
+                        if isfield(obj.Enemies(i), 'Graphic') && ...
+                                ~isempty(obj.Enemies(i).Graphic) && ...
+                                isgraphics(obj.Enemies(i).Graphic)
+                            delete(obj.Enemies(i).Graphic);
+                        end
+
+                        % 刪除技能警示圖形（boss專用）
+                        if isfield(obj.Enemies(i), 'SkillWarning') && ...
+                                ~isempty(obj.Enemies(i).SkillWarning) && ...
+                                isgraphics(obj.Enemies(i).SkillWarning)
+                            delete(obj.Enemies(i).SkillWarning);
+                        end
+
+                        deletedCount = deletedCount + 1;
+
+                    catch ME
+                        fprintf('刪除敵人 %d 圖形時出錯：%s\n', i, ME.message);
+                        % 即使刪除圖形失敗，仍要清除陣列中的敵人
+                        deletedCount = deletedCount + 1;
+                    end
+                end
+
+                % 完全清空敵人陣列
+                obj.Enemies = struct('Type', {}, 'Position', {}, ...
+                    'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
+                    'AttackCooldown', {}, 'SkillCooldown', {}, ...
+                    'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
+                    'SkillWarningTimer', {}, 'PoisonSlowed', {}, ...
+                    'SlowTimer', {}, 'Graphic', {});
+
+                fprintf('技能3：成功清除 %d/%d 個敵人\n', deletedCount, enemyCount);
+
+                % 強制UI更新
+                drawnow;
+
+                % 只有當boss存在並被殺死時才觸發勝利
+                if hasBoss
+                    obj.showVictoryScreen();
+                end
+
+            catch ME
+                fprintf('destroyAllEnemies 執行時發生嚴重錯誤：%s\n', ME.message);
+                disp(getReport(ME));
+
+                % 即使出錯也要嘗試清空陣列
+                obj.Enemies = [];
+
+                if hasBoss
+                    obj.showVictoryScreen();
                 end
             end
 
-            % 短暫停頓顯示效果
-            pause(0.1);
-
-            % 檢查是否有boss並記錄
-            hasBoss = false;
-            for i = 1:length(obj.Enemies)
-                if strcmp(obj.Enemies(i).Type, 'boss')
-                    hasBoss = true;
-                    break;
-                end
-            end
-
-            % 刪除所有敵人
-            for i = 1:length(obj.Enemies)
-                if isvalid(obj.Enemies(i).Graphic)
-                    delete(obj.Enemies(i).Graphic);
-                end
-                if isfield(obj.Enemies(i), 'SkillWarning') && ...
-                        ~isempty(obj.Enemies(i).SkillWarning) && ...
-                        isgraphics(obj.Enemies(i).SkillWarning)
-                    delete(obj.Enemies(i).SkillWarning);
-                end
-            end
-
-            % 清空敵人陣列
-            obj.Enemies = [];
-
-            % 只有當boss存在並被殺死時才觸發勝利
-            if hasBoss
-                obj.showVictoryScreen();
-            end
+            % 恢復敵人生成
+            obj.EnemySpawnInterval = oldSpawnInterval;
+            obj.EnemySpawnTimer = 0; % 重置生成計時器
         end
+
 
         function loadSkill1Frames(obj)
             % 載入Effect.png第26行第1-9列
@@ -3097,7 +3177,7 @@ classdef final_all < handle
 
             fprintf('新敵人在位置 [%.1f, %.1f] 生成\n', position(1), position(2));
         end
-
+       
 
     end
 end
