@@ -66,13 +66,13 @@ classdef final_all < handle
         KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false)
 
         % 技能(1)
-        SkillCooldown = 0  % 技能冷卻時間(秒)
-        SkillMaxCooldown = 3  % 最大冷卻時間
-        SkillLabel  % 技能冷卻顯示標籤
-        SkillEffects = {}  % 存儲技能動畫效果
-        SkillDescLabel  % 技能說明標籤
-        SkillIcon       % 技能圖標
-        Skill1Frames = {}      % 技能1動畫幀
+        SkillCooldown = 0 % 技能冷卻時間(秒)
+        SkillMaxCooldown = 3 % 最大冷卻時間
+        SkillLabel % 技能冷卻顯示標籤
+        SkillEffects = {} % 存儲技能動畫效果
+        SkillDescLabel % 技能說明標籤
+        SkillIcon % 技能圖標
+        Skill1Frames = {} % 技能1動畫幀
         Skill1Animations = {} % 技能1動畫實例
 
         % 技能2
@@ -92,6 +92,12 @@ classdef final_all < handle
         Skill3Icon
         ExplosionFrames = {}
         Skill3Animation = []
+
+        % 敵人生成
+        EnemySpawnTimer = 0 % 生成計時器
+        EnemySpawnInterval = 5 % 生成間隔(秒)
+        MaxEnemies = 8 % 最大敵人數量
+        SpawnMargin = 50 % 在畫面邊緣外的生成邊距
 
     end
 
@@ -213,12 +219,10 @@ classdef final_all < handle
             end
 
             % 從暫停狀態轉移
-            if strcmp(fromState, 'PAUSED')
-                if strcmp(toPanel, 'game')
-                    % 從暫停返回遊戲，重啟計時器
-                    if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'off')
-                        start(obj.Timer);
-                    end
+            if strcmp(toPanel, 'game')
+                % 從暫停返回遊戲，重啟計時器
+                if ~isempty(obj.Timer) && isvalid(obj.Timer) && strcmp(get(obj.Timer, 'Running'), 'off')
+                    start(obj.Timer);
                 end
             end
             % 從遊戲結束狀態轉移
@@ -367,6 +371,9 @@ classdef final_all < handle
                     % skill_3
                     obj.updateSkill3Animation(0.016);
                     obj.updateSkill3UI();
+
+                    % 敵人生成
+                    obj.updateEnemySpawning(0.016);
 
                     % 更新玩家資訊顯示
                     if isvalid(obj.HealthLabel)
@@ -757,6 +764,21 @@ classdef final_all < handle
             % 初始化遊戲元素
             obj.initPlayer();
             obj.initEnemies(levelNum);
+            % 根據關卡調整生成參數
+            switch levelNum
+                case 1
+                    obj.EnemySpawnInterval = 1; % todo: modify
+                    obj.MaxEnemies = 10;
+                case 2
+                    obj.EnemySpawnInterval = 6;
+                    obj.MaxEnemies = 15;
+                case 3
+                    obj.EnemySpawnInterval = 4;
+                    obj.MaxEnemies = 20;
+            end
+
+            % 重置生成計時器
+            obj.EnemySpawnTimer = 0;
 
             % 添加時間標籤
             obj.TimeLabel = uilabel(obj.MainFig);
@@ -875,6 +897,7 @@ classdef final_all < handle
                     obj.FireballFrames{i} = struct('Image', img, 'Alpha', []);
                 end
             end
+
             % 確保計時器處於運行狀態
             if isempty(obj.Timer) || ~isvalid(obj.Timer)
                 obj.Timer = timer('ExecutionMode', 'fixedRate', 'Period', 0.016, ...
@@ -1067,11 +1090,11 @@ classdef final_all < handle
         end
 
         function initEnemies(obj, levelNum)
-            obj.Enemies = struct('Type', {}, 'Position', {}, 'AwarenessDistance', {}, ...
+            obj.Enemies = struct('Type', {}, 'Position', {}, ...
                 'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
                 'AttackCooldown', {}, 'SkillCooldown', {}, ...
                 'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
-                'SkillWarningTimer', {},'PoisonSlowed', {}, ...
+                'SkillWarningTimer', {}, 'PoisonSlowed', {}, ...
                 'SlowTimer', {}, 'Graphic', {});
 
             switch levelNum
@@ -1081,17 +1104,16 @@ classdef final_all < handle
                         obj.Enemies(i) = struct( ...
                             'Type', 'melee', ...
                             'Position', [randi([50, 750]), 550], ...
-                            'AwarenessDistance', 300, ...
                             'Health', 1314, ...
                             'Attack', 520, ...
                             'AttackRange', 50, ...
                             'AttackCooldown', 0, ...
-                            'SkillCooldown', 0, ...        % 一般小怪不使用技能，設為0
-                            'SkillMaxCooldown', 0, ...     % 一般小怪不使用技能，設為0
-                            'SkillWarning', [], ...        % 一般小怪不使用技能警示
-                            'SkillWarningTimer', 0, ...    % 一般小怪不使用技能警示
-                            'PoisonSlowed', false, ... % 添加減速狀態
-                            'SlowTimer', 0, ...        % 添加減速計時器
+                            'SkillCooldown', 0, ...
+                            'SkillMaxCooldown', 0, ...
+                            'SkillWarning', [], ...
+                            'SkillWarningTimer', 0, ...
+                            'PoisonSlowed', false, ...
+                            'SlowTimer', 0, ...
                             'Graphic', [] ...
                             );
 
@@ -1108,16 +1130,15 @@ classdef final_all < handle
             newBoss = struct( ...
                 'Type', 'boss', ...
                 'Position', [obj.gameWidth / 2, obj.gameHeight - 100], ...
-                'AwarenessDistance', 114514, ... % not used but hove to add or have error:
                 'Health', 100, ...
                 'Attack', 100, ...
                 'AttackRange', 114514, ... % Subscripted assignment between dissimilar structures
                 'AttackCooldown', 0, ...
-                'SkillCooldown', 0, ...        % 技能冷卻
-                'SkillMaxCooldown', 2, ...     % boss技能冷卻為2秒
-                'SkillWarning', [], ...        % 技能警示圖形
-                'SkillWarningTimer', 0, ...    % 警示計時器
-                'PoisonSlowed', false, ...     % only to match structure
+                'SkillCooldown', 0, ... % 技能冷卻
+                'SkillMaxCooldown', 2, ... % boss技能冷卻為2秒
+                'SkillWarning', [], ... % 技能警示圖形
+                'SkillWarningTimer', 0, ... % 警示計時器
+                'PoisonSlowed', false, ... % only to match structure
                 'SlowTimer', 0, ...
                 'Graphic', [] ...
                 );
@@ -1261,7 +1282,6 @@ classdef final_all < handle
                 end
             end
 
-            % 刪除無效或超出範圍的子彈
             obj.removeBullets(bulletsToRemove);
         end
         function updateEnemies(obj)
@@ -1314,7 +1334,7 @@ classdef final_all < handle
                             % 創建閃爍效果
                             blinkInterval = 0.2; % 每0.2秒閃爍一次
                             blinkPhase = mod(obj.Enemies(i).SkillWarningTimer, blinkInterval);
-                            if blinkPhase < blinkInterval/2
+                            if blinkPhase < blinkInterval / 2
                                 obj.Enemies(i).SkillWarning.FaceAlpha = 0.5;
                             else
                                 obj.Enemies(i).SkillWarning.FaceAlpha = 0.1;
@@ -1377,59 +1397,56 @@ classdef final_all < handle
                         end
                     end
 
-                    % 僅在感知範圍內追蹤玩家
-                    if distanceToPlayer <= obj.Enemies(i).AwarenessDistance
-
-                        % 更新減速效果
-                        if isfield(obj.Enemies(i), 'SlowTimer') && obj.Enemies(i).SlowTimer > 0
-                            obj.Enemies(i).SlowTimer = obj.Enemies(i).SlowTimer - 0.016;
-                            if obj.Enemies(i).SlowTimer <= 0
-                                obj.Enemies(i).PoisonSlowed = false;
-                            end
+                    % 更新減速效果
+                    if isfield(obj.Enemies(i), 'SlowTimer') && obj.Enemies(i).SlowTimer > 0
+                        obj.Enemies(i).SlowTimer = obj.Enemies(i).SlowTimer - 0.016;
+                        if obj.Enemies(i).SlowTimer <= 0
+                            obj.Enemies(i).PoisonSlowed = false;
                         end
-
-                        % 設定移動速度時考慮減速效果
-                        switch obj.Enemies(i).Type
-                            case 'melee'
-                                moveSpeed = 2;
-                            case 'ranged'
-                                moveSpeed = 1;
-                            otherwise
-                                moveSpeed = 1.5;
-                        end
-
-                        % 如果被毒減速，速度減半
-                        if isfield(obj.Enemies(i), 'PoisonSlowed') && obj.Enemies(i).PoisonSlowed
-                            moveSpeed = moveSpeed * 0.5;
-                        end
-
-
-                        % 保存原始位置
-                        originalPos = obj.Enemies(i).Position;
-
-                        % 計算潛在的新位置
-                        newPos = originalPos + normalizedDirection * moveSpeed;
-
-                        % 檢查是否會與玩家碰撞
-                        willCollideWithPlayer = obj.checkAABBCollision(newPos, 30, obj.Player.Position, obj.Player.Size);
-
-                        % 檢查是否會與其他敵人碰撞
-                        willCollideWithEnemy = false;
-                        for j = 1:length(obj.Enemies)
-                            if i ~= j && obj.checkAABBCollision(newPos, 30, obj.Enemies(j).Position, 30)
-                                willCollideWithEnemy = true;
-                                break;
-                            end
-                        end
-
-                        % 只有在沒有碰撞時才移動
-                        if ~willCollideWithPlayer && ~willCollideWithEnemy
-                            obj.Enemies(i).Position = newPos;
-                        end
-
-                        % 更新敵人圖形位置
-                        updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
                     end
+
+                    % 設定移動速度時考慮減速效果
+                    switch obj.Enemies(i).Type
+                        case 'melee'
+                            moveSpeed = 2;
+                        case 'ranged'
+                            moveSpeed = 1;
+                        otherwise
+                            moveSpeed = 1.5;
+                    end
+
+                    % 如果被毒減速，速度減半
+                    if isfield(obj.Enemies(i), 'PoisonSlowed') && obj.Enemies(i).PoisonSlowed
+                        moveSpeed = moveSpeed * 0.5;
+                    end
+
+
+                    % 保存原始位置
+                    originalPos = obj.Enemies(i).Position;
+
+                    % 計算潛在的新位置
+                    newPos = originalPos + normalizedDirection * moveSpeed;
+
+                    % 檢查是否會與玩家碰撞
+                    willCollideWithPlayer = obj.checkAABBCollision(newPos, 30, obj.Player.Position, obj.Player.Size);
+
+                    % 檢查是否會與其他敵人碰撞
+                    willCollideWithEnemy = false;
+                    for j = 1:length(obj.Enemies)
+                        if i ~= j && obj.checkAABBCollision(newPos, 30, obj.Enemies(j).Position, 30)
+                            willCollideWithEnemy = true;
+                            break;
+                        end
+                    end
+
+                    % 只有在沒有碰撞時才移動
+                    if ~willCollideWithPlayer && ~willCollideWithEnemy
+                        obj.Enemies(i).Position = newPos;
+                    end
+
+                    % 更新敵人圖形位置
+                    updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+
                 end
             end
         end
@@ -1477,7 +1494,7 @@ classdef final_all < handle
                         dist = norm(obj.Bullets(b).Position-obj.Enemies(e).Position);
 
                         % 若距離小於敵人半徑，判定為碰撞
-                        if dist < obj.Enemies(e).Graphic.Position(3)/2
+                        if dist < obj.Enemies(e).Graphic.Position(3) / 2
 
                             bulletsToRemove(b) = true;
 
@@ -1903,7 +1920,7 @@ classdef final_all < handle
                 if ~isempty(obj.Skill1Animations{i}) && ...
                         isfield(obj.Skill1Animations{i}, 'Graphic') && ...
                         ~isempty(obj.Skill1Animations{i}.Graphic) && ...
-                        isgraphics(obj.Skill1Animations{i}.Graphic)  
+                        isgraphics(obj.Skill1Animations{i}.Graphic)
                     delete(obj.Skill1Animations{i}.Graphic);
                 end
             end
@@ -1919,6 +1936,7 @@ classdef final_all < handle
             % 重置第三個技能冷卻
             obj.Skill3Cooldown = 0;
 
+            obj.EnemySpawnTimer = 0;
 
         end
 
@@ -2119,7 +2137,7 @@ classdef final_all < handle
             if obj.SkillCooldown > 0
                 return; % 技能在冷卻中
             end
-            obj.SkillIcon.Visible='off';
+            obj.SkillIcon.Visible = 'off';
             % 使用技能
             skillDamage = obj.Player.Attack * 1.5;
             skillRadius = 60; % 技能範圍半徑
@@ -2145,7 +2163,7 @@ classdef final_all < handle
 
             for i = 1:length(obj.Enemies)
                 % 計算敵人與技能中心的距離
-                distance = norm(obj.Enemies(i).Position - center);
+                distance = norm(obj.Enemies(i).Position-center);
 
                 % 如果在範圍內，造成傷害
                 if distance <= radius
@@ -2171,7 +2189,7 @@ classdef final_all < handle
         end
 
         function createSkillAnimation(obj, center, radius)
-            % 創建技能1動畫效果 
+            % 創建技能1動畫效果
             if isempty(obj.Skill1Frames)
                 % 如果沒有載入動畫幀，使用原有的圓形效果
                 wasHeld = ishold(obj.GameAxes);
@@ -2228,7 +2246,7 @@ classdef final_all < handle
                 hold(obj.GameAxes, 'off');
             end
         end
-        
+
         % function with return value
         function animation = updateSkill1Frame(obj, animation)
             % 更新技能1動畫幀 - 返回修改後的動畫結構體
@@ -2249,8 +2267,8 @@ classdef final_all < handle
             centerPos = animation.Position;
 
             % 修改位置計算 - 讓動畫底部對應到目標位置
-            xData = [centerPos(1) - scaledW/2, centerPos(1) + scaledW/2]; % 水平居中
-            yData = [centerPos(2), centerPos(2) + scaledH];               % 底部對應到目標位置
+            xData = [centerPos(1) - scaledW / 2, centerPos(1) + scaledW / 2]; % 水平居中
+            yData = [centerPos(2), centerPos(2) + scaledH]; % 底部對應到目標位置
 
             % 如果已有圖像，先刪除
             if ~isempty(animation.Graphic) && isgraphics(animation.Graphic)
@@ -2272,23 +2290,21 @@ classdef final_all < handle
         end
 
 
-
-
         function updateSkillSystem(obj, deltaTime)
             % 更新技能冷卻
             if obj.SkillCooldown > 0
-                obj.SkillCooldown = max(0, obj.SkillCooldown - deltaTime);
+                obj.SkillCooldown = max(0, obj.SkillCooldown-deltaTime);
             end
 
             if obj.Skill2Cooldown > 0
-                obj.Skill2Cooldown = max(0, obj.Skill2Cooldown - deltaTime);
+                obj.Skill2Cooldown = max(0, obj.Skill2Cooldown-deltaTime);
             end
 
-            % 更新第三個技能冷卻 
+            % 更新第三個技能冷卻
             if obj.Skill3Cooldown > 0
-                obj.Skill3Cooldown = max(0, obj.Skill3Cooldown - deltaTime);
+                obj.Skill3Cooldown = max(0, obj.Skill3Cooldown-deltaTime);
             end
-             % 更新技能1動畫
+            % 更新技能1動畫
             obj.updateSkill1Animations(deltaTime);
 
             % 更新原有的技能動畫效果（備用）
@@ -2346,7 +2362,7 @@ classdef final_all < handle
                         animation.IsActive = false;
                         animationsToRemove(end+1) = i;
                     else
-                        % 更新到下一幀 
+                        % 更新到下一幀
                         animation = obj.updateSkill1Frame(animation);
                     end
                 end
@@ -2429,10 +2445,10 @@ classdef final_all < handle
 
         function executeBossSkillDamage(obj, bossIndex, center, radius)
             % 執行boss技能傷害
-            skillDamage = obj.Enemies(bossIndex).Attack * 1.5; 
-            
+            skillDamage = obj.Enemies(bossIndex).Attack * 1.5;
+
             % 檢查玩家是否在範圍內
-            distance = norm(obj.Player.Position - center);
+            distance = norm(obj.Player.Position-center);
             if distance <= radius
                 obj.Player.Health = obj.Player.Health - skillDamage;
 
@@ -2564,7 +2580,7 @@ classdef final_all < handle
                 end
 
                 % 檢查是否到達目標位置
-                distance = norm(projectile.Position - projectile.TargetPos);
+                distance = norm(projectile.Position-projectile.TargetPos);
                 if distance <= 10 % 到達目標位置
                     % 創建毒區域
                     obj.createPoisonArea(projectile.TargetPos);
@@ -2635,7 +2651,7 @@ classdef final_all < handle
 
             for i = 1:length(obj.Enemies)
                 % 計算敵人與毒區域中心的距離
-                distance = norm(obj.Enemies(i).Position - area.Position);
+                distance = norm(obj.Enemies(i).Position-area.Position);
 
                 % 如果在毒區域內
                 if distance <= area.Radius
@@ -2703,16 +2719,16 @@ classdef final_all < handle
                 targetRow = 4;
                 numFrames = 6;
 
-                frameWidth = floor(size(effectSheet, 2) / numColumns);
-                frameHeight = floor(size(effectSheet, 1) / numRows);
+                frameWidth = floor(size(effectSheet, 2)/numColumns);
+                frameHeight = floor(size(effectSheet, 1)/numRows);
 
                 obj.ExplosionFrames = cell(1, numFrames);
 
                 for frame = 1:numFrames
                     % 計算第四row第frame張的位置
-                    startY = floor((targetRow - 1) * frameHeight) + 1;
-                    startX = floor((frame - 1) * frameWidth) + 1;
-                    endY = min(startY + frameHeight - 1, size(effectSheet, 1));
+                    startY = floor((targetRow - 1)*frameHeight) + 1;
+                    startX = floor((frame - 1)*frameWidth) + 1;
+                    endY = min(startY+frameHeight-1, size(effectSheet, 1));
                     endX = min(startX + frameWidth - 1, size(effectSheet, 2));
 
                     % 提取幀
@@ -2730,15 +2746,15 @@ classdef final_all < handle
                 end
 
             catch ME
-                warning(ME.identifier,'載入爆炸動畫失敗：%s', ME.message);
+                warning(ME.identifier, '載入爆炸動畫失敗：%s', ME.message);
                 % 創建備用的爆炸效果
                 obj.ExplosionFrames = {};
                 for i = 1:6
                     % 創建漸變的橙紅色圓形作為備用
                     img = ones(100, 100, 3, 'uint8');
-                    intensity = (7-i) / 6; % 逐漸減弱
-                    img(:, :, 1) = uint8(255 * intensity); % Red
-                    img(:, :, 2) = uint8(165 * intensity); % Orange
+                    intensity = (7 - i) / 6; % 逐漸減弱
+                    img(:, :, 1) = uint8(255*intensity); % Red
+                    img(:, :, 2) = uint8(165*intensity); % Orange
                     img(:, :, 3) = uint8(0); % Blue
                     alpha = ones(100, 100) * intensity;
                     obj.ExplosionFrames{i} = struct('Image', img, 'Alpha', alpha);
@@ -2826,8 +2842,8 @@ classdef final_all < handle
             scaledH = h * obj.Skill3Animation.ScaleFactor;
 
             centerPos = obj.Skill3Animation.Position;
-            xData = [centerPos(1) - scaledW/2, centerPos(1) + scaledW/2];
-            yData = [centerPos(2) - scaledH/2, centerPos(2) + scaledH/2];
+            xData = [centerPos(1) - scaledW / 2, centerPos(1) + scaledW / 2];
+            yData = [centerPos(2) - scaledH / 2, centerPos(2) + scaledH / 2];
 
             % 如果已有圖像，先刪除
             if ~isempty(obj.Skill3Animation.Graphic) && isvalid(obj.Skill3Animation.Graphic)
@@ -2955,19 +2971,19 @@ classdef final_all < handle
                 % Effect.png 是30行×9列的sheet
                 numColumns = 9;
                 numRows = 30;
-                targetRow = 26;      % 第26行
-                numFrames = 9;       % 第1到第9列，共九張圖片
+                targetRow = 26; % 第26行
+                numFrames = 9; % 第1到第9列，共九張圖片
 
-                frameWidth = floor(size(effectSheet, 2) / numColumns);
-                frameHeight = floor(size(effectSheet, 1) / numRows);
+                frameWidth = floor(size(effectSheet, 2)/numColumns);
+                frameHeight = floor(size(effectSheet, 1)/numRows);
 
                 obj.Skill1Frames = cell(1, numFrames);
 
                 for frame = 1:numFrames
                     % 計算第26行第frame列的位置
-                    startY = floor((targetRow - 1) * frameHeight) + 1;
-                    startX = floor((frame - 1) * frameWidth) + 1;
-                    endY = min(startY + frameHeight - 1, size(effectSheet, 1));
+                    startY = floor((targetRow - 1)*frameHeight) + 1;
+                    startX = floor((frame - 1)*frameWidth) + 1;
+                    endY = min(startY+frameHeight-1, size(effectSheet, 1));
                     endX = min(startX + frameWidth - 1, size(effectSheet, 2));
 
                     % 提取幀
@@ -2988,15 +3004,15 @@ classdef final_all < handle
                 end
 
             catch ME
-                warning(ME.identifier,'載入技能1動畫失敗：%s', ME.message);
+                warning(ME.identifier, '載入技能1動畫失敗：%s', ME.message);
                 % 創建備用的效果
                 obj.Skill1Frames = {};
                 for i = 1:9
                     % 創建漸變的黃色圓形作為備用
                     img = ones(100, 100, 3, 'uint8');
-                    intensity = (10-i) / 9; % 逐漸減弱
-                    img(:, :, 1) = uint8(255 * intensity); % Red
-                    img(:, :, 2) = uint8(255 * intensity); % Green (Yellow)
+                    intensity = (10 - i) / 9; % 逐漸減弱
+                    img(:, :, 1) = uint8(255*intensity); % Red
+                    img(:, :, 2) = uint8(255*intensity); % Green (Yellow)
                     img(:, :, 3) = uint8(0); % Blue
                     alpha = ones(100, 100) * intensity;
                     obj.Skill1Frames{i} = struct('Image', img, 'Alpha', alpha);
@@ -3004,8 +3020,83 @@ classdef final_all < handle
             end
         end
 
+        function updateEnemySpawning(obj, deltaTime)
+            % 更新生成計時器
+            obj.EnemySpawnTimer = obj.EnemySpawnTimer + deltaTime;
+
+            % 檢查是否該生成新敵人
+            if obj.EnemySpawnTimer >= obj.EnemySpawnInterval && length(obj.Enemies) < obj.MaxEnemies
+                obj.spawnEnemyAtEdge();
+                obj.EnemySpawnTimer = 0; % 重置計時器
+            end
+        end
+        function spawnEnemyAtEdge(obj)
+            % 計算四個邊的總長度
+            totalPerimeter = 2 * (obj.gameWidth + obj.gameHeight);
+
+            % 隨機選擇邊緣上的一點
+            randomPoint = randi(totalPerimeter);
+
+            if randomPoint <= obj.gameWidth
+                % 上邊緣
+                spawnX = randomPoint;
+                spawnY = obj.gameHeight + obj.SpawnMargin;
+
+            elseif randomPoint <= obj.gameWidth + obj.gameHeight
+                % 右邊緣
+                spawnX = obj.gameWidth + obj.SpawnMargin;
+                spawnY = randomPoint - obj.gameWidth;
+
+            elseif randomPoint <= 2 * obj.gameWidth + obj.gameHeight
+                % 下邊緣
+                spawnX = obj.gameWidth - (randomPoint - obj.gameWidth - obj.gameHeight);
+                spawnY = -obj.SpawnMargin;
+
+            else
+                % 左邊緣
+                spawnX = -obj.SpawnMargin;
+                spawnY = obj.gameHeight - (randomPoint - 2 * obj.gameWidth - obj.gameHeight);
+            end
+
+            % 創建新敵人
+            obj.createNewEnemy([spawnX, spawnY]);
+        end
 
 
+        function createNewEnemy(obj, position)
+            % 創建新敵人結構
+            newEnemy = struct( ...
+                'Type', 'melee', ...
+                'Position', position, ...
+                'Health', 1314, ...
+                'Attack', 520, ...
+                'AttackRange', 50, ...
+                'AttackCooldown', 0, ...
+                'SkillCooldown', 0, ...
+                'SkillMaxCooldown', 0, ...
+                'SkillWarning', [], ...
+                'SkillWarningTimer', 0, ...
+                'PoisonSlowed', false, ...
+                'SlowTimer', 0, ...
+                'Graphic', []);
+
+            % 創建圖形
+            newEnemy.Graphic = rectangle(obj.GameAxes, ...
+                'Position', [0, 0, 30, 30], ...
+                'FaceColor', 'r');
+
+            % 更新位置
+            updatePosition(newEnemy.Graphic, newEnemy.Position);
+
+            % 添加到敵人陣列
+            if isempty(obj.Enemies)
+                obj.Enemies = newEnemy;
+            else
+                obj.Enemies(end+1) = newEnemy;
+            end
+
+            fprintf('新敵人在位置 [%.1f, %.1f] 生成\n', position(1), position(2));
+        end
 
 
     end
