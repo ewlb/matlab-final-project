@@ -72,6 +72,8 @@ classdef final_all < handle
         SkillEffects = {}  % 存儲技能動畫效果
         SkillDescLabel  % 技能說明標籤
         SkillIcon       % 技能圖標
+        Skill1Frames = {}      % 技能1動畫幀
+        Skill1Animations = {} % 技能1動畫實例
 
         % 技能2
         Skill2Cooldown = 0
@@ -575,25 +577,94 @@ classdef final_all < handle
             titleLbl.Text = '遊戲說明';
             titleLbl.FontSize = 36;
             titleLbl.FontColor = 'w';
-            titleLbl.Position = [centerX - 100, centerY + 150, 200, 40];
+            titleLbl.Position = [centerX - 100, centerY + 200, 200, 40];
 
-            % 說明內容
+            % 基本操作說明
+            basicControlLbl = uilabel(obj.HelpPanel);
+            basicControlLbl.Text = '基本操作';
+            basicControlLbl.FontSize = 24;
+            basicControlLbl.FontColor = [1, 1, 0]; % 黃色標題
+            basicControlLbl.Position = [centerX - 200, centerY + 150, 150, 30];
+
+            % 基本操作內容
             instructLbl = uilabel(obj.HelpPanel);
-            instructLbl.Text = sprintf('%s\n%s\n%s', '移動: WASD鍵', '射擊: 滑鼠左鍵', '暫停: p鍵');
+            instructLbl.Text = sprintf('%s\n%s\n%s', '移動: WASD鍵', '射擊: 滑鼠左鍵', '暫停: P鍵');
             instructLbl.WordWrap = 'on';
-            instructLbl.FontSize = 24;
+            instructLbl.FontSize = 18;
             instructLbl.FontColor = 'w';
-            instructLbl.Position = [centerX - 150, centerY - 50, 300, 300];
+            instructLbl.Position = [centerX - 200, centerY + 80, 400, 80];
+
+            % 技能說明標題
+            skillTitleLbl = uilabel(obj.HelpPanel);
+            skillTitleLbl.Text = '技能系統';
+            skillTitleLbl.FontSize = 24;
+            skillTitleLbl.FontColor = [1, 1, 0]; % 黃色標題
+            skillTitleLbl.Position = [centerX - 200, centerY + 30, 150, 30];
+
+            % 技能1說明
+            skill1Lbl = uilabel(obj.HelpPanel);
+            skill1Lbl.Text = '技能1 (按鍵1): 範圍傷害';
+            skill1Lbl.FontSize = 16;
+            skill1Lbl.FontColor = [0.8, 1, 0.8]; % 淺綠色
+            skill1Lbl.Position = [centerX - 200, centerY - 10, 400, 25];
+
+            skill1DetailLbl = uilabel(obj.HelpPanel);
+            skill1DetailLbl.Text = '在鼠標位置造成1.5倍攻擊力的範圍傷害，冷卻3秒';
+            skill1DetailLbl.FontSize = 14;
+            skill1DetailLbl.FontColor = 'w';
+            skill1DetailLbl.Position = [centerX - 180, centerY - 35, 400, 20];
+
+            % 技能2說明
+            skill2Lbl = uilabel(obj.HelpPanel);
+            skill2Lbl.Text = '技能2 (按鍵2): 毒藥水';
+            skill2Lbl.FontSize = 16;
+            skill2Lbl.FontColor = [0.8, 1, 0.8]; % 淺綠色
+            skill2Lbl.Position = [centerX - 200, centerY - 65, 400, 25];
+
+            skill2DetailLbl = uilabel(obj.HelpPanel);
+            skill2DetailLbl.Text = '投擲毒藥水，在目標位置生成持續傷害區域並減速敵人，冷卻4秒';
+            skill2DetailLbl.FontSize = 14;
+            skill2DetailLbl.FontColor = 'w';
+            skill2DetailLbl.Position = [centerX - 180, centerY - 90, 400, 20];
+
+            % 技能3說明
+            skill3Lbl = uilabel(obj.HelpPanel);
+            skill3Lbl.Text = '技能3 (按鍵3): 超級大爆炸';
+            skill3Lbl.FontSize = 16;
+            skill3Lbl.FontColor = [1, 0.5, 0.5]; % 淺紅色 - 表示終極技能
+            skill3Lbl.Position = [centerX - 200, centerY - 120, 400, 25];
+
+            skill3DetailLbl = uilabel(obj.HelpPanel);
+            skill3DetailLbl.Text = '消滅畫面上所有敵人的終極技能，冷卻3秒';
+            skill3DetailLbl.FontSize = 14;
+            skill3DetailLbl.FontColor = 'w';
+            skill3DetailLbl.Position = [centerX - 180, centerY - 145, 400, 20];
+
+            % 遊戲提示
+            tipTitleLbl = uilabel(obj.HelpPanel);
+            tipTitleLbl.Text = '遊戲提示';
+            tipTitleLbl.FontSize = 20;
+            tipTitleLbl.FontColor = [1, 1, 0]; % 黃色標題
+            tipTitleLbl.Position = [centerX - 200, centerY - 185, 150, 30];
+
+            tipLbl = uilabel(obj.HelpPanel);
+            tipLbl.Text = sprintf('%s\n', ...
+                '• 滑鼠在不同位置點擊可以射很快');
+            tipLbl.WordWrap = 'on';
+            tipLbl.FontSize = 14;
+            tipLbl.FontColor = 'w';
+            tipLbl.Position = [centerX - 180, centerY - 250, 400, 60];
 
             % 返回按鈕
             backBtn = uibutton(obj.HelpPanel, 'push');
             backBtn.Text = '返回主畫面';
-            backBtn.Position = [centerX - 100, centerY - 150, 200, 50];
+            backBtn.Position = [centerX - 100, centerY - 300, 200, 50];
             backBtn.FontSize = 18;
             backBtn.BackgroundColor = [0.8, 0.2, 0.2];
             backBtn.FontColor = 'w';
             backBtn.ButtonPushedFcn = @(src, event) obj.switchPanel('main');
         end
+
         function initLevelSelect(obj)
             % 主網格佈局
             mainGrid = uigridlayout(obj.LevelPanel, [3, 1]);
@@ -733,6 +804,7 @@ classdef final_all < handle
             obj.SkillDescLabel.FontSize = 14;
             obj.SkillDescLabel.FontColor = 'w';
             obj.SkillDescLabel.BackgroundColor = [0.1, 0.1, 0.4];
+            obj.loadSkill1Frames();
 
 
             % 技能2
@@ -1826,6 +1898,18 @@ classdef final_all < handle
             obj.Skill3Icon = [];
 
             % 清理動畫
+            % 技能1
+            for i = 1:length(obj.Skill1Animations)
+                if ~isempty(obj.Skill1Animations{i}) && ...
+                        isfield(obj.Skill1Animations{i}, 'Graphic') && ...
+                        ~isempty(obj.Skill1Animations{i}.Graphic) && ...
+                        isgraphics(obj.Skill1Animations{i}.Graphic)  
+                    delete(obj.Skill1Animations{i}.Graphic);
+                end
+            end
+            obj.Skill1Animations = {};
+
+            % 技能3
             if ~isempty(obj.Skill3Animation) && isfield(obj.Skill3Animation, 'Graphic') && ...
                     ~isempty(obj.Skill3Animation.Graphic) && isvalid(obj.Skill3Animation.Graphic)
                 delete(obj.Skill3Animation.Graphic);
@@ -1894,7 +1978,7 @@ classdef final_all < handle
         end
         function updateTimer(obj)
             THESHOWTIME = 10;
-            
+
             % 更新計時
             obj.ElapsedTime = obj.ElapsedTime + 1;
             minutes = floor(obj.ElapsedTime/60);
@@ -2087,28 +2171,108 @@ classdef final_all < handle
         end
 
         function createSkillAnimation(obj, center, radius)
-            % 創建黃色圓形動畫效果
+            % 創建技能1動畫效果 
+            if isempty(obj.Skill1Frames)
+                % 如果沒有載入動畫幀，使用原有的圓形效果
+                wasHeld = ishold(obj.GameAxes);
+                hold(obj.GameAxes, 'on');
+
+                theta = linspace(0, 2*pi, 50);
+                x = center(1) + radius * cos(theta);
+                y = center(2) + radius * sin(theta);
+
+                skillEffect = fill(obj.GameAxes, x, y, [1, 1, 0], ...
+                    'FaceAlpha', 0.6, ...
+                    'EdgeColor', [1, 0.8, 0], ...
+                    'LineWidth', 3);
+
+                obj.SkillEffects{end+1} = struct('Graphic', skillEffect, 'Timer', 0.5);
+
+                if ~wasHeld
+                    hold(obj.GameAxes, 'off');
+                end
+                return;
+            end
+
             wasHeld = ishold(obj.GameAxes);
             hold(obj.GameAxes, 'on');
 
-            % 創建圓形範圍指示器
-            theta = linspace(0, 2*pi, 50);
-            x = center(1) + radius * cos(theta);
-            y = center(2) + radius * sin(theta);
+            % 使用第一幀創建初始圖像
+            firstFrame = obj.Skill1Frames{1};
+            [h, w, ~] = size(firstFrame.Image);
 
-            % 創建填充圓形
-            skillEffect = fill(obj.GameAxes, x, y, [1, 1, 0], ... % 黃色
-                'FaceAlpha', 0.6, ...
-                'EdgeColor', [1, 0.8, 0], ...
-                'LineWidth', 3);
+            % 計算動畫大小（根據技能範圍調整）
+            animationSize = radius * 2; % 動畫大小基於技能範圍
+            scaleFactor = animationSize / max(h, w);
 
-            % 存儲動畫效果
-            obj.SkillEffects{end+1} = struct('Graphic', skillEffect, 'Timer', 0.5);
+            % 創建動畫實例
+            newAnimation = struct( ...
+                'Position', center, ...
+                'FrameIndex', 1, ...
+                'FrameTimer', 0, ...
+                'FrameInterval', 0.1, ... % 每幀持續0.1秒
+                'ScaleFactor', scaleFactor, ...
+                'Graphic', [], ...
+                'IsActive', true, ...
+                'TotalTimer', 0, ...
+                'MaxDuration', 0.9 ... % 9幀 × 0.1秒 = 0.9秒
+                );
+
+            % 創建第一幀的圖像、接收返回值
+            newAnimation = obj.updateSkill1Frame(newAnimation);
+
+            % 添加到動畫列表
+            obj.Skill1Animations{end+1} = newAnimation;
 
             if ~wasHeld
                 hold(obj.GameAxes, 'off');
             end
         end
+        
+        % function with return value
+        function animation = updateSkill1Frame(obj, animation)
+            % 更新技能1動畫幀 - 返回修改後的動畫結構體
+            if ~animation.IsActive || animation.FrameIndex > length(obj.Skill1Frames)
+                return;
+            end
+
+            % 獲取當前幀
+            frame = obj.Skill1Frames{animation.FrameIndex};
+            img = frame.Image;
+            alpha = frame.Alpha;
+
+            % 計算圖像大小和位置
+            [h, w, ~] = size(img);
+            scaledW = w * animation.ScaleFactor;
+            scaledH = h * animation.ScaleFactor;
+
+            centerPos = animation.Position;
+
+            % 修改位置計算 - 讓動畫底部對應到目標位置
+            xData = [centerPos(1) - scaledW/2, centerPos(1) + scaledW/2]; % 水平居中
+            yData = [centerPos(2), centerPos(2) + scaledH];               % 底部對應到目標位置
+
+            % 如果已有圖像，先刪除
+            if ~isempty(animation.Graphic) && isgraphics(animation.Graphic)
+                delete(animation.Graphic);
+            end
+
+            % 創建新的圖像
+            wasHeld = ishold(obj.GameAxes);
+            hold(obj.GameAxes, 'on');
+
+            animation.Graphic = image(obj.GameAxes, xData, yData, img, ...
+                'AlphaData', alpha);
+
+            if ~wasHeld
+                hold(obj.GameAxes, 'off');
+            end
+
+            % 返回修改後的動畫結構體
+        end
+
+
+
 
         function updateSkillSystem(obj, deltaTime)
             % 更新技能冷卻
@@ -2120,19 +2284,21 @@ classdef final_all < handle
                 obj.Skill2Cooldown = max(0, obj.Skill2Cooldown - deltaTime);
             end
 
-            % 更新第三個技能冷卻 - 添加這部分
+            % 更新第三個技能冷卻 
             if obj.Skill3Cooldown > 0
                 obj.Skill3Cooldown = max(0, obj.Skill3Cooldown - deltaTime);
             end
+             % 更新技能1動畫
+            obj.updateSkill1Animations(deltaTime);
 
-            % 更新技能動畫效果
+            % 更新原有的技能動畫效果（備用）
             effectsToRemove = [];
             for i = 1:length(obj.SkillEffects)
                 obj.SkillEffects{i}.Timer = obj.SkillEffects{i}.Timer - deltaTime;
 
                 if obj.SkillEffects{i}.Timer <= 0
                     % 動畫結束，移除效果
-                    if isvalid(obj.SkillEffects{i}.Graphic)
+                    if ~isempty(obj.SkillEffects{i}.Graphic) && isgraphics(obj.SkillEffects{i}.Graphic)
                         delete(obj.SkillEffects{i}.Graphic);
                     end
                     effectsToRemove(end+1) = i;
@@ -2148,6 +2314,51 @@ classdef final_all < handle
             % 移除已結束的動畫效果
             obj.SkillEffects(effectsToRemove) = [];
         end
+
+        function updateSkill1Animations(obj, deltaTime)
+            % 更新技能1動畫列表
+            animationsToRemove = [];
+
+            for i = 1:length(obj.Skill1Animations)
+                animation = obj.Skill1Animations{i};
+
+                if ~animation.IsActive
+                    animationsToRemove(end+1) = i;
+                    continue;
+                end
+
+                % 更新總計時器
+                animation.TotalTimer = animation.TotalTimer + deltaTime;
+                animation.FrameTimer = animation.FrameTimer + deltaTime;
+
+                % 檢查是否需要切換到下一幀
+                if animation.FrameTimer >= animation.FrameInterval
+                    animation.FrameTimer = 0;
+                    animation.FrameIndex = animation.FrameIndex + 1;
+
+                    % 檢查動畫是否結束
+                    if animation.FrameIndex > length(obj.Skill1Frames) || ...
+                            animation.TotalTimer >= animation.MaxDuration
+                        % 動畫結束，清理
+                        if ~isempty(animation.Graphic) && isgraphics(animation.Graphic)
+                            delete(animation.Graphic);
+                        end
+                        animation.IsActive = false;
+                        animationsToRemove(end+1) = i;
+                    else
+                        % 更新到下一幀 
+                        animation = obj.updateSkill1Frame(animation);
+                    end
+                end
+
+                % 確保修改後的結構被保存
+                obj.Skill1Animations{i} = animation;
+            end
+
+            % 移除已結束的動畫
+            obj.Skill1Animations(animationsToRemove) = [];
+        end
+
 
         function updateSkillUI(obj)
             if isvalid(obj.SkillLabel)
@@ -2218,8 +2429,8 @@ classdef final_all < handle
 
         function executeBossSkillDamage(obj, bossIndex, center, radius)
             % 執行boss技能傷害
-            skillDamage = obj.Enemies(bossIndex).Attack * 1.5; % boss攻擊力的1.5倍
-
+            skillDamage = obj.Enemies(bossIndex).Attack * 1.5; 
+            
             % 檢查玩家是否在範圍內
             distance = norm(obj.Player.Position - center);
             if distance <= radius
@@ -2242,8 +2453,8 @@ classdef final_all < handle
 
             % 創建技能傷害動畫效果
             obj.createSkillAnimation(center, radius);
-        end
 
+        end
 
         function useSkill2(obj)
             % 檢查技能是否可用
@@ -2420,6 +2631,7 @@ classdef final_all < handle
             end
 
             skillDamage = obj.Player.Attack * 1.5;
+            enemiesToRemove = false(1, length(obj.Enemies));
 
             for i = 1:length(obj.Enemies)
                 % 計算敵人與毒區域中心的距離
@@ -2434,12 +2646,9 @@ classdef final_all < handle
                     obj.Enemies(i).PoisonSlowed = true;
                     obj.Enemies(i).SlowTimer = 1.2; % 減速效果持續1.2秒
 
-                    % 檢查敵人是否死亡
+                    % 檢查敵人是否死亡 分
                     if obj.Enemies(i).Health <= 0
-                        enemiesToRemove = false(1, length(obj.Enemies));
-                        enemiesToRemove(i) = true;
-                        obj.removeEnemies(enemiesToRemove);
-                        return;
+                        enemiesToRemove(i) = true; % 標記移除
                     end
 
                     % 視覺效果
@@ -2451,7 +2660,13 @@ classdef final_all < handle
                     end
                 end
             end
+
+            % 在循環結束後一次性移除所有死亡的敵人
+            if any(enemiesToRemove)
+                obj.removeEnemies(enemiesToRemove);
+            end
         end
+
 
         function updateSkill2UI(obj)
             if isvalid(obj.Skill2Label)
@@ -2484,9 +2699,9 @@ classdef final_all < handle
                 [effectSheet, ~, effectAlpha] = imread(effectPath);
 
                 numColumns = 9;
-                numRows = 30; 
-                targetRow = 4; 
-                numFrames = 6; 
+                numRows = 30;
+                targetRow = 4;
+                numFrames = 6;
 
                 frameWidth = floor(size(effectSheet, 2) / numColumns);
                 frameHeight = floor(size(effectSheet, 1) / numRows);
@@ -2543,7 +2758,7 @@ classdef final_all < handle
             centerPos = [obj.gameWidth / 2, obj.gameHeight / 2];
             obj.createSuperExplosion(centerPos);
 
-            % 立即清除所有敵人 
+            % 立即清除所有敵人
             obj.destroyAllEnemies();
 
             % 設置冷卻時間
@@ -2728,6 +2943,64 @@ classdef final_all < handle
             % 只有當boss存在並被殺死時才觸發勝利
             if hasBoss
                 obj.showVictoryScreen();
+            end
+        end
+
+        function loadSkill1Frames(obj)
+            % 載入Effect.png第26行第1-9列
+            try
+                effectPath = fullfile(obj.basePath, 'images', 'skill', 'Effect.png');
+                [effectSheet, ~, effectAlpha] = imread(effectPath);
+
+                % Effect.png 是30行×9列的sheet
+                numColumns = 9;
+                numRows = 30;
+                targetRow = 26;      % 第26行
+                numFrames = 9;       % 第1到第9列，共九張圖片
+
+                frameWidth = floor(size(effectSheet, 2) / numColumns);
+                frameHeight = floor(size(effectSheet, 1) / numRows);
+
+                obj.Skill1Frames = cell(1, numFrames);
+
+                for frame = 1:numFrames
+                    % 計算第26行第frame列的位置
+                    startY = floor((targetRow - 1) * frameHeight) + 1;
+                    startX = floor((frame - 1) * frameWidth) + 1;
+                    endY = min(startY + frameHeight - 1, size(effectSheet, 1));
+                    endX = min(startX + frameWidth - 1, size(effectSheet, 2));
+
+                    % 提取幀
+                    frameImg = effectSheet(startY:endY, startX:endX, :);
+
+                    % 處理alpha通道
+                    if ~isempty(effectAlpha)
+                        frameAlpha = effectAlpha(startY:endY, startX:endX);
+                    else
+                        frameAlpha = ones(size(frameImg, 1), size(frameImg, 2));
+                    end
+
+                    % 翻轉圖像（與爆炸動畫保持一致）
+                    frameImg = flipud(frameImg);
+                    frameAlpha = flipud(frameAlpha);
+
+                    obj.Skill1Frames{frame} = struct('Image', frameImg, 'Alpha', frameAlpha);
+                end
+
+            catch ME
+                warning(ME.identifier,'載入技能1動畫失敗：%s', ME.message);
+                % 創建備用的效果
+                obj.Skill1Frames = {};
+                for i = 1:9
+                    % 創建漸變的黃色圓形作為備用
+                    img = ones(100, 100, 3, 'uint8');
+                    intensity = (10-i) / 9; % 逐漸減弱
+                    img(:, :, 1) = uint8(255 * intensity); % Red
+                    img(:, :, 2) = uint8(255 * intensity); % Green (Yellow)
+                    img(:, :, 3) = uint8(0); % Blue
+                    alpha = ones(100, 100) * intensity;
+                    obj.Skill1Frames{i} = struct('Image', img, 'Alpha', alpha);
+                end
             end
         end
 
