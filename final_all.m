@@ -65,13 +65,22 @@ classdef final_all < handle
         % used to fix input latency
         KeysPressed = struct('w', false, 'a', false, 's', false, 'd', false)
 
-        % 技能系統
+        % 技能(1)
         SkillCooldown = 0  % 技能冷卻時間(秒)
         SkillMaxCooldown = 3  % 最大冷卻時間
         SkillLabel  % 技能冷卻顯示標籤
         SkillEffects = {}  % 存儲技能動畫效果
         SkillDescLabel  % 技能說明標籤
         SkillIcon       % 技能圖標
+
+        % 技能2
+        Skill2Cooldown = 0          
+        Skill2MaxCooldown = 4       
+        Skill2Label                
+        Skill2DescLabel            
+        Skill2Icon                 
+        PoisonProjectiles = {}     
+        PoisonAreas = {}          
     end
 
     methods
@@ -336,8 +345,13 @@ classdef final_all < handle
                     obj.resolveEnemyCollisions();
                     obj.checkPlayerEnemyCollision();
                     obj.updatePlayerAnimation(0.016);
+                    
                     obj.updateSkillSystem(0.016);
                     obj.updateSkillUI();
+                    % skill_2
+                    obj.updatePoisonProjectiles(0.016);
+                    obj.updatePoisonAreas(0.016);
+                    obj.updateSkill2UI();
 
                     % 更新玩家資訊顯示
                     if isvalid(obj.HealthLabel)
@@ -684,10 +698,10 @@ classdef final_all < handle
             obj.AttackLabel.FontColor = 'w';
             obj.AttackLabel.BackgroundColor = [0.1, 0.1, 0.4];
 
-            % skill
+            % skill_1
             obj.SkillIcon = uiimage(obj.MainFig);
             obj.SkillIcon.ImageSource = 'C:\Users\User\Desktop\matlab_\final\images\skill\mikunani.png';
-            obj.SkillIcon.Position = [65, obj.ScreenHeight - 205, 30, 30]; % 調整大小和位置
+            obj.SkillIcon.Position = [65, obj.ScreenHeight - 200, 30, 30]; % 調整大小和位置
             obj.SkillIcon.Visible = 'off'; % 初始隱藏
 
             obj.SkillLabel = uilabel(obj.MainFig);
@@ -699,13 +713,36 @@ classdef final_all < handle
             obj.SkillLabel.HorizontalAlignment = 'center';
             obj.SkillLabel.Visible = 'off';
 
-            % 技能說明 - 存儲到屬性中以便清理
+
             obj.SkillDescLabel = uilabel(obj.MainFig);
             obj.SkillDescLabel.Text = '技能(1)';
             obj.SkillDescLabel.Position = [135, obj.ScreenHeight - 200, 100, 40];
             obj.SkillDescLabel.FontSize = 14;
             obj.SkillDescLabel.FontColor = 'w';
             obj.SkillDescLabel.BackgroundColor = [0.1, 0.1, 0.4];
+
+
+            % 技能2
+            obj.Skill2Icon = uiimage(obj.MainFig);
+            obj.Skill2Icon.ImageSource = 'C:\Users\User\Desktop\matlab_\final\images\skill\mikunani.png';
+            obj.Skill2Icon.Position = [65, obj.ScreenHeight - 250, 30, 30];
+            obj.Skill2Icon.Visible = 'off';
+
+            obj.Skill2Label = uilabel(obj.MainFig);
+            obj.Skill2Label.Text = '';
+            obj.Skill2Label.Position = [50, obj.ScreenHeight - 250, 80, 40];
+            obj.Skill2Label.FontSize = 18;
+            obj.Skill2Label.FontColor = 'w';
+            obj.Skill2Label.BackgroundColor = [0.1, 0.1, 0.4];
+            obj.Skill2Label.HorizontalAlignment = 'center';
+            obj.Skill2Label.Visible = 'off';
+
+            obj.Skill2DescLabel = uilabel(obj.MainFig);
+            obj.Skill2DescLabel.Text = '技能(2)';
+            obj.Skill2DescLabel.Position = [135, obj.ScreenHeight - 250, 100, 40];
+            obj.Skill2DescLabel.FontSize = 14;
+            obj.Skill2DescLabel.FontColor = 'w';
+            obj.Skill2DescLabel.BackgroundColor = [0.1, 0.1, 0.4];
 
             obj.FireballFrames = cell(1, 5);
             for i = 1:5
@@ -919,12 +956,13 @@ classdef final_all < handle
         end
 
         function initEnemies(obj, levelNum)
-             obj.Enemies = struct('Type', {}, 'Position', {}, 'AwarenessDistance', {}, ...
-                        'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
-                        'AttackCooldown', {}, 'SkillCooldown', {}, ...
-                        'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
-                        'SkillWarningTimer', {}, 'Graphic', {});
-    
+            obj.Enemies = struct('Type', {}, 'Position', {}, 'AwarenessDistance', {}, ...
+                'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
+                'AttackCooldown', {}, 'SkillCooldown', {}, ...
+                'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
+                'SkillWarningTimer', {},'PoisonSlowed', {}, ...
+                'SlowTimer', {}, 'Graphic', {});
+
             switch levelNum
                 case 1
                     % 近戰敵人配置
@@ -941,6 +979,8 @@ classdef final_all < handle
                             'SkillMaxCooldown', 0, ...     % 一般小怪不使用技能，設為0
                             'SkillWarning', [], ...        % 一般小怪不使用技能警示
                             'SkillWarningTimer', 0, ...    % 一般小怪不使用技能警示
+                            'PoisonSlowed', false, ... % 添加減速狀態
+                            'SlowTimer', 0, ...        % 添加減速計時器
                             'Graphic', [] ...
                             );
 
@@ -966,6 +1006,8 @@ classdef final_all < handle
                 'SkillMaxCooldown', 2, ...     % boss技能冷卻為2秒
                 'SkillWarning', [], ...        % 技能警示圖形
                 'SkillWarningTimer', 0, ...    % 警示計時器
+                'PoisonSlowed', false, ...     % only to match structure
+                'SlowTimer', 0, ...           
                 'Graphic', [] ...
                 );
 
@@ -999,6 +1041,11 @@ classdef final_all < handle
 
             if strcmp(event.Key, '1') && ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
                 obj.useSkill();
+                return;
+            end
+
+            if strcmp(event.Key, '2') && ~obj.isPaused && strcmp(obj.GameState, 'PLAYING')
+                obj.useSkill2();
                 return;
             end
 
@@ -1186,7 +1233,7 @@ classdef final_all < handle
                         % end
                     end
                 else
-
+                    
                     % 處理敵人攻擊冷卻
                     if obj.Enemies(i).AttackCooldown > 0
                         obj.Enemies(i).AttackCooldown = obj.Enemies(i).AttackCooldown - 1;
@@ -1213,14 +1260,18 @@ classdef final_all < handle
                         end
                     end
 
-                    % % 跳過 BOSS 移動
-                    % if strcmp(obj.Enemies(i).Type, 'boss')
-                    %     continue;
-                    % end
                     % 僅在感知範圍內追蹤玩家
                     if distanceToPlayer <= obj.Enemies(i).AwarenessDistance
 
-                        % 設定移動速度
+                        % 更新減速效果
+                        if isfield(obj.Enemies(i), 'SlowTimer') && obj.Enemies(i).SlowTimer > 0
+                            obj.Enemies(i).SlowTimer = obj.Enemies(i).SlowTimer - 0.016;
+                            if obj.Enemies(i).SlowTimer <= 0
+                                obj.Enemies(i).PoisonSlowed = false;
+                            end
+                        end
+
+                        % 設定移動速度時考慮減速效果
                         switch obj.Enemies(i).Type
                             case 'melee'
                                 moveSpeed = 2;
@@ -1229,6 +1280,12 @@ classdef final_all < handle
                             otherwise
                                 moveSpeed = 1.5;
                         end
+
+                        % 如果被毒減速，速度減半
+                        if isfield(obj.Enemies(i), 'PoisonSlowed') && obj.Enemies(i).PoisonSlowed
+                            moveSpeed = moveSpeed * 0.5;
+                        end
+
 
                         % 保存原始位置
                         originalPos = obj.Enemies(i).Position;
@@ -1649,6 +1706,55 @@ classdef final_all < handle
 
             % 重置技能冷卻
             obj.SkillCooldown = 0;
+
+            % 清理第二個技能UI
+            try
+                if ~isempty(obj.Skill2Label) && isvalid(obj.Skill2Label)
+                    delete(obj.Skill2Label);
+                end
+            catch
+            end
+            obj.Skill2Label = [];
+
+            try
+                if ~isempty(obj.Skill2DescLabel) && isvalid(obj.Skill2DescLabel)
+                    delete(obj.Skill2DescLabel);
+                end
+            catch
+            end
+            obj.Skill2DescLabel = [];
+
+            try
+                if ~isempty(obj.Skill2Icon) && isvalid(obj.Skill2Icon)
+                    delete(obj.Skill2Icon);
+                end
+            catch
+            end
+            obj.Skill2Icon = [];
+
+            % 清理毒藥水投擲物
+            for i = 1:length(obj.PoisonProjectiles)
+                if ~isempty(obj.PoisonProjectiles{i}) && ...
+                        isfield(obj.PoisonProjectiles{i}, 'Graphic') && ...
+                        isvalid(obj.PoisonProjectiles{i}.Graphic)
+                    delete(obj.PoisonProjectiles{i}.Graphic);
+                end
+            end
+            obj.PoisonProjectiles = {};
+
+            % 清理毒區域
+            for i = 1:length(obj.PoisonAreas)
+                if ~isempty(obj.PoisonAreas{i}) && ...
+                        isfield(obj.PoisonAreas{i}, 'Graphic') && ...
+                        isvalid(obj.PoisonAreas{i}.Graphic)
+                    delete(obj.PoisonAreas{i}.Graphic);
+                end
+            end
+            obj.PoisonAreas = {};
+
+            % 重置第二個技能冷卻
+            obj.Skill2Cooldown = 0;
+
         end
 
         function showVictoryScreen(obj)
@@ -1939,6 +2045,9 @@ classdef final_all < handle
                 obj.SkillCooldown = max(0, obj.SkillCooldown - deltaTime);
             end
 
+            if obj.Skill2Cooldown > 0
+                obj.Skill2Cooldown = max(0, obj.Skill2Cooldown - deltaTime);
+            end
 
             % 更新技能動畫效果
             effectsToRemove = [];
@@ -2058,6 +2167,240 @@ classdef final_all < handle
             % 創建技能傷害動畫效果
             obj.createSkillAnimation(center, radius);
         end
+
+
+        function useSkill2(obj)
+            % 檢查技能是否可用
+            if obj.Skill2Cooldown > 0
+                return; % 技能在冷卻中
+            end
+
+            obj.Skill2Icon.Visible = 'off';
+
+            % 投擲毒藥水到鼠標位置
+            obj.throwPoisonBottle(obj.Player.Position, obj.MousePos);
+
+            % 設置冷卻時間
+            obj.Skill2Cooldown = obj.Skill2MaxCooldown;
+            obj.Skill2Label.Visible = 'on';
+        end
+
+        function throwPoisonBottle(obj, startPos, targetPos)
+            % 計算投擲方向和距離
+            direction = targetPos - startPos;
+            distance = norm(direction);
+
+            if distance == 0
+                return;
+            end
+
+            normalizedDirection = direction / distance;
+
+            % 創建毒藥水投擲物
+            wasHeld = ishold(obj.GameAxes);
+            hold(obj.GameAxes, 'on');
+
+            % 創建投擲物圖形（綠色圓點）
+            projectileGraphic = plot(obj.GameAxes, startPos(1), startPos(2), 'o', ...
+                'MarkerSize', 12, ...
+                'MarkerFaceColor', [0, 0.8, 0], ...
+                'MarkerEdgeColor', [0, 0.6, 0], ...
+                'LineWidth', 2);
+
+            % 創建投擲物數據
+            newProjectile = struct( ...
+                'Position', startPos, ...
+                'TargetPos', targetPos, ...
+                'Speed', 8, ...
+                'Graphic', projectileGraphic, ...
+                'Direction', normalizedDirection ...
+                );
+
+            % 添加到投擲物陣列
+            obj.PoisonProjectiles{end+1} = newProjectile;
+
+            if ~wasHeld
+                hold(obj.GameAxes, 'off');
+            end
+        end
+
+        function createPoisonArea(obj, center)
+            % 創建毒區域效果
+            wasHeld = ishold(obj.GameAxes);
+            hold(obj.GameAxes, 'on');
+
+            radius = 80; % 毒區域半徑
+
+            % 創建綠色圓形毒區域
+            theta = linspace(0, 2*pi, 50);
+            x = center(1) + radius * cos(theta);
+            y = center(2) + radius * sin(theta);
+
+            % 創建填充圓形
+            poisonArea = fill(obj.GameAxes, x, y, [0, 0.8, 0], ... % 綠色
+                'FaceAlpha', 0.4, ...
+                'EdgeColor', [0, 0.6, 0], ...
+                'LineWidth', 2);
+
+            % 創建毒區域數據
+            newPoisonArea = struct( ...
+                'Position', center, ...
+                'Radius', radius, ...
+                'Graphic', poisonArea, ...
+                'Timer', 3.0, ... % 持續3秒
+                'DamageTimer', 0, ... % 傷害計時器
+                'DamageInterval', 1.0 ... % 每秒造成傷害
+                );
+
+            % 添加到毒區域陣列
+            obj.PoisonAreas{end+1} = newPoisonArea;
+
+            if ~wasHeld
+                hold(obj.GameAxes, 'off');
+            end
+        end
+        
+        function updatePoisonProjectiles(obj, deltaTime)
+    % 更新毒藥水投擲物
+    projectilesToRemove = [];
+    
+    for i = 1:length(obj.PoisonProjectiles)
+        projectile = obj.PoisonProjectiles{i};
+        
+        % 移動投擲物
+        projectile.Position = projectile.Position + projectile.Direction * projectile.Speed;
+        
+        % 更新圖形位置
+        if isvalid(projectile.Graphic)
+            projectile.Graphic.XData = projectile.Position(1);
+            projectile.Graphic.YData = projectile.Position(2);
+        end
+        
+        % 檢查是否到達目標位置
+        distance = norm(projectile.Position - projectile.TargetPos);
+        if distance <= 10 % 到達目標位置
+            % 創建毒區域
+            obj.createPoisonArea(projectile.TargetPos);
+            
+            % 移除投擲物
+            if isvalid(projectile.Graphic)
+                delete(projectile.Graphic);
+            end
+            projectilesToRemove(end+1) = i;
+        end
+        
+        % 更新投擲物數據
+        obj.PoisonProjectiles{i} = projectile;
+    end
+    
+    % 移除已到達的投擲物
+    obj.PoisonProjectiles(projectilesToRemove) = [];
+end
+
+function updatePoisonAreas(obj, deltaTime)
+    % 更新毒區域
+    areasToRemove = [];
+    
+    for i = 1:length(obj.PoisonAreas)
+        area = obj.PoisonAreas{i};
+        
+        % 更新計時器
+        area.Timer = area.Timer - deltaTime;
+        area.DamageTimer = area.DamageTimer + deltaTime;
+        
+        % 檢查是否需要造成傷害
+        if area.DamageTimer >= area.DamageInterval
+            obj.applyPoisonDamage(area);
+            area.DamageTimer = 0;
+        end
+        
+        % 檢查是否過期
+        if area.Timer <= 0
+            % 移除毒區域
+            if isvalid(area.Graphic)
+                delete(area.Graphic);
+            end
+            areasToRemove(end+1) = i;
+        else
+            % 更新透明度（漸漸消失效果）
+            if isvalid(area.Graphic)
+                alpha = area.Timer / 3.0; % 原始持續時間
+                area.Graphic.FaceAlpha = alpha * 0.4;
+            end
+        end
+        
+        % 更新區域數據
+        obj.PoisonAreas{i} = area;
+    end
+    
+    % 移除過期的區域
+    obj.PoisonAreas(areasToRemove) = [];
+end
+
+function applyPoisonDamage(obj, area)
+    % 對毒區域內的敵人造成傷害並減速
+    if isempty(obj.Enemies)
+        return;
+    end
+    
+    skillDamage = obj.Player.Attack * 1.5;
+    
+    for i = 1:length(obj.Enemies)
+        % 計算敵人與毒區域中心的距離
+        distance = norm(obj.Enemies(i).Position - area.Position);
+        
+        % 如果在毒區域內
+        if distance <= area.Radius
+            % 造成傷害
+            obj.Enemies(i).Health = obj.Enemies(i).Health - skillDamage;
+            
+            % 添加減速效果標記
+            obj.Enemies(i).PoisonSlowed = true;
+            obj.Enemies(i).SlowTimer = 1.2; % 減速效果持續1.2秒
+            
+            % 檢查敵人是否死亡
+            if obj.Enemies(i).Health <= 0
+                enemiesToRemove = false(1, length(obj.Enemies));
+                enemiesToRemove(i) = true;
+                obj.removeEnemies(enemiesToRemove);
+                return;
+            end
+            
+            % 視覺效果
+            if isvalid(obj.Enemies(i).Graphic)
+                originalColor = obj.Enemies(i).Graphic.FaceColor;
+                obj.Enemies(i).Graphic.FaceColor = [0, 1, 0]; % 綠色閃爍
+                pause(0.05);
+                obj.Enemies(i).Graphic.FaceColor = originalColor;
+            end
+        end
+    end
+end
+
+function updateSkill2UI(obj)
+    if isvalid(obj.Skill2Label)
+        if obj.Skill2Cooldown > 0
+            % 冷卻中 - 顯示剩餘時間，灰暗色，隱藏圖片
+            obj.Skill2Label.Text = sprintf('%.1f', obj.Skill2Cooldown);
+            obj.Skill2Label.FontColor = [0.5, 0.5, 0.5];
+            obj.Skill2Label.BackgroundColor = [0.3, 0.3, 0.3];
+            
+            if isvalid(obj.Skill2Icon)
+                obj.Skill2Icon.Visible = 'off';
+            end
+        else
+            % 可用 - 不顯示數字，顯示圖片
+            obj.Skill2Label.Text = '';
+            obj.Skill2Label.BackgroundColor = [0.1, 0.1, 0.4];
+            obj.Skill2Label.Visible = 'off';
+            
+            if isvalid(obj.Skill2Icon)
+                obj.Skill2Icon.Visible = 'on';
+            end
+        end
+    end
+end
+
 
 
 
