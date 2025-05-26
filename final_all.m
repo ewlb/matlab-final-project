@@ -1,13 +1,12 @@
 classdef final_all < handle
     properties
-        % 遊戲狀態與視窗管理
         MainFig % 主視窗
         MainPanel % 主選單面板
         LevelPanel % 關卡選擇面板
         GamePanel % 遊戲面板
         HelpPanel % 說明面板
-        PausePanel % 暫停面板 (新增)
-        GameOverPanel % 遊戲結束面板 (新增)
+        PausePanel % 暫停面板 
+        GameOverPanel % 遊戲結束面板 
         VictoryPanel
 
         CurrentPanel % 當前顯示的面板
@@ -52,8 +51,11 @@ classdef final_all < handle
         BlinkTimer = [] % 閃爍效果計時器
 
         FireballFrames = {} % Store the fireball animation frames
-        % 圖片的基礎路徑
-        basePath = 'C:\Users\User\Desktop\matlab_\final';
+
+        % basePath dynamically
+        basePath = fileparts(mfilename('fullpath'));
+        % basePath = 'C:\Users\User\Desktop\matlab_\final';
+
         % player animation property
         IdleFrames
         RunFrames
@@ -335,6 +337,10 @@ classdef final_all < handle
 
                     % 檢查敵人圖形是否有效
                     for i = 1:length(obj.Enemies)
+                        % 跳過標記為刪除的敵人
+                        if isfield(obj.Enemies(i), 'MarkedForDeletion') && obj.Enemies(i).MarkedForDeletion
+                            continue;
+                        end
                         if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
                             % 根據敵人類型重建圖形
                             if strcmp(obj.Enemies(i).Type, 'boss')
@@ -806,7 +812,8 @@ classdef final_all < handle
 
             % skill_1
             obj.SkillIcon = uiimage(obj.MainFig);
-            obj.SkillIcon.ImageSource = 'C:\Users\User\Desktop\matlab_\final\images\skill\mikunani.png';
+            imagePath = fullfile(obj.basePath, 'images', 'skill', 'mikunani.png');
+            obj.SkillIcon.ImageSource=imagePath;
             obj.SkillIcon.Position = [65, obj.ScreenHeight - 200, 30, 30]; % 調整大小和位置
             obj.SkillIcon.Visible = 'off'; % 初始隱藏
 
@@ -831,7 +838,8 @@ classdef final_all < handle
 
             % 技能2
             obj.Skill2Icon = uiimage(obj.MainFig);
-            obj.Skill2Icon.ImageSource = 'C:\Users\User\Desktop\matlab_\final\images\skill\mikunani.png';
+            imagePath = fullfile(obj.basePath, 'images', 'skill', 'mikunani.png');
+            obj.Skill2Icon.ImageSource=imagePath;
             obj.Skill2Icon.Position = [65, obj.ScreenHeight - 250, 30, 30];
             obj.Skill2Icon.Visible = 'off';
 
@@ -854,7 +862,8 @@ classdef final_all < handle
             % skill3
             % 第三個技能 - 添加在第二個技能下方
             obj.Skill3Icon = uiimage(obj.MainFig);
-            obj.Skill3Icon.ImageSource = 'C:\Users\User\Desktop\matlab_\final\images\skill\mikunani.png';
+            imagePath = fullfile(obj.basePath, 'images', 'skill', 'mikunani.png');
+            obj.Skill3Icon.ImageSource=imagePath;
             obj.Skill3Icon.Position = [65, obj.ScreenHeight - 300, 30, 30];
             obj.Skill3Icon.Visible = 'off';
 
@@ -1095,7 +1104,7 @@ classdef final_all < handle
                 'AttackCooldown', {}, 'SkillCooldown', {}, ...
                 'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
                 'SkillWarningTimer', {}, 'PoisonSlowed', {}, ...
-                'SlowTimer', {}, 'Graphic', {});
+                'SlowTimer', {}, 'Graphic', {}, 'MarkedForDeletion', {});
 
             switch levelNum
                 case 1
@@ -1114,7 +1123,8 @@ classdef final_all < handle
                             'SkillWarningTimer', 0, ...
                             'PoisonSlowed', false, ...
                             'SlowTimer', 0, ...
-                            'Graphic', [] ...
+                            'Graphic', [] , ...
+                            'MarkedForDeletion', false ...
                             );
 
                         % 創建圖形
@@ -1140,7 +1150,8 @@ classdef final_all < handle
                 'SkillWarningTimer', 0, ... % 警示計時器
                 'PoisonSlowed', false, ... % only to match structure
                 'SlowTimer', 0, ...
-                'Graphic', [] ...
+                'Graphic', [] , ...
+                "MarkedForDeletion", false ...
                 );
 
             % 創建 BOSS 圖形
@@ -1244,9 +1255,11 @@ classdef final_all < handle
                             alpha = frame.Alpha;
 
                             % Rotate image for direction
-                            rotatedImg = imrotate(img, -obj.Bullets(i).Angle, 'bicubic');
+                            % rotatedImg = imrotate(img, -obj.Bullets(i).Angle, 'bicubic');
+                            rotatedImg = ROTATE_IMAGINE(img, -obj.Bullets(i).Angle, 'bicubic');
+
                             if ~isempty(alpha)
-                                rotatedAlpha = imrotate(alpha, -obj.Bullets(i).Angle, 'bicubic');
+                                rotatedAlpha = ROTATE_IMAGINE(alpha, -obj.Bullets(i).Angle, 'bicubic');
                                 obj.Bullets(i).Graphic.AlphaData = rotatedAlpha;
                             end
 
@@ -1292,6 +1305,11 @@ classdef final_all < handle
 
             % 處理每個敵人
             for i = 1:length(obj.Enemies)
+
+                % 跳過標記為刪除的敵人
+                if isfield(obj.Enemies(i), 'MarkedForDeletion') && obj.Enemies(i).MarkedForDeletion
+                    continue;
+                end
                 % 確保敵人圖形有效
                 if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
                     % 根據敵人類型重建圖形
@@ -1364,10 +1382,7 @@ classdef final_all < handle
 
                     % 技能攻擊邏輯
                     if obj.Enemies(i).SkillCooldown <= 0 && obj.Enemies(i).SkillWarningTimer <= 0
-                        % 隨機決定是否使用技能（30%機率）
-                        % if rand() < 0.3
                         obj.useBossSkill(i);
-                        % end
                     end
                 else
 
@@ -1384,11 +1399,11 @@ classdef final_all < handle
                         % 設置攻擊冷卻（120幀）
                         obj.Enemies(i).AttackCooldown = 120;
 
-                        % 視覺效果 - 閃爍敵人顏色表示攻擊
-                        originalColor = obj.Enemies(i).Graphic.FaceColor;
-                        obj.Enemies(i).Graphic.FaceColor = [1, 1, 0]; % 黃色閃爍
-                        pause(0.05);
-                        obj.Enemies(i).Graphic.FaceColor = originalColor;
+                        % 閃爍敵人顏色表示攻擊 
+                        % TODO: change here using animation
+
+                        % don't use pause
+                        obj.createFlashEffect(i, [1, 1, 0], 0.05);
 
                         % 檢查玩家是否死亡
                         if obj.Player.Health <= 0
@@ -1607,9 +1622,9 @@ classdef final_all < handle
                 alpha = frame.Alpha;
 
                 % Rotate the image to point in direction of travel
-                rotatedImg = imrotate(img, -angle);
+                rotatedImg = ROTATE_IMAGINE(img, -angle);
                 if ~isempty(alpha)
-                    rotatedAlpha = imrotate(alpha, -angle);
+                    rotatedAlpha = ROTATE_IMAGINE(alpha, -angle);
                 else
                     rotatedAlpha = [];
                 end
@@ -2169,24 +2184,57 @@ classdef final_all < handle
                 if distance <= radius
                     obj.Enemies(i).Health = obj.Enemies(i).Health - damage;
 
-                    % 標記死亡的敵人
                     if obj.Enemies(i).Health <= 0
                         enemiesToRemove(i) = true;
                     end
 
-                    % 視覺效果 - 敵人受傷閃爍
+                    % 受傷閃爍
                     if isvalid(obj.Enemies(i).Graphic)
-                        originalColor = obj.Enemies(i).Graphic.FaceColor;
-                        obj.Enemies(i).Graphic.FaceColor = [1, 1, 0]; % 黃色閃爍
-                        pause(0.05);
-                        obj.Enemies(i).Graphic.FaceColor = originalColor;
+                        % pause(0.05); % don't use pause
+                        obj.createFlashEffect(i, [1, 1, 0], 0.05);
                     end
+
                 end
             end
 
             % 移除死亡的敵人
             obj.removeEnemies(enemiesToRemove);
         end
+
+        function createFlashEffect(obj, enemyIndex, flashColor, duration)
+            % 閃爍效果
+            if enemyIndex > length(obj.Enemies) || ...
+                    ~isfield(obj.Enemies(enemyIndex), 'Graphic') || ...
+                    ~isvalid(obj.Enemies(enemyIndex).Graphic)
+                return;
+            end
+
+            enemyGraphic = obj.Enemies(enemyIndex).Graphic;
+
+            originalColor = [1, 0, 0]; % red
+
+            if isvalid(enemyGraphic)
+                % set color
+                enemyGraphic.FaceColor = flashColor;
+
+                restoreTimer = timer(...
+                    'StartDelay', duration, ...
+                    'TimerFcn', @(src,event) obj.restoreEnemyColor(enemyGraphic, originalColor), ...
+                    'ExecutionMode', 'singleShot');
+                start(restoreTimer);
+            end
+        end
+
+        function restoreEnemyColor(obj, graphic, originalColor)
+            try
+                if isvalid(graphic) && isgraphics(graphic)
+                    graphic.FaceColor = originalColor;
+                end
+            catch
+                % 忽略錯誤
+            end
+        end
+
 
         function createSkillAnimation(obj, center, radius)
             % 創建技能1動畫效果
@@ -2452,18 +2500,8 @@ classdef final_all < handle
             if distance <= radius
                 obj.Player.Health = obj.Player.Health - skillDamage;
 
-                % 視覺效果 - 玩家受傷閃爍
-                if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
-                    % 創建受傷閃爍效果
-                    if ~isempty(obj.IdleFrames)
-                        % 如果使用圖像動畫，暫時改變透明度
-                        originalAlpha = obj.Player.Graphic.AlphaData;
-                        obj.Player.Graphic.AlphaData = originalAlpha * 0.5; % 半透明
-                        pause(0.1);
-                        obj.Player.Graphic.AlphaData = originalAlpha;
-                    end
-                end
-
+                % 玩家受傷閃爍-deleted,TODO: use sound effect instead
+                
                 fprintf('玩家受到Boss技能攻擊，傷害：%.1f\n', skillDamage);
             end
 
@@ -2473,14 +2511,13 @@ classdef final_all < handle
         end
 
         function useSkill2(obj)
-            % 檢查技能是否可用
+
             if obj.Skill2Cooldown > 0
                 return; % 技能在冷卻中
             end
 
             obj.Skill2Icon.Visible = 'off';
 
-            % 投擲毒藥水到鼠標位置
             obj.throwPoisonBottle(obj.Player.Position, obj.MousePos);
 
             % 設置冷卻時間
@@ -2504,6 +2541,8 @@ classdef final_all < handle
             hold(obj.GameAxes, 'on');
 
             % 創建投擲物圖形（綠色圓點）
+            % TODO: use pictures
+
             projectileGraphic = plot(obj.GameAxes, startPos(1), startPos(2), 'o', ...
                 'MarkerSize', 12, ...
                 'MarkerFaceColor', [0, 0.8, 0], ...
@@ -2528,6 +2567,7 @@ classdef final_all < handle
         end
 
         function createPoisonArea(obj, center)
+            % TODO: add animation
             % 創建毒區域效果
             wasHeld = ishold(obj.GameAxes);
             hold(obj.GameAxes, 'on');
@@ -2658,21 +2698,19 @@ classdef final_all < handle
                     % 造成傷害
                     obj.Enemies(i).Health = obj.Enemies(i).Health - skillDamage;
 
-                    % 添加減速效果標記
+                    % 減速標記
                     obj.Enemies(i).PoisonSlowed = true;
                     obj.Enemies(i).SlowTimer = 1.2; % 減速效果持續1.2秒
 
-                    % 檢查敵人是否死亡 分
+                    % 檢查死亡
                     if obj.Enemies(i).Health <= 0
                         enemiesToRemove(i) = true; % 標記移除
                     end
 
                     % 視覺效果
                     if isvalid(obj.Enemies(i).Graphic)
-                        originalColor = obj.Enemies(i).Graphic.FaceColor;
-                        obj.Enemies(i).Graphic.FaceColor = [0, 1, 0]; % 綠色閃爍
-                        pause(0.05);
-                        obj.Enemies(i).Graphic.FaceColor = originalColor;
+                        % pause(0.05); % don't use pause
+                        obj.createFlashEffect(i, [0, 1, 0], 0.05); % 綠色閃爍
                     end
                 end
             end
@@ -2771,20 +2809,23 @@ classdef final_all < handle
             obj.Skill3Icon.Visible = 'off';
 
             % 記錄技能使用
-            fprintf('使用技能3：超級大爆炸\n');
-
+            fprintf('使用技能3：當前敵人數量：%d\n', length(obj.Enemies));
+    
             % 畫面中央創建
             centerPos = [obj.gameWidth / 2, obj.gameHeight / 2];
             obj.createSuperExplosion(centerPos);
 
             % 立即清除所有敵人
-            obj.destroyAllEnemies();
+            obj.destroyAllEnemies(length(obj.Enemies));
 
             % 確保沒有遺漏的敵人
             if ~isempty(obj.Enemies)
                 fprintf('警告：技能3後仍有 %d 個敵人存在，進行二次清理\n', length(obj.Enemies));
-                % 強制清除
                 for i = 1:length(obj.Enemies)
+                    % skip boss or can't win
+                    if strcmp(obj.Enemies(i).Type, 'boss')
+                        continue;
+                    end
                     try
                         if isfield(obj.Enemies(i), 'Graphic') && isgraphics(obj.Enemies(i).Graphic)
                             delete(obj.Enemies(i).Graphic);
@@ -2818,7 +2859,7 @@ classdef final_all < handle
             [h, w, ~] = size(firstFrame.Image);
 
             % 創建爆炸圖像（放大到畫面大小）
-            explosionSize = min(obj.gameWidth, obj.gameHeight) * 0.8; % 占畫面80%
+            explosionSize = min(obj.gameWidth, obj.gameHeight) * 0.9; % 占畫面90%
             scaleFactor = explosionSize / max(h, w);
 
             obj.Skill3Animation = struct( ...
@@ -2935,59 +2976,55 @@ classdef final_all < handle
                 end
             end
         end
-        function destroyAllEnemies(obj)
-            % 清除所有敵人 - 強化版本
+        function destroyAllEnemies(obj, num_to_destroy)
+            % 清除所有敵人
             if isempty(obj.Enemies)
                 return;
             end
+            % 確保不會超出陣列範圍
+            num_to_destroy = min(num_to_destroy, length(obj.Enemies));
 
             % 暫停敵人生成，避免競爭條件
+            % not including boss so useing "num_to_destroy"
             oldSpawnInterval = obj.EnemySpawnInterval;
             obj.EnemySpawnInterval = 999999; % 臨時停止生成
 
             try
                 % 記錄要刪除的敵人數量
-                enemyCount = length(obj.Enemies);
-                fprintf('技能3：準備清除 %d 個敵人\n', enemyCount);
+                fprintf('技能3：準備清除 %d 個敵人（共 %d 個）\n', num_to_destroy, length(obj.Enemies));
 
                 % 檢查是否有boss
                 hasBoss = false;
-                for i = 1:length(obj.Enemies)
+                for i = 1:num_to_destroy
+                    obj.Enemies(i).MarkedForDeletion=true;
                     if isfield(obj.Enemies(i), 'Type') && strcmp(obj.Enemies(i).Type, 'boss')
                         hasBoss = true;
                         break;
                     end
                 end
 
-                % 創建視覺效果 - 所有敵人同時閃爍
-                for i = 1:length(obj.Enemies)
-                    try
-                        if isfield(obj.Enemies(i), 'Graphic') && ...
-                                ~isempty(obj.Enemies(i).Graphic) && ...
-                                isgraphics(obj.Enemies(i).Graphic) && ...
-                                isvalid(obj.Enemies(i).Graphic)
-
-                            originalColor = obj.Enemies(i).Graphic.FaceColor;
-                            obj.Enemies(i).Graphic.FaceColor = [1, 1, 1]; % 白色閃爍
-                        end
-                    catch ME
-                        % 忽略閃爍錯誤，繼續處理
-                        fprintf('敵人 %d 閃爍效果失敗：%s\n', i, ME.message);
+                % 創建視覺效果 
+                for i = 1:num_to_destroy
+                    if isfield(obj.Enemies(i), 'Graphic') && ...
+                            ~isempty(obj.Enemies(i).Graphic) && ...
+                            isgraphics(obj.Enemies(i).Graphic) && ...
+                            isvalid(obj.Enemies(i).Graphic)
+                        obj.Enemies(i).Graphic.FaceColor = [1, 1, 1]; % 白色
                     end
                 end
 
-                % 短暫停頓顯示效果
-                pause(0.1);
+                 drawnow; 
 
-                % 逐個安全刪除敵人
+                % 逐個刪除敵人
                 deletedCount = 0;
-                for i = 1:length(obj.Enemies)
+                for i = 1:num_to_destroy
                     try
                         % 刪除主要圖形
                         if isfield(obj.Enemies(i), 'Graphic') && ...
                                 ~isempty(obj.Enemies(i).Graphic) && ...
                                 isgraphics(obj.Enemies(i).Graphic)
                             delete(obj.Enemies(i).Graphic);
+                            obj.Enemies(i).Graphic = [];
                         end
 
                         % 刪除技能警示圖形（boss專用）
@@ -2995,6 +3032,7 @@ classdef final_all < handle
                                 ~isempty(obj.Enemies(i).SkillWarning) && ...
                                 isgraphics(obj.Enemies(i).SkillWarning)
                             delete(obj.Enemies(i).SkillWarning);
+                            obj.Enemies(i).SkillWarning = [];
                         end
 
                         deletedCount = deletedCount + 1;
@@ -3007,14 +3045,16 @@ classdef final_all < handle
                 end
 
                 % 完全清空敵人陣列
-                obj.Enemies = struct('Type', {}, 'Position', {}, ...
-                    'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
-                    'AttackCooldown', {}, 'SkillCooldown', {}, ...
-                    'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
-                    'SkillWarningTimer', {}, 'PoisonSlowed', {}, ...
-                    'SlowTimer', {}, 'Graphic', {});
+                % obj.Enemies = struct('Type', {}, 'Position', {}, ...
+                %     'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
+                %     'AttackCooldown', {}, 'SkillCooldown', {}, ...
+                %     'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
+                %     'SkillWarningTimer', {}, 'PoisonSlowed', {}, ...
+                %     'SlowTimer', {}, 'Graphic', {});
 
-                fprintf('技能3：成功清除 %d/%d 個敵人\n', deletedCount, enemyCount);
+                obj.Enemies(1:num_to_destroy) = [];
+                fprintf('保留了 %d 個敵人（可能包含剛生成的boss）\n', length(obj.Enemies));
+                fprintf('技能3：成功清除 %d/%d 個敵人\n', deletedCount, num_to_destroy);
 
                 % 強制UI更新
                 drawnow;
@@ -3158,7 +3198,8 @@ classdef final_all < handle
                 'SkillWarningTimer', 0, ...
                 'PoisonSlowed', false, ...
                 'SlowTimer', 0, ...
-                'Graphic', []);
+                'Graphic', [], ...
+                'MarkedForDeletion', false);
 
             % 創建圖形
             newEnemy.Graphic = rectangle(obj.GameAxes, ...
@@ -3184,7 +3225,6 @@ end
 
 % 更新位置輔助函數
 function updatePosition(graphicObj, pos)
-try
     if ~isvalid(graphicObj)
         warning('嘗試更新無效的圖形對象');
 
@@ -3198,7 +3238,5 @@ try
 
     % 設定新位置
     graphicObj.Position = [pos(1) - width / 2, pos(2) - height / 2, width, height];
-catch
-    % 忽略錯誤，防止崩潰
-end
+
 end
