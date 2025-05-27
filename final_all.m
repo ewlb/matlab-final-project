@@ -23,9 +23,10 @@ classdef final_all < handle
         GameAxes
         Player
         Enemies = struct()
-        Bullets = struct('Position', {}, 'Velocity', {}, 'Damage', {}, 'IsBossBullet', {}, ...
-            'Graphic', {}, 'AnimationFrame', {}, 'FrameCount', {}, ...
-            'AnimationTimer', {}, 'AnimationSpeed', {}, 'Angle', {}, 'Size', {})
+        Bullets = struct('Position', {}, 'Velocity', {}, 'Damage', {}, ...
+        'IsBossBullet', {}, 'Graphic', {}, 'AnimationFrame', {}, ...
+        'FrameCount', {}, 'AnimationTimer', {}, 'AnimationSpeed', {}, ...
+        'Angle', {}, 'Size', {}, 'ImageSize', {}, 'IsImageBullet', {}) 
 
         Timer
         MousePos = [0, 0]
@@ -101,12 +102,19 @@ classdef final_all < handle
         MaxEnemies = 8 % 最大敵人數量
         SpawnMargin = 50 % 在畫面邊緣外的生成邊距
 
+        HeadRunFrames     
+        HeadGraphic
+
+        PlayerBulletFrames = {}     % 預旋轉的玩家子彈圖片
+        NumBulletAngles = 120        
+        BulletAngleStep = 360/120       
+
     end
 
     methods
         function obj = final_all()
             % 創建唯一的主視窗並設置背景
-            obj.MainFig = uifigure('Name', '太空射擊遊戲');
+            obj.MainFig = uifigure('Name', '痛扁XX');
             obj.MainFig.WindowState = 'fullscreen';
             obj.MainFig.Color = [0.1, 0.1, 0.4];
 
@@ -466,23 +474,45 @@ classdef final_all < handle
 
                 if obj.IsMoving
                     % 運行動畫 - 循環切換8幀
-                    totalFrames = 8; % run.png 每個方向有8幀
+                    totalFrames = 8;
                     obj.CurrentFrame = mod(obj.CurrentFrame, totalFrames) + 1;
 
-                    % 獲取當前方向的當前運行幀
-                    frame = obj.RunFrames{obj.CurrentDirection, obj.CurrentFrame};
-                else
-                    % 靜止動畫 - 使用對應方向的靜止幀
-                    frame = obj.IdleFrames{obj.CurrentDirection};
-                end
+                    % 更新身體動畫
+                    if ~isempty(obj.RunFrames)
+                        bodyFrame = obj.RunFrames{obj.CurrentDirection, obj.CurrentFrame};
+                        if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                            obj.Player.Graphic.CData = bodyFrame.Image;
+                            obj.Player.Graphic.AlphaData = bodyFrame.Alpha;
+                        end
+                    end
 
-                % 更新角色圖形
-                if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
-                    obj.Player.Graphic.CData = frame.Image;
-                    obj.Player.Graphic.AlphaData = frame.Alpha;
+                    % 更新頭部動畫
+                    if ~isempty(obj.HeadRunFrames) && isvalid(obj.HeadGraphic)
+                        headFrame = obj.HeadRunFrames{obj.CurrentDirection, obj.CurrentFrame};
+                        obj.HeadGraphic.CData = headFrame.Image;
+                        obj.HeadGraphic.AlphaData = headFrame.Alpha;
+                    end
+
+                else
+                    % 靜止動畫 - 身體使用idle，頭部使用第一幀
+                    if ~isempty(obj.IdleFrames)
+                        bodyFrame = obj.IdleFrames{obj.CurrentDirection};
+                        if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                            obj.Player.Graphic.CData = bodyFrame.Image;
+                            obj.Player.Graphic.AlphaData = bodyFrame.Alpha;
+                        end
+                    end
+
+                    % 頭部靜止時使用跑步動畫的第一幀
+                    if ~isempty(obj.HeadRunFrames) && isvalid(obj.HeadGraphic)
+                        headFrame = obj.HeadRunFrames{obj.CurrentDirection, 1};
+                        obj.HeadGraphic.CData = headFrame.Image;
+                        obj.HeadGraphic.AlphaData = headFrame.Alpha;
+                    end
                 end
             end
         end
+
 
 
         % 顯示遊戲結束畫面
@@ -557,7 +587,7 @@ classdef final_all < handle
 
             % 遊戲標題
             titleLbl = uilabel(obj.MainPanel);
-            titleLbl.Text = '太空射擊戰';
+            titleLbl.Text = '痛扁XX';
             titleLbl.FontSize = 48;
             titleLbl.FontColor = 'w';
             titleLbl.Position = [centerX - 200, centerY + 150, 400, 60];
@@ -661,8 +691,8 @@ classdef final_all < handle
             tipTitleLbl.Position = [centerX - 200, centerY - 185, 150, 30];
 
             tipLbl = uilabel(obj.HelpPanel);
-            tipLbl.Text = sprintf('%s\n', ...
-                '• 滑鼠在不同位置點擊可以射很快');
+            tipLbl.Text = sprintf('%s\n%s\n', ...
+                '• 滑鼠在不同位置點擊可以射很快', '• 擊敗BOSS就贏');
             tipLbl.WordWrap = 'on';
             tipLbl.FontSize = 14;
             tipLbl.FontColor = 'w';
@@ -885,8 +915,9 @@ classdef final_all < handle
             % 載入爆炸動畫幀
             obj.loadExplosionFrames();
 
-
             obj.FireballFrames = cell(1, 5);
+            obj.loadPlayerBulletFrames();
+
             for i = 1:5
                 try
                     % Load fireball image
@@ -1056,7 +1087,6 @@ classdef final_all < handle
                 'Graphic', []);
             obj.loadPlayerAnimations();
 
-            % 如果動畫載入失敗，使用原有的矩形
             if ~isempty(obj.IdleFrames)
                 initialFrame = obj.IdleFrames{3}; % 向下idle
                 width = 60; % 跟 updatePlayerPosition 一起改
@@ -1070,6 +1100,19 @@ classdef final_all < handle
                 % 備用方案 - 藍色矩形
                 obj.Player.Graphic = rectangle(obj.GameAxes, 'Position', [0, 0, 30, 30], ...
                     'FaceColor', 'b');
+            end
+            % 初始化頭部圖形
+            if ~isempty(obj.HeadRunFrames)
+                % 使用第一幀作為初始頭部
+                initialHeadFrame = obj.HeadRunFrames{3, 1}; % 向下第一幀
+                headWidth = 60;  % 與身體相同大小
+                headHeight = 60;
+
+                obj.HeadGraphic = image(obj.GameAxes,...
+                    'CData', initialHeadFrame.Image,...
+                    'AlphaData', initialHeadFrame.Alpha,...
+                    'XData', [obj.Player.Position(1) - headWidth/2, obj.Player.Position(1) + headWidth/2],...
+                    'YData', [obj.Player.Position(2) - headHeight/2, obj.Player.Position(2) + headHeight/2]);
             end
             % 重置玩家狀態
             obj.CurrentDirection = 3; % 預設向下
@@ -1091,6 +1134,12 @@ classdef final_all < handle
                     height = 60;
                     obj.Player.Graphic.XData = [obj.Player.Position(1) - width / 2, obj.Player.Position(1) + width / 2];
                     obj.Player.Graphic.YData = [obj.Player.Position(2) - height / 2, obj.Player.Position(2) + height / 2];
+                    if ~isempty(obj.HeadGraphic) && isvalid(obj.HeadGraphic)
+                        headWidth = 60;
+                        headHeight = 60;
+                        obj.HeadGraphic.XData = [obj.Player.Position(1) - headWidth/2, obj.Player.Position(1) + headWidth/2];
+                        obj.HeadGraphic.YData = [obj.Player.Position(2) - headHeight/2, obj.Player.Position(2) + headHeight/2];
+                    end
                 else
                     % 使用矩形時的原有更新
                     updatePosition(obj.Player.Graphic, obj.Player.Position);
@@ -1277,13 +1326,13 @@ classdef final_all < handle
                         continue;
                     end
                 else
-                    % Regular bullet update (unchanged)
                     try
-                        obj.Bullets(i).Graphic.XData = obj.Bullets(i).Position(1);
-                        obj.Bullets(i).Graphic.YData = obj.Bullets(i).Position(2);
+                        obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1)-obj.Bullets(i).ImageSize(1)/2, ...
+                            obj.Bullets(i).Position(1)+obj.Bullets(i).ImageSize(1)/2];
+                        obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2)-obj.Bullets(i).ImageSize(2)/2, ...
+                            obj.Bullets(i).Position(2)+obj.Bullets(i).ImageSize(2)/2];
                     catch
                         bulletsToRemove(i) = true;
-                        continue;
                     end
 
                 end
@@ -1571,6 +1620,9 @@ classdef final_all < handle
             end
         end
         function checkPlayerEnemyCollision(obj)
+            % may have errors when intentionally collide with enemies,
+            % u'll be stucked
+            % TODO
             % 檢查玩家與敵人碰撞
             if isempty(obj.Enemies)
                 return;
@@ -1612,6 +1664,21 @@ classdef final_all < handle
         function fireBullet(obj, startPos, direction, isBossBullet, attackerAttack)
             wasHeld = ishold(obj.GameAxes);
             hold(obj.GameAxes, 'on');
+            newBullet = struct(...
+                'Position', startPos, ...
+                'Velocity', [], ...
+                'Damage', attackerAttack, ...
+                'IsBossBullet', isBossBullet, ...
+                'Graphic', [], ...
+                'AnimationFrame', 1, ...
+                'FrameCount', 1, ...
+                'AnimationTimer', 0, ...
+                'AnimationSpeed', 0.075, ...
+                'Angle', 0, ...
+                'Size', 35, ...
+                'ImageSize', [0 0], ...
+                'IsImageBullet', false);
+
             if isBossBullet && ~isempty(obj.FireballFrames)
                 % Calculate angle for rotation (in degrees, 0 = right)
                 angle = atan2(direction(2), direction(1)) * 180 / pi;
@@ -1646,43 +1713,53 @@ classdef final_all < handle
                 hold(obj.GameAxes, 'off');
 
                 % Create new bullet with all fields
-                newBullet = struct( ...
-                    'Position', startPos, ...
-                    'Velocity', direction*3, ...
-                    'Damage', attackerAttack, ...
-                    'IsBossBullet', true, ...
-                    'Graphic', h_img, ...
-                    'AnimationFrame', 1, ...
-                    'FrameCount', length(obj.FireballFrames), ...
-                    'AnimationTimer', 0, ...
-                    'AnimationSpeed', 0.075, ...
-                    'Angle', angle, ...
-                    'Size', 25);
+                newBullet.Velocity=direction*3;
+                newBullet.Graphic=h_img;
+                newBullet.FrameCount=length(obj.FireballFrames);
+                newBullet.Angle=angle;
+                newBullet.Size=25;
+                % newBullet = struct( ...
+                %     'Position', startPos, ...
+                %     'Velocity', direction*3, ...
+                %     'Damage', attackerAttack, ...
+                %     'IsBossBullet', true, ...
+                %     'Graphic', h_img, ...
+                %     'AnimationFrame', 1, ...
+                %     'FrameCount', length(obj.FireballFrames), ...
+                %     'AnimationTimer', 0, ...
+                %     'AnimationSpeed', 0.075, ...
+                %     'Angle', angle, ...
+                %     'Size', 25);
             else
-                % Regular bullet parameters
-                markerSize = 8;
-                color = [0, 0, 0]; % Black
-                bulletSpeed = 15;
+                % 玩家子彈使用預旋轉圖片
+                if ~isempty(obj.PlayerBulletFrames)
+                    angle = atan2(direction(2), direction(1)) * 180 / pi;
+                    angleIndex = mod(round(angle / obj.BulletAngleStep), obj.NumBulletAngles) + 1;
 
-                % Create bullet graphic
-                bulletGraphic = plot(obj.GameAxes, startPos(1), startPos(2), 'o', ...
-                    'MarkerSize', markerSize, ...
-                    'MarkerFaceColor', color, ...
-                    'MarkerEdgeColor', color);
+                    bulletFrame = obj.PlayerBulletFrames{angleIndex};
+                    [h, w, ~] = size(bulletFrame.Image);
 
-                % Create regular bullet with all fields (default values for animation fields)
-                newBullet = struct( ...
-                    'Position', startPos, ...
-                    'Velocity', direction*bulletSpeed, ...
-                    'Damage', attackerAttack, ...
-                    'IsBossBullet', isBossBullet, ...
-                    'Graphic', bulletGraphic, ...
-                    'AnimationFrame', 0, ... % Default value
-                    'FrameCount', 1, ... % Default value
-                    'AnimationTimer', 0, ... % Default value
-                    'AnimationSpeed', 0, ... % Default value
-                    'Angle', 0, ... % Default value
-                    'Size', markerSize); % Use marker size
+                    % 計算顯示尺寸
+                    scaleFactor = newBullet.Size / max(h, w);
+                    displayW = w * scaleFactor;
+                    displayH = h * scaleFactor;
+
+                    % 創建圖形對象
+                    newBullet.Graphic = image(obj.GameAxes,...
+                        [startPos(1)-displayW/2, startPos(1)+displayW/2],...
+                        [startPos(2)-displayH/2, startPos(2)+displayH/2],...
+                        bulletFrame.Image, 'AlphaData', bulletFrame.Alpha);
+
+                    % 子彈參數
+                    newBullet.Velocity = direction * 15;
+                    newBullet.ImageSize = [displayW, displayH];
+                    newBullet.IsImageBullet = true;
+                else
+                    % 備用圓形子彈
+                    newBullet.Graphic = plot(obj.GameAxes, startPos(1), startPos(2), 'o',...
+                        'MarkerSize', 8, 'MarkerFaceColor', [0,0,0]);
+                    newBullet.Velocity = direction * 15;
+                end
             end
 
             % Add to bullets array
@@ -1812,6 +1889,10 @@ classdef final_all < handle
             if isfield(obj, 'Player') && ~isempty(obj.Player) && isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
                 delete(obj.Player.Graphic);
             end
+            if ~isempty(obj.HeadGraphic) && isvalid(obj.HeadGraphic)
+                delete(obj.HeadGraphic);
+            end
+            obj.HeadGraphic = [];
             obj.Player = [];
             obj.BossAdded = false;
 
@@ -1952,6 +2033,8 @@ classdef final_all < handle
             obj.Skill3Cooldown = 0;
 
             obj.EnemySpawnTimer = 0;
+
+            obj.PlayerBulletFrames = {};
 
         end
 
@@ -2117,6 +2200,51 @@ classdef final_all < handle
                 warning(ME.identifier, '載入動畫失敗：%s', ME.message);
                 obj.IdleFrames = {};
                 obj.RunFrames = {};
+            end
+            try
+                % 載入頭部跑步動畫
+                headRunPath = fullfile(obj.basePath, 'images', 'head', 'head_run.png');
+                [headRunSheet, ~, headRunAlpha] = imread(headRunPath);
+
+                % head_run.png 是 4行8列：上、左、下、右 × 8幀
+                numDirections = 4;
+                numFrames = 8;
+
+                headFrameHeight = floor(size(headRunSheet, 1) / 4);
+                headFrameWidth = floor(size(headRunSheet, 2) / 8);
+
+                obj.HeadRunFrames = cell(numDirections, numFrames);
+
+                % 載入每個方向的每一幀
+                for dir = 1:numDirections
+                    for frame = 1:numFrames
+                        % 計算當前幀位置
+                        startY = floor((dir - 1) * headFrameHeight) + 1;
+                        startX = floor((frame - 1) * headFrameWidth) + 1;
+                        endY = floor(startY + headFrameHeight - 1);
+                        endX = floor(startX + headFrameWidth - 1);
+
+                        % 範圍安全檢查
+                        endY = min(endY, size(headRunSheet, 1));
+                        endX = min(endX, size(headRunSheet, 2));
+
+                        % 提取幀
+                        frameImg = headRunSheet(startY:endY, startX:endX, :);
+                        frameAlpha = headRunAlpha(startY:endY, startX:endX);
+
+                        % 翻轉圖像（與身體保持一致）
+                        frameImg = flipud(frameImg);
+                        frameAlpha = flipud(frameAlpha);
+
+                        obj.HeadRunFrames{dir, frame} = struct('Image', frameImg, 'Alpha', frameAlpha);
+                    end
+                end
+
+                fprintf('頭部動畫載入成功\n');
+
+            catch ME
+                warning(ME.identifier, '載入頭部動畫失敗：%s', ME.message);
+                obj.HeadRunFrames = {};
             end
         end
 
@@ -3218,6 +3346,46 @@ classdef final_all < handle
 
             fprintf('新敵人在位置 [%.1f, %.1f] 生成\n', position(1), position(2));
         end
+
+        function loadPlayerBulletFrames(obj)
+            % 載入並預旋轉玩家子彈圖片
+
+            try
+                % 載入原始子彈圖片
+                bulletPath = fullfile(obj.basePath, 'images', 'player_bullet', 'PB13.png');
+                [bulletImg, ~, bulletAlpha] = imread(bulletPath);
+
+                % 初始化預旋轉陣列
+                obj.PlayerBulletFrames = cell(1, obj.NumBulletAngles);
+
+                % 預先生成所有角度的旋轉圖片
+                for i = 1:obj.NumBulletAngles
+                    angle = (i - 1) * obj.BulletAngleStep; % 0, 15, 30, 45, ...
+
+                    % 使用 imrotate 旋轉圖片
+                    rotatedImg = imrotate(bulletImg, -angle, 'bicubic', 'crop');
+                    rotatedAlpha = [];
+
+                    if ~isempty(bulletAlpha)
+                        rotatedAlpha = imrotate(bulletAlpha, -angle, 'bicubic', 'crop');
+                    end
+
+                    % 儲存旋轉後的圖片
+                    obj.PlayerBulletFrames{i} = struct(...
+                        'Image', rotatedImg,...
+                        'Alpha', rotatedAlpha,...
+                        'Angle', angle);
+                end
+
+                fprintf('玩家子彈圖片預旋轉完成：%d 個角度\n', obj.NumBulletAngles);
+
+            catch ME
+                warning(ME.identifier, '載入玩家子彈圖片失敗：%s，使用預設圓形子彈', ME.message);
+                obj.PlayerBulletFrames = {};
+            end
+        end
+
+
        
 
     end
