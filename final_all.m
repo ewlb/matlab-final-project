@@ -107,7 +107,10 @@ classdef final_all < handle
 
         PlayerBulletFrames = {}     % 預旋轉的玩家子彈圖片
         NumBulletAngles = 120        
-        BulletAngleStep = 360/120       
+        BulletAngleStep = 360/120    
+
+        VictorySound        
+        VictorySoundPath    
 
     end
 
@@ -145,12 +148,14 @@ classdef final_all < handle
             obj.initPauseMenu();
             obj.initGameOverScreen();
             obj.initVictoryScreen();
-
+            
             % 設置當前面板
             obj.CurrentPanel = obj.MainPanel;
 
             % 設置窗口關閉時的清理函數
             obj.MainFig.CloseRequestFcn = @(src, event) obj.cleanup();
+
+            obj.loadVictorySound();
         end
 
         function cleanup(obj)
@@ -166,6 +171,10 @@ classdef final_all < handle
 
             % 清理遊戲資源
             obj.cleanupGameState();
+
+            if isplaying(obj.VictorySound)
+                stop(obj.VictorySound);
+            end
 
             % 關閉視窗
             delete(obj.MainFig);
@@ -2039,6 +2048,10 @@ classdef final_all < handle
         end
 
         function showVictoryScreen(obj)
+            
+            % % 播放勝利音效
+            % obj.playVictorySound();
+
             % 停止遊戲循環
             if ~isempty(obj.Timer) && isvalid(obj.Timer)
                 stop(obj.Timer);
@@ -2046,6 +2059,7 @@ classdef final_all < handle
             if ~isempty(obj.GameTimer) && isvalid(obj.GameTimer)
                 stop(obj.GameTimer);
             end
+            
 
             % 隱藏其他面板
             obj.CurrentPanel.Visible = 'off';
@@ -3384,6 +3398,49 @@ classdef final_all < handle
                 obj.PlayerBulletFrames = {};
             end
         end
+
+
+        function loadVictorySound(obj)
+            try
+                % 設定音效路徑
+                obj.VictorySoundPath = fullfile(obj.basePath, 'sound', '統神_再來啊.mp3');
+
+                % 檢查文件是否存在
+                if exist(obj.VictorySoundPath, 'file') == 2
+                    % 讀取音頻文件
+                    [audioData, sampleRate] = audioread(obj.VictorySoundPath);
+
+                    % 創建音頻播放器對象
+                    obj.VictorySound = audioplayer(audioData, sampleRate);
+
+                    fprintf('勝利音效載入成功: %s\n', obj.VictorySoundPath);
+                else
+                    warning('勝利音效文件不存在: %s', obj.VictorySoundPath);
+                    obj.VictorySound = [];
+                end
+
+            catch ME
+                obj.VictorySound = [];
+            end
+        end
+
+        function playVictorySound(obj)
+            try
+                if ~isempty(obj.VictorySound) && isvalid(obj.VictorySound)
+
+                    % 播放音效
+                    play(obj.VictorySound);
+
+                    fprintf('正在播放勝利音效\n');
+                else
+                    fprintf('勝利音效未載入，無法播放\n');
+                end
+            catch ME
+                warning(ME.identifier, '播放勝利音效時發生錯誤：%s', ME.message);
+            end
+        end
+
+
 
 
        
