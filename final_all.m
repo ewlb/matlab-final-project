@@ -358,6 +358,7 @@ classdef final_all < handle
                         if isfield(obj.Enemies(i), 'MarkedForDeletion') && obj.Enemies(i).MarkedForDeletion
                             continue;
                         end
+                        % TODO
                         if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
                             % 根據敵人類型重建圖形
                             if strcmp(obj.Enemies(i).Type, 'boss')
@@ -2296,7 +2297,7 @@ classdef final_all < handle
             end
             obj.SkillIcon.Visible = 'off';
             % 使用技能
-            skillDamage = obj.Player.Attack * 1.5;
+            skillDamage = obj.Player.Attack * 3;
             skillRadius = 60; % 技能範圍半徑
 
             % 在鼠標位置創建範圍傷害
@@ -2714,7 +2715,7 @@ classdef final_all < handle
             wasHeld = ishold(obj.GameAxes);
             hold(obj.GameAxes, 'on');
 
-            radius = 80; % 毒區域半徑
+            radius = 120; % 毒區域半徑
 
             % 創建綠色圓形毒區域
             theta = linspace(0, 2*pi, 50);
@@ -2733,7 +2734,7 @@ classdef final_all < handle
                 'Radius', radius, ...
                 'Graphic', poisonArea, ...
                 'Timer', 3.0, ... % 持續3秒
-                'DamageTimer', 0, ... % 傷害計時器
+                'DamageTimer', 1, ... % 傷害計時器(一開始就造成傷害)
                 'DamageInterval', 1.0 ... % 每秒造成傷害
                 );
 
