@@ -1,0 +1,75 @@
+    <INIT_RESULTS_STRUCT_IN_FUNC>
+    imgInd = 1;
+    while hasdata(<IMDS_VAR_NAME>)
+        try
+            [im, info] = read(<IMDS_VAR_NAME>);
+            inImageFile = info.Filename;
+            if isempty(im)
+                disp("READ FAILED:" + inImageFile);
+                imgInd = imgInd + 1;
+                continue;
+            end
+
+            % Process
+            <FUNCTIONCALL>
+            
+            % Accumulate
+            for ind = 1:numel(workSpaceFields)
+                % Only copy fields specified to be returned in the output
+                fieldName = workSpaceFields{ind};
+                if fieldName == "fileName"
+                    continue;
+                end
+                result(imgInd).(fieldName) = oneResult.(fieldName);
+            end
+            
+            % Include the input image file name
+            result(imgInd).fileName = <IMDS_VAR_NAME>.Files{imgInd};
+
+            % Write chosen fields to image files only if output directory is
+            % specified
+            if outDir ~= ""
+                % Output has the same sub-directory structure as input
+                outImageFileWithExtension = replace(inImageFile, inDir, outDir);
+    
+                % Remove the file extension to create the template output file name
+                [path, filename,~] = fileparts(outImageFileWithExtension);
+                outImageFile = fullfile(path,filename);
+    
+                % Create (sub)directory if needed
+                outSubDir = fileparts(outImageFile);
+                createDirectory(outSubDir);
+                
+                for ind = 1:numel(fileFieldsAndFormat)
+                    fieldName  = fileFieldsAndFormat{ind}{1};
+                    fileFormat = fileFieldsAndFormat{ind}{2};
+                    imageData  = oneResult.(fieldName);
+                    % Add the field name and required file format for this
+                    % field to the template output file name
+                    outImageFileWithExtension = outImageFile + "_"  + fieldName + "." + fileFormat;
+                    
+                    try
+                        switch(fileFormat)
+                            case "dcm"
+                                dicomwrite(imageData, outImageFileWithExtension);
+                            case "exr"
+                                exrwrite(imageData, outImageFileWithExtension);
+                            otherwise
+                                imwrite(imageData, outImageFileWithExtension);
+                            end
+                    catch IMAGEWRITEFAIL
+                        disp("WRITE FAILED:" + inImageFile);
+                        warning(IMAGEWRITEFAIL.identifier, "%s", IMAGEWRITEFAIL.message);
+                    end
+                end
+                disp("PASSED:" + inImageFile);
+            else
+                disp("PASSED:" + inImageFile);
+            end
+        
+        catch READANDPROCESSEXCEPTION
+            disp("FAILED:" + inImageFile);
+            warning(READANDPROCESSEXCEPTION.identifier, "%s", READANDPROCESSEXCEPTION.message);
+        end
+        imgInd = imgInd + 1;
+    end

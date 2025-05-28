@@ -1,0 +1,4431 @@
+{
+
+"activecontour":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"A", "kind":"required", "type":[ ["numeric", "3d", "@(x) ~isvector(x)"],
+                                                                 ["logical", "3d", "@(x) ~isvector(x)"] ] },
+                        {"name":"MASK", "kind":"required", "type":[ ["numeric", "3d", "@(x) ~isvector(x)"],
+                                                                    ["logical", "3d", "@(x) ~isvector(x)"] ] },
+                        {"name":"n", "kind":"positional", "type":[["numeric", "scalar", "positive", "integer"]]},
+                        {"name":"SmoothFactor", "kind":"namevalue", "type":[["numeric", "positive", "scalar"]]},
+                        {"name":"ContractionBias", "kind":"namevalue", "type":[["numeric", "scalar"]]}
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[ ["numeric", "3d", "@(x) ~isvector(x)"],
+                                                                 ["logical", "3d", "@(x) ~isvector(x)"] ] },
+                        {"name":"MASK", "kind":"required", "type":[ ["numeric", "3d", "@(x) ~isvector(x)"],
+                                                                    ["logical", "3d", "@(x) ~isvector(x)"] ] },
+                        {"name":"method", "kind":"positional", "type":"choices={'Chan-vese', 'edge'}"},
+                        {"name":"SmoothFactor", "kind":"namevalue", "type":[["numeric", "positive", "scalar"]]},
+                        {"name":"ContractionBias", "kind":"namevalue", "type":[["numeric", "scalar"]]}
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[ ["numeric", "3d", "@(x) ~isvector(x)"],
+                                                                 ["logical", "3d", "@(x) ~isvector(x)"] ] },
+                        {"name":"MASK", "kind":"required", "type":[ ["numeric", "3d", "@(x) ~isvector(x)"],
+                                                                    ["logical", "3d", "@(x) ~isvector(x)"] ] },
+                        {"name":"n", "kind":"positional", "type":[["numeric", "scalar", "positive",  "integer"]]},
+                        {"name":"method", "kind":"positional", "type":"choices={'Chan-vese', 'edge'}"},
+                        {"name":"SmoothFactor", "kind":"namevalue", "type":[["numeric", "positive", "scalar"]]},
+                        {"name":"ContractionBias", "kind":"namevalue", "type":[["numeric", "scalar"]]}
+                    ]
+                ]
+            }
+        ],  
+        "outputs":
+        [
+            {"name":"BW", "type":"numeric"}
+        ]
+},
+
+"adapthisteq":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":["numeric","2d"]},
+    {"name":"NumTiles", "kind":"namevalue", "type":["numeric","size=1,2",">=2","integer"]},
+    {"name":"ClipLimit", "kind":"namevalue", "type":["numeric","scalar",">=0","<=1"]},
+    {"name":"NBins", "kind":"namevalue", "type":["numeric","scalar","positive","integer"]},
+    {"name":"Range", "kind":"namevalue", "type":"choices={'original','full'}"},
+    {"name":"Distribution", "kind":"namevalue", "type":"choices={'rayleigh','exponential'}"},
+    {"name":"Alpha", "kind":"namevalue", "type":["numeric","scalar",">=0"]}
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":["numeric","2d"]}
+  ]
+},
+
+"adapthisteq":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":["numeric","2d"]},
+    {"name":"NumTiles", "kind":"namevalue", "type":["numeric","size=1,2",">=2","integer"]},
+    {"name":"ClipLimit", "kind":"namevalue", "type":["numeric","scalar",">=0","<=1"]},
+    {"name":"NBins", "kind":"namevalue", "type":["numeric","scalar","positive","integer"]},
+    {"name":"Range", "kind":"namevalue", "type":"choices={'original','full'}"},
+    {"name":"Distribution", "kind":"namevalue", "type":"choices={'uniform'}"}
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":["numeric","2d"]}
+  ]
+},
+
+"adaptthresh":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"Sensitivity","kind":"ordered","type":"numeric"},
+    {"name":"NeighborhoodSize","kind":"namevalue","type":"numeric"},
+    {"name":"ForegroundPolarity","kind":"namevalue","type":"choices={'bright','dark'}"},
+    {"name":"Statistic","kind":"namevalue","type":"choices={'mean','median','gaussian'}"}
+  ],
+  "outputs":
+  [
+    {"name":"T","type":["double"]}
+  ]
+},
+
+"affinetform2d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=3,3"], ["double", "size=2,3"],
+      ["single", "size=3,3"], ["single", "size=2,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["affinetform2d"]}
+  ]
+},
+
+"affinetform2d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform2d"], ["rigidtform2d"],
+      ["simtform2d"], ["affinetform2d"], ["projtform2d"]]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["affinetform2d"]}
+  ]
+},
+
+"affinetform3d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=4,4"], ["double", "size=3,4"],
+      ["single", "size=4,4"], ["single", "size=3,4"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["affinetform3d"]}
+  ]
+},
+
+"affinetform3d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform3d"], ["rigidtform3d"],
+      ["simtform3d"], ["affinetform3d"]]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["affinetform3d"]}
+  ]
+},
+
+"affine3d":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"optional","type":[["single", "size=4,4"], ["double", "size=4,4"]]}
+  ],
+  "outputs":
+  [
+    {"name":"TFORM","type":["affine3d"]}
+  ]
+},
+
+"affineOutputView":
+{
+  "inputs":
+  [
+    {"name":"sizeA","kind":"required","type":"numeric"},
+    {"name":"tform","kind":"required","type":[["affinetform2d"],["affinetform3d"],["affine2d"],["affine3d"]]},
+    {"name":"BoundsStyle","kind":"namevalue","type":"choices={'followOutput','sameAsInput','centerOutput'}"}
+  ]
+},
+
+"bfscore":
+{
+  "inputs":
+  [
+    {"name":"PREDICTION","kind":"required","type":[["logical"],["double"],["categorical"]]},
+    {"name":"GROUNDTRUTH","kind":"required","type":[["logical"],["double"],["categorical"]]},
+    {"name":"THRESHOLD","kind":"ordered","type":"double"}
+  ],
+  "outputs":
+  [
+    {"name":"SCORE","type":"double"},
+    {"name":"PRECISION","type":"double"},
+    {"name":"RECALL","type":"double"}
+  ]
+},
+
+"blendexposure":
+{
+  "inputs":
+  [
+    {"name":"I1","kind":"required","type":[["uint8"],["double"],["single"],["uint16"]]},
+    {"name":"I2","kind":"required","type":[["uint8"],["double"],["single"],["uint16"]]},
+    {"name":"Contrast","kind":"namevalue","type":[["double"],["single"]]},
+    {"name":"Saturation","kind":"namevalue","type":[["double"],["single"]]},
+    {"name":"WellExposedness","kind":"namevalue","type":[["double"],["single"]]},
+    {"name":"ReduceStrongLight","kind":"namevalue","type":["logical"]}
+  ],
+  "outputs":
+  [
+    {"name":"E","type":[["uint8"],["double"],["single"],["uint16"]]}
+  ]
+},
+
+"blockproc":
+{
+ "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+             [
+                 [
+                     {"name":"A", "kind":"required", "type":"numeric"}
+                 ],
+                 [
+                     {"name":"src_filename", "kind":"required", "type":[["char"],["file=*.dng,*.tif, *.tiff,*.jp2, *.jpf, *.jpx, *.j2c, *.j2k"], ["matlabpathfile=*.dng,*.tif, *.tiff,*.jp2, *.jpf, *.jpx, *.j2c, *.j2k"]]}
+                 ],
+                 [
+                     {"name":"adapter", "kind":"required", "type":["images.iptformats.imageAdapter"]}
+                 ]
+             ]
+            },
+             {"name":"mn", "kind":"required", "type":["numeric","vector","numel=2"]},
+             {"name":"fun", "kind":"required", "type":"function_handle"},
+             {"name":"Destination", "kind":"namevalue", "type":[["char"],["file=*.dng,*.tif, *.tiff,*.jp2, *.jpf, *.jpx, *.j2c, *.j2k"]]},
+             {"name":"BorderSize", "kind":"namevalue", "type":["numeric", "numel=2","integer","vector","positive"]},
+             {"name":"PadPartialBlocks", "kind":"namevalue", "type":["logical","scalar"]},
+             {"name":"PadMethod", "kind":"namevalue", "type":[["choices={'replicate','symmetric'}"], ["scalar"]]},
+             {"name":"TrimBorder", "kind":"namevalue", "type":["logical","scalar"]},
+             {"name":"UseParallel", "kind":"namevalue", "type":["logical","scalar"]},
+             {"name":"DisplayWaitbar", "kind":"namevalue", "type":["logical","scalar"]}
+        ],
+  "outputs":
+  [
+    {"name":"B","type":["inferredFrom=A"]}
+  ]
+},
+
+"brisque":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"], ["int16"], ["single"], ["double"]]},
+    {"name":"Model", "kind":"ordered", "type":"brisqueModel"}
+  ],
+  "outputs":
+  [
+    {"name":"Score", "type":"numeric"}
+  ]
+},
+
+"brisqueModel":
+{
+  "inputs":
+  [
+    {"name":"Alpha", "kind":"required", "type":"numeric"},
+    {"name":"Bias", "kind":"required", "type":"numeric"},
+    {"name":"SupportVectors", "kind":"required", "type":"numeric"},
+    {"name":"Scale", "kind":"required", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"Model", "type":"brisqueModel"}
+  ]
+},
+
+"burstinterpolant":
+{
+  "inputs":
+  [
+    {"name":"imds", "kind":"required", "type":"matlab.io.datastore.ImageDatastore"},
+    {"name":"tforms", "kind":"required", "type":"numeric"},
+    {"scale":"scale", "kind":"required", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"E","type":[["uint8"],["uint16"],["single"],["double"]]}
+  ]
+},
+
+"bwarea":
+{
+  "inputs":
+    [
+        {"name":"BW", "kind":"required", "type":[["numeric","2d","~scalar"],["logical","2d","~scalar"]]}
+    ],
+  "outputs":
+    [
+        {"name":"total", "type":["double","scalar"]}
+    ]
+},
+
+"bwboundaries":
+{
+  "inputs":
+    [
+      {"name":"BW", "kind":"required", "type":[["logical","2d"],["numeric","2d"]]},
+      {"name":"conn", "kind":"positional", "type":"choices={4,8}"},
+      {"name":"options", "kind":"ordered", "type":"choices={'holes'}"}
+    ],
+  "outputs":
+    [
+      {"name":"B","type":["logical","2d"]},
+      {"name":"L","type":["double","2d"]},
+      {"name":"n","type":["double","scalar"]},
+      {"name":"A","type":["logical","2d","sparse"]}
+    ]
+},
+
+"bwconncomp":
+    {
+        "inputs":
+        [
+            {"name":"BW", "kind":"required", "type":[["numeric"], ["logical"]]},
+            {"name":"conn", "kind":"positional", "type":[
+                                                         ["choices={4, 6, 8, 18, 26}"], 
+                                                         ["double", "@(x) all(size(x) == 3)"],
+                                                         ["logical", "@(x) all(size(x) == 3)"] ] }
+        ],
+        "outputs":
+        [
+            {"name":"CC", "type":[["struct", "scalar"]]}
+        ]
+    },
+    
+"bwareaopen":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["numeric"]]},
+    {"name":"P", "kind":"required", "type":["numeric","scalar","integer",">=0"]},
+    {"name":"conn", "kind":"positional", 
+      "type":[
+        ["choices={4, 6, 8, 18, 26}"], 
+        ["double", "@(x) all(size(x) == 3)"],
+        ["logical", "@(x) all(size(x) == 3)"] 
+      ] 
+    }
+  ]
+},
+
+"bwconvhull":
+{
+  "inputs":
+    [
+      {"name":"BW", "kind":"required", "type":["logical","2d"]},
+      {"name":"method", "kind":"positional", "type":"choices={'union','objects'}"},
+      {"name":"conn", "kind":"positional", "type":[["choices={4,8}"],["size=3,3","numeric"]]}      
+    ],
+  "outputs":
+    [
+      {"name":"CH","type":"logical"}
+    ]
+},
+"bwdist":
+{
+  "inputs":
+  [
+    {"name":"BW","kind":"required","type":[["logical"],["numeric"]]},
+    {"name":"METHOD","kind":"ordered","type":"choices={'cityblock','chessboard','quasi-euclidean','euclidean'}"}
+  ],
+  "outputs":
+  [
+    {"name":"D", "type":"single"},
+    {"name":"IDX", "type":[["uint32"],["uint64"]]}
+  ]
+},
+
+"bwferet":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"]]},
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+            ],
+            [
+                {"name":"Properties", "kind":"ordered", "type":"choices={'MaxFeretProperties','MinFeretProperties'}"}
+            ]
+
+         ]   
+    }
+  ],
+  "outputs":
+  [
+    {"name":"Out", "type":"table"},
+    {"name":"L", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]}
+  ]
+},
+
+"bwlabel":
+{
+  "inputs":
+  [
+    {"name":"BW","kind":"required","type":[["logical","2d"],["numeric","2d"]]},
+    {"name":"CONN","kind":"ordered","type":"choices={4,8}"}
+  ],
+  "outputs":
+  [
+    {"name":"L", "type":["double"]},
+    {"name":"n", "type":["double"]}
+  ]
+},
+
+"bwmorph":
+{
+  "inputs":
+  [
+    {"name":"BW","kind":"required","type":[["logical","2d"],["numeric","2d"]]},
+    {"name": "Operation", "kind": "required", "type":"choices={'bothat','branchpoints','bridge','clean','close','diag','dilate','endpoints','erode','fatten','fill','hbreak','majority','perim4','perim8','open','remove','shrink','skeleton','spur','thicken','thin','tophat'}"
+    },
+    {"name": "n", "kind": "ordered","type": [["numeric","scalar"]]}
+  ],
+  "outputs":
+  [
+    {"name":"BW2","type":"logical"}
+  ]
+},
+
+"bwmorph3":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["logical"],["numeric"]]},
+    {"name":"Operation","kind":"required","type":"choices={'branchpoints','clean','endpoints','fill','majority','remove'}"}
+  ],
+  "outputs":
+  [
+    {"name":"J","type":["logical"]}
+  ]
+},
+
+    "bwpropfilt":
+    {
+        "inputs":
+        [
+            {"mutuallyExclusiveGroup":
+             [
+                 [
+                     {"name":"IN","kind":"required","type":[["logical","~numeric","2d"], ["struct"]]},
+                     {"name":"ATTRIB","kind":"required","type":"choices={'Area','EquivDiameter','FilledArea','Orientation','Solidity','ConvexArea','EulerNumber','MajorAxisLength','Perimeter','Eccentricity','Extent','MinorAxisLength','PerimeterOld'}"},
+                     {"name":"N","kind":"required","type":["numeric","scalar"]},
+                     {"name":"KEEP","kind":"ordered","type":"choices={'largest','smallest'}"},
+                     {"name":"CONN","kind":"ordered","type":["numeric"]}
+                 ],
+                 [
+                     {"name":"IN","kind":"required","type":[["logical","~numeric","2d"], ["struct"]]},
+                     {"name":"I","kind":"required","type":["numeric","2d"]},
+                     {"name":"ATTRIB","kind":"required","type":"choices={'Area','EquivDiameter','FilledArea','Orientation','Solidity','ConvexArea','EulerNumber','MajorAxisLength','Perimeter','Eccentricity','Extent','MinorAxisLength','PerimeterOld','MaxIntensity','MinIntensity','MeanIntensity'}"},
+                     {"name":"N","kind":"ordered","type":["numeric","scalar"]},
+                     {"name":"KEEP","kind":"ordered","type":"choices={'largest','smallest'}"},
+                     {"name":"CONN","kind":"ordered","type":["numeric"]}
+                 ],
+                 [
+                     {"name":"IN","kind":"required","type":[["logical","~numeric","2d"], ["struct"]]},
+                     {"name":"ATTRIB","kind":"required","type":"choices={'Area','EquivDiameter','FilledArea','Orientation','Solidity','ConvexArea','EulerNumber','MajorAxisLength','Perimeter','Eccentricity','Extent','MinorAxisLength','PerimeterOld'}"},
+                     {"name":"RANGE","kind":"required","type":["numeric","vector","size=1,2"]},
+                     {"name":"CONN","kind":"ordered","type":["numeric"]}
+                 ],
+                 [
+                     {"name":"IN","kind":"required","type":[["logical","~numeric","2d"], ["struct"]]},
+                     {"name":"I","kind":"required","type":["numeric","2d"]},
+                     {"name":"ATTRIB","kind":"required","type":"choices={'Area','EquivDiameter','FilledArea','Orientation','Solidity','ConvexArea','EulerNumber','MajorAxisLength','Perimeter','Eccentricity','Extent','MinorAxisLength','PerimeterOld','MaxIntensity','MinIntensity','MeanIntensity'}"},
+                     {"name":"RANGE","kind":"required","type":["numeric","vector","size=1,2"]},
+                     {"name":"CONN","kind":"ordered","type":["numeric"]}
+                 ]
+             ]
+            }
+        ],
+        "outputs":
+        [
+            {"name":"OUT", "type":[["logical"], ["struct"]]}
+        ]
+    },
+
+"bwperim":
+{
+  "inputs":
+    [
+      {"name":"BW", "kind":"required", "type":[["logical"],["numeric"]]},
+      {"name":"conn", "kind":"positional", 
+      "type":[
+        ["choices={4, 6, 8, 18, 26}"], 
+        ["double", "@(x) all(size(x) == 3)"],
+        ["logical", "@(x) all(size(x) == 3)"] 
+      ] 
+    }
+    ],
+  "outputs":
+    [
+      {"name":"BW2","type":["logical"]}
+    ]
+},
+
+"bwselect":
+{
+  "inputs":
+  [
+  ]
+},
+
+"bwselect":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical","2d"],["numeric","2d"]]},
+    {"name":"c", "kind":"required", "type":["numeric","vector"]},
+    {"name":"r", "kind":"required", "type":["numeric","vector"]},
+    {"name":"n", "kind":"positional", "type":["choices={4,8}"]}
+  ]
+},
+
+"bwselect":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical","2d"],["numeric","2d"]]},
+    {"name":"n", "kind":"positional", "type":["choices={4,8}"]}
+  ]
+},
+
+"bwselect":
+{
+  "inputs":
+  [
+    {"name":"x", "kind":"required", "type":["numeric","vector"]},
+    {"name":"y", "kind":"required", "type":["numeric","vector"]},
+    {"name":"BW", "kind":"required", "type":[["logical","2d"],["numeric","2d"]]},
+    {"name":"xi", "kind":"required", "type":["numeric","vector"]},
+    {"name":"yi", "kind":"required", "type":["numeric","vector"]},
+    {"name":"n", "kind":"required", "type":["choices={4,8}"]}
+  ]
+},
+
+"bwselect3":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["logical"],["numeric"]]},
+    {"name":"C","kind":"required","type":"numeric"},
+    {"name":"R","kind":"required","type":"numeric"},
+    {"name":"P","kind":"required","type":"numeric"},
+    {"name":"N","kind":"ordered","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"J","type":["logical"]}
+  ]
+},
+
+"bwselect3":
+{
+  "inputs":
+  [
+    {"name":"X","kind":"required","type":"numeric"},
+    {"name":"Y","kind":"required","type":"numeric"},
+    {"name":"Z","kind":"required","type":"numeric"},
+    {"name":"V","kind":"required","type":[["logical"],["numeric"]]},
+    {"name":"Xi","kind":"required","type":"numeric"},
+    {"name":"Yi","kind":"required","type":"numeric"},
+    {"name":"Zi","kind":"required","type":"numeric"},
+    {"name":"N","kind":"ordered","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"J","type":["logical"]}
+  ]
+},
+
+"bwskel":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":["numeric","2d","~scalar"]},
+    {"name":"MinBranchLength", "kind":"namevalue", "type":["numeric","scalar",">=0"]}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":["logical","2d"]}
+  ]
+},
+
+"bwskel":
+{
+  "inputs":
+  [
+    {"name":"V", "kind":"required", "type":["numeric","3d","~scalar"]},
+    {"name":"MinBranchLength", "kind":"namevalue", "type":["numeric","scalar",">=0"]}
+  ],
+ "outputs":
+  [
+    {"name":"B", "type":["logical","3d"]}
+  ]
+},
+
+"bwtraceboundary":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"BW","kind":"required","type":[["numeric"], ["logical"]]},
+                {"name":"P","kind":"required","type":["numeric","size=1,2","vector"]},
+                {"name":"FSTEP","kind":"required","type":"choices={'N','NE','E','SE','W','SW','W','NW'}"},
+                {"name":"CONN","kind":"ordered","type":["numeric","scalar"]}
+            ],
+            [
+                {"name":"BW","kind":"required","type":[["numeric"], ["logical"]]},
+                {"name":"P","kind":"required","type":["numeric","size=1,2","vector"]},
+                {"name":"FSTEP","kind":"required","type":"choices={'N','NE','E','SE','W','SW','W','NW'}"},
+                {"name":"CONN","kind":"required","type":["numeric","scalar"]},
+                {"name":"N","kind":"required","type":["numeric", "scalar"]},
+                {"name":"DIR","kind":"required","type":"choices={'clockwise','counterclockwise'}"}
+            ]
+        ]
+    }
+  ],
+ "outputs":
+  [
+    {"name":"B","type":"double"}
+  ]
+},
+"cc2bw":
+{
+    "inputs":
+    [
+        {"name":"CC", "kind":"required", "type":"struct"},
+        {"name":"ObjectsToKeep", "kind":"namevalue", "type":[["logical", "vector"]]}
+    ],
+    "outputs":
+    [
+        {"name":"BW","type":["logical", "~numeric"]}
+    ]
+},
+"colfilt":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"A", "kind":"required", "type":[["numeric", "2d"], ["logical", "2d"]]},
+                {"name":"indexed", "kind":"ordered", "type":"choices={'indexed'}"},
+                {"name":"BlockSize", "kind":"required", "type":["numeric", "positive", "size=1,2", "integer"]},
+                {"name":"BlockType", "kind":"required", "type":"choices={'sliding','distinct'}"},
+                {"name":"fun", "kind":"required", "type":"function_handle"}
+            ],
+            [
+                {"name":"A", "kind":"required", "type":[["numeric", "2d"], ["logical", "2d"]]},
+                {"name":"indexed", "kind":"ordered", "type":"choices={'indexed'}"},
+                {"name":"BlockSize", "kind":"required", "type":["numeric", "positive", "size=1,2", "integer"]},
+                {"name":"BlockGroupSize", "kind":"required", "type":["size=1,2", "numeric", "positive", "integer"]},
+                {"name":"BlockType", "kind":"required", "type":"choices={'sliding','distinct'}"},
+                {"name":"fun", "kind":"required", "type":"function_handle"}
+            ]
+        ]
+    }
+  ],
+ "outputs":
+  [
+    {"name":"B","type":["numeric","2d"]}
+  ]
+},
+    
+"checkerboard":
+{
+  "inputs":
+  [
+    {"name":"n", "kind":"positional", "type":["scalar","numeric"]},
+    {"name":"p", "kind":"positional", "type":["scalar","numeric"]},
+    {"name":"q", "kind":"positional", "type":["scalar","numeric"]}
+    
+  ]
+},
+
+"colorChecker":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["single"], ["double"]]},
+                {"name":"Sensitivity", "kind":"namevalue", "type":["numeric","scalar"]},
+                {"name":"Downsample", "kind":"namevalue", "type":["logical","scalar"]}
+            ],
+            [
+                {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["single"], ["double"]]},
+                {"name":"RegistrationPoints", "kind":"namevalue", "type":"numeric"}
+            ]
+        ]
+    }
+  ],
+ "outputs":
+  [
+    {"name":"chartcc","type":"colorChecker"}
+  ]
+},
+
+"corr2":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"required","type":[["numerical"], ["logical"]]},
+    {"name":"B","kind":"required","type":[["numerical"], ["logical"]]}
+  ],
+  "outputs":
+  [
+    {"name":"R","type":["double","scalar"]}
+  ]
+},
+
+"dct2":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+      [
+        [
+          {"name":"A","kind":"required","type":[["numerical"], ["logical"]]},
+          {"name":"[M N]","kind":"ordered","type":["numeric","size=1,2","vector"]}
+        ],
+        [
+          {"name":"A","kind":"required","type":[["numerical"], ["logical"]]},
+          {"name":"M","kind":"required","type":["numeric","scalar"]},
+            {"name":"N","kind":"required","type":["numeric","scalar"]}
+        ]
+      ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"B","type":"double"}
+  ]
+},
+
+"dice":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+      [
+        [
+          {"name":"BW1","kind":"required","type":"logical"},
+          {"name":"BW2","kind":"required","type":"logical"}
+        ],
+        [
+          {"name":"L1","kind":"required","type":"double"},
+          {"name":"L2","kind":"required","type":"double"}
+        ],
+        [
+          {"name":"C1","kind":"required","type":"categorical"},
+          {"name":"C2","kind":"required","type":"categorical"}
+        ]
+      ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"SIMILARITY","type":"double"}
+  ]
+},
+
+"displayChart":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"chartcc", "kind":"required", "type":"colorChecker"},
+                {"name":"displayRegistrationPoints", "kind":"namevalue", "type":"logical"},
+                {"name":"displayColorROIs", "kind":"namevalue", "type":"logical"},
+                {"name":"Parent", "kind":"namevalue", "type":"matlab.graphics.axis.Axes"}
+            ],
+            [
+                {"name":"CHART", "kind":"required", "type":"esfrChart"},
+                {"name":"displayEdgeROIs", "kind":"namevalue", "type":"logical"},
+                {"name":"displayGrayROIs", "kind":"namevalue", "type":"logical"},
+                {"name":"displayColorROIs", "kind":"namevalue", "type":"logical"},
+                {"name":"displayRegistrationPoints", "kind":"namevalue", "type":"logical"},
+                {"name":"Parent", "kind":"namevalue", "type":"matlab.graphics.axis.Axes"}
+            ]
+        ]
+    }
+  ]
+},
+
+"displayColorPatch":
+{
+  "inputs":
+  [
+    {"name":"colorTable", "kind":"required", "type":"table"},
+	{"name":"displayROIIndex", "kind":"namevalue", "type":"logical"},
+	{"name":"displayDeltaE", "kind":"namevalue", "type":"logical"},
+	{"name":"Parent", "kind":"namevalue", "type":"matlab.graphics.axis.Axes"}
+  ]
+},
+
+"edge":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"},
+    {"name":"thresh", "type":["numeric","scalar"]}
+  ]
+},
+
+"edge":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"METHOD", "kind":"required", "type":"choices={'sobel','prewitt'}"},
+    {"name":"THRESH", "kind":"ordered", "type":["numeric","scalar","positive"]},
+    {"name":"DIRECTION", "kind":"ordered", "type":"choices={'both','horizontal','vertical'}"},
+    {"name":"OPTIONS", "kind":"ordered", "type":"choices={'nothinning','thinning'}"}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"},
+    {"name":"thresh", "type":["numeric","scalar"]}
+  ]
+},
+
+"edge":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"METHOD", "kind":"required", "type":"choices={'roberts'}"},
+    {"name":"THRESH", "kind":"ordered", "type":["numeric","scalar","positive"]},
+    {"name":"OPTIONS", "kind":"ordered", "type":"choices={'nothinning','thinning'}"}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"},
+    {"name":"thresh", "type":["numeric","scalar"]}
+  ]
+},
+
+"edge":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"METHOD", "kind":"required", "type":"choices={'log','canny','canny_old'}"},
+    {"name":"THRESH", "kind":"ordered", "type":["numeric","scalar","positive"]},
+    {"name":"SIGMA", "kind":"ordered", "type":["numeric","scalar","positive"]}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"},
+    {"name":"thresh", "type":["numeric","scalar"]}
+  ]
+},
+
+"edge":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"METHOD", "kind":"required", "type":"choices={'zerocross'}"},
+    {"name":"THRESH", "kind":"required", "type":["numeric","scalar","positive"]},
+    {"name":"H", "kind":"required", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"},
+    {"name":"thresh", "type":["numeric","scalar"]}
+  ]
+},
+
+"edge":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"METHOD", "kind":"required", "type":"choices={'approxcanny'}"},
+    {"name":"THRESH", "kind":"ordered", "type":["numeric","scalar","positive"]}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"}
+  ]
+},
+
+"edge3":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"],["logical"]]},
+    {"name":"Method","kind":"required","type":"choices={'approxcanny'}"},
+    {"name":"THRESH", "kind":"required", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":["logical"]}
+  ]
+},
+
+"edge3":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"],["logical"]]},
+    {"name":"Method","kind":"required","type":"choices={'sobel'}"},
+    {"name":"THRESH", "kind":"required", "type":"numeric"},
+    {"name":"edgeThinning","kind":"ordered","type":"choices={'thinning','nothinning'}"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":["logical"]}
+  ]
+},
+
+"esfrChart":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"],["single"], ["double"]]},
+    {"name":"Sensitivity", "kind":"namevalue", "type":["numeric", "scalar", ">=0","<=1"]},
+    {"name":"Style", "kind":"namevalue", "type":"choices={'Enhanced','Extended','WedgeEnhanced','WedgeExtended'}"},
+    {"name":"CameraParameters", "kind":"namevalue", "type":"cameraParameters"},
+    {"name":"RefinePoints", "kind":"namevalue", "type":["logical","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"CHART", "type":"esfrChart"}
+  ]
+},
+
+"esfrChart":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"],["single"], ["double"]]},
+    {"name":"RegistrationPoints", "kind":"namevalue", "type":[["numeric", "size=4,2"]]},
+    {"name":"Style", "kind":"namevalue", "type":"choices={'Enhanced','Extended','WedgeEnhanced','WedgeExtended'}"},
+    {"name":"CameraParameters", "kind":"namevalue", "type":"cameraParameters"},
+    {"name":"RefinePoints", "kind":"namevalue", "type":["logical","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"CHART", "type":"esfrChart"}
+  ]
+},
+
+"fibermetric":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"thickness", "kind":"ordered", "type":"numeric"},
+    {"name":"ObjectPolarity","kind":"namevalue","type":"choices={'bright','dark'}"},
+    {"name":"StructureSensitivity","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"single"}
+  ]
+},
+
+"fitbrisque":
+{
+  "inputs":
+  [
+    {"name":"IMDS", "kind":"required", "type":"matlab.io.datastore.ImageDatastore"},
+    {"name":"OpinionScore", "kind":"required", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"Model", "type":"brisqueModel"}
+  ]
+},
+
+"fitgeotform2d":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'reflectivesimilarity','similarity','affine','projective'}"}
+  ]
+},
+
+"fitgeotform2d":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'polynomial'}"},
+    {"name":"degree", "kind":"required", "type":"choices={2,3,4}"}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":"images.geotrans.PolynomialTransformation2D"}
+  ]
+},
+
+"fitgeotform2d":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'lwm'}"},
+    {"name":"N", "kind":"required", "type":["numeric", "integer", "scalar", ">=6"]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":"images.geotrans.LocalWeightedMeanTransformation2D"}
+  ]
+},
+
+"fitgeotform2d":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'pwl'}"}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":"images.geotrans.PiecewiseLinearTransformation2D"}
+  ]
+},
+
+"fitgeotrans":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'nonreflectivesimilarity','similarity','affine','projective'}"}
+  ]
+},
+
+"fitgeotrans":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'polynomial'}"},
+    {"name":"degree", "kind":"required", "type":"choices={2,3,4}"}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":"images.geotrans.PolynomialTransformation2D"}
+  ]
+},
+
+"fitgeotrans":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'lwm'}"},
+    {"name":"N", "kind":"required", "type":["numeric", "integer", "scalar", ">=6"]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":"images.geotrans.LocalWeightedMeanTransformation2D"}
+  ]
+},
+
+"fitgeotrans":
+{
+  "inputs":
+  [
+    {"name":"movingPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"fixedPoints", "kind":"required", "type":[["numeric", "size=:,2"]]},
+    {"name":"transformationType", "kind":"required", "type":"choices={'pwl'}"}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":"images.geotrans.PiecewiseLinearTransformation2D"}
+  ]
+},
+
+"fitniqe":
+{
+  "inputs":
+  [
+    {"name":"IMDS", "kind":"required", "type":[["matlab.io.datastore.ImageDatastore"]]},
+    {"name":"BlockSize", "kind":"namevalue", "type":"numeric"},
+    {"name":"SharpnessThreshold", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"Model", "type":"niqeModel"}
+  ]
+},
+
+"fspecial":
+{
+    "inputs":
+    [
+        { "mutuallyExclusiveGroup":
+             [
+                 [
+                     {"name":"type", "kind":"required", "type":"choices={'average', 'disk', 'gaussian', 'laplacian', 'log', 'motion', 'prewitt', 'sobel'}"}
+                 ],
+                 [
+                     {"name":"'average'", "kind":"required", "type":[["char", "choices={'average'}"]]},
+                     {"name":"hsize", "kind":"positional", "type":[ ["double", "scalar", "positive", "integer"], 
+                                                                    ["double", "size=1,2", "positive", "integer"] ]}
+                 ],
+                 [
+                     {"name":"'disk'", "kind":"required", "type":[["char", "choices={'disk'}"]]},
+                     {"name":"radius", "kind":"positional", "type":[["double", "scalar", "positive"]]}
+                 ],
+                 [
+                     {"name":"'gaussian'", "kind":"required", "type":[["char", "choices={'gaussian'}"]]},
+                     {"name":"hsize", "kind":"positional", "type":[ ["double", "scalar", "positive", "integer"], 
+                                                                    ["double", "size=1,2", "positive", "integer"] ]},
+                     {"name":"sigma", "kind":"positional", "type":[["double", "scalar", "positive"]]}
+                 ],
+                 [
+                     {"name":"'laplacian'", "kind":"required", "type":[["char", "choices={'laplacian'}"]]},
+                     {"name":"alpha", "kind":"positional", "type":[["double", "scalar", ">=0", "<=1"]]}
+                 ],
+                 [
+                     {"name":"'log'", "kind":"required", "type":[["char", "choices={'log'}"]]},
+                     {"name":"hsize", "kind":"positional", "type":[ ["double", "scalar", "positive", "integer"], 
+                                                                    ["double", "size=1,2", "positive", "integer"] ]},
+                     {"name":"sigma", "kind":"positional", "type":[["double", "scalar", "positive"]]}
+                 ],
+                 [
+                     {"name":"'motion'", "kind":"required", "type":[["char", "choices={'motion'}"]]},
+                     {"name":"len", "kind":"positional", "type":[["double", "scalar", "positive"]]},
+                     {"name":"theta", "kind":"positional", "type":[["double", "scalar"]]}
+                 ]
+             ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"h", "type":"double"}
+    ]
+},
+
+"fspecial3":
+{
+   "inputs":
+   [
+     {"name":"TYPE","kind":"required", "type":"choices={'average','ellipsoid'}"},
+     {"name":"HSIZE","kind":"ordered","type":"numeric"}
+   ],
+   "outputs":
+   [
+     {"name":"H","type":"double"}
+   ]
+},
+
+"fspecial3":
+{
+   "inputs":
+   [
+     {"name":"TYPE","kind":"required", "type":"choices={'gaussian','log','laplacian'}"},
+     {"name":"HSIZE","kind":"ordered","type":"numeric"},
+     {"name":"sigma","kind":"ordered","type":"numeric"}
+   ],
+   "outputs":
+   [
+     {"name":"H","type":"double"}
+   ]
+},
+
+"fspecial3":
+{
+   "inputs":
+   [
+     {"name":"TYPE","kind":"required", "type":"choices={'prewitt','sobel'}"},
+     {"name":"direction", "kind":"ordered", "type":"choices={'X','Y','Z'}"}
+   ],
+   "outputs":
+   [
+     {"name":"H","type":"double"}
+   ]
+},
+
+"grabcut":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"L", "kind":"required", "type":[["numeric"],["logical"]]},
+	{"name":"ROI", "kind":"required", "type":"logical"},
+    {"name":"FOREMASK", "kind":"ordered", "type":[["numeric"],["logical"]]},
+    {"name":"BACKMASK", "kind":"ordered", "type":[["numeric"],["logical"]]},
+    {"name":"Connectivity", "kind":"namevalue", "type":"numeric"},
+    {"name":"MaximumIterations", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"}
+  ]
+},
+
+"gradientweight":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"sigma","kind":"ordered","type":"numeric"},
+    {"name":"RolloffFactor","kind":"namevalue","type":"numeric"},
+    {"name":"WeightCutoff","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"W","type":"numeric"}
+  ]
+},
+
+"graycomatrix":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"GrayLimits", "kind":"namevalue", "type":["numeric","size=1,2"]},
+    {"name":"Offset", "kind":"namevalue", "type":["numeric","size=:,2"]},
+    {"name":"NumLevels", "kind":"namevalue", "type":["numeric","scalar","integer",">=2","<=8"]},
+    {"name":"Symmetric", "kind":"namevalue", "type":["logical","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"GLCMS", "type":"double"},
+    {"name":"SI", "type":"double"}
+  ]
+},
+
+"graycoprops":
+{
+  "inputs":
+  [
+    {"name":"glcm", "kind":"required", "type":[["numeric"],["logical"]]},
+    {
+      "mutuallyExclusiveGroup":
+        [
+          [
+            {"name":"properties", "kind":"ordered", "repeating":true, "type":"choices={'Contrast','Correlation','Energy','Homogeneity'}"}
+          ],
+          [
+            {"name":"properties", "kind":"ordered", "repeating":false, "type":[["cellstr"],["string"]]}
+          ],
+          [
+            {"name":"properties", "kind":"ordered", "repeating":false, "type":"choices={'all'}"}
+          ]
+        ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"struct"}
+  ]
+},
+
+"graydiffweight":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {  
+      "mutuallyExclusiveGroup":
+      [
+        [
+          {"name":"refGrayVal","kind":"required","type":["numeric","scalar"]}
+        ],
+        [
+          {"name":"MASK","kind":"required","type":["logical"]}
+        ],
+        [
+          {"name":"C","kind":"positional","type":["numeric", "row"]},
+          {"name":"R","kind":"required","type":["numeric", "row"]},
+          {"name":"P","kind":"optional","type":["numeric", "row"]}
+        ]
+      ]
+    },
+	{"name":"RolloffFactor","kind":"namevalue","type":["numeric","scalar","positive"]},
+    {"name":"GrayDifferenceCutoff","kind":"namevalue","type":["numeric","scalar",">=0"]}
+  ],
+  "outputs":
+  [
+    {"name":"W","type":"numeric"}
+  ]
+},
+
+"graythresh":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["double"],["single"]]}
+  ],
+  "outputs":
+  [
+    {"name":"T", "type":["double"]},
+    {"name":"EM", "type":["double"]}
+  ]
+},
+
+"hough":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"RhoResolution", "kind":"namevalue", "type":["double","scalar","positive"]},
+    {"name":"Theta", "kind":"namevalue", "type":["double","vector"]}
+  ],
+  "outputs":
+  [
+    {"name":"H", "type":"numeric"},
+    {"name":"theta", "type":"numeric"},
+    {"name":"rho", "type":"numeric"}
+  ]
+},
+
+"houghlines":
+{
+ "inputs":
+ [
+    {"name":"BW","kind":"required","type":[["logical","2d"],["numeric","2d"]]},
+    {"name":"THETA","kind":"required","type":["numeric","vector"]},
+    {"name":"RHO","kind":"required","type":["numeric","vector"]},
+    {"name":"PEAKS","kind":"required","type":["numeric","size=:,2"]},
+    {"name":"FillGap","kind":"namevalue","type":["numeric","scalar"]},
+    {"name":"MinLength","kind":"namevalue","type":["numeric","scalar"]}
+ ],
+"outputs":
+  [
+    {"name":"LINES","type":["struct"]}
+  ]
+},   
+
+"houghpeaks":
+{
+ "inputs":
+ [
+    {"name":"H","kind":"required","type":["2d","double"]},
+    {"name":"numpeaks","kind":"required","type":["scalar","double","positive"]},
+    {"name":"Threshold","kind":"namevalue","type":["scalar","double","positive"]},
+    {"name":"NHoodSize","kind":"namevalue","type":["vector","numel=2","double","positive","@(x) all(mod(x,2))"]},
+    {"name":"Theta","kind":"namevalue","type":["vector","double"]}
+   
+ ],
+"outputs":
+  [
+    {"name":"peaks","type":"double"}
+  ]
+},
+
+"idct2":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":["numeric","2d","~scalar"]},
+    {
+      "mutuallyExclusiveGroup":
+      [
+        [
+          {"name":"m", "kind":"required", "type":["numeric","scalar","integer","positive"]},
+          {"name":"n", "kind":"required", "type":["numeric","scalar","integer","positive"]}
+        ],
+        [
+          {"name":"mn", "kind":"required", "type":["numeric","size=1,2","integer","positive"]}
+        ]
+      ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"B","type":"double"}
+  ]
+},
+
+"im2col":
+{
+  "inputs":
+  [
+      {"name":"A", "kind":"required", "type":[["numeric", "2d"], ["logical", "2d"]]},
+      {"name":"indexed", "kind":"ordered", "type":"choices={'indexed'}"},
+      {"name":"BlockSize", "kind":"required", "type":["numeric", "positive", "size=1,2", "integer"]},
+      {"name":"BlockType", "kind":"required", "type":"choices={'sliding','distinct'}"}
+  ],
+ "outputs":
+  [
+    {"name":"B","type":["inferredFrom=A"]}
+  ]
+},
+
+"im2int16":
+    {
+        "inputs":
+        [
+            {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]}
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":"int16"}
+        ]
+    },
+
+"im2single":
+    {
+        "inputs":
+        [
+            {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]}, 
+            {"name":"'indexed'", "kind":"positional", "type":"choices={'indexed'}"}
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":"single"}
+        ]
+    },
+
+"im2uint8":
+{
+    "inputs":
+    [
+        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]}, 
+        {"name":"'indexed'", "kind":"positional", "type":"choices={'indexed'}"}
+    ],
+    "outputs":
+    [
+        {"name":"J", "type":"uint8"}
+    ]
+},
+
+"im2uint16":
+    {
+        "inputs":
+        [
+            {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]}, 
+            {"name":"'indexed'", "kind":"positional", "type":"choices={'indexed'}"}
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":"uint16"}
+        ]
+    },
+
+"imabsdiff":
+{
+    "inputs":
+    [
+        {"name":"X", "kind":"required", "type":[["numeric", "real"], ["logical", "real"]]},
+        {"name":"Y", "kind":"required", "type":[["numeric", "real"], ["logical", "real"]]}
+    ],
+    "outputs":
+    [
+        {"name":"Z", "type":[["numeric", "real"], ["logical", "real"]]}
+    ]
+},
+
+"imadjustn":
+{
+ "inputs":
+ [
+    {"name":"V","kind":"required","type":[["uint8"],["uint16"],["int16"],["double"],["single"]]},
+    {"name":"LowHighIn","kind":"ordered","type":"numeric"},
+    {"name":"LowHighOut","kind":"ordered","type":"numeric"},
+    {"name":"gamma","kind":"ordered","type":"numeric"}
+ ],
+"outputs":
+  [
+    {"name":"J","type":[["uint8"],["uint16"],["int16"],["double"],["single"]]}
+  ]
+},
+
+"images.geotrans.Warper":
+{
+  "inputs":
+  [
+    {"name":"tform", "kind":"required", "type":[["affine2d"],["projective2d"],["numeric"]]},
+    {"name":"inputSize", "kind":"required", "type":[["numeric"],["imref2d"]]},
+    {"name":"outputRef", "kind":"ordered", "type":"imref2d"},
+    {"name":"Interpolation","kind":"namevalue","type":"choices={'nearest','linear','cubic'}"},
+    {"name":"FillValue","kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"warper", "type":"images.geotrans.Warper"}
+  ]
+},
+
+"imbilatfilt":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"DegreeOfSmoothing", "kind":"ordered", "type":"numeric"},
+    {"name":"SpatialSigma", "kind":"ordered", "type":"numeric"},
+    {"name":"NeighborhoodSize", "kind":"namevalue", "type":"numeric"},
+    {"name":"Padding","kind":"namevalue","type":[["choices={'replicate','symmetric'}"], ["numeric"]]}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"numeric"}
+  ]
+},
+
+"imbinarize":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"Method","kind":"ordered","type":"choices={'global'}"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":["logical"]}
+  ]
+},
+
+"imclose":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]},
+                        {"name":"SE", "kind":"required", "type":[["scalar", "strel"], ["scalar", "offsetstrel"]]}
+                    ],
+                    [
+                        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]},
+                        {"name":"nhood", "kind":"required", "type":[["numeric"], ["logical"]]}
+                    ]
+                ]
+
+            }
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":[["numeric"], ["logical"]]}
+        ]
+    },
+
+"imcrop":
+{
+  "inputs":
+    [
+      {"mutuallyExclusiveGroup":
+        [
+          [
+            {"name":"I","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"],["categorical"]]},
+            {"name":"RECT","kind":"ordered","type":[["size=1,4","numeric","vector"], ["images.spatialref.Rectangle"]]}
+          ],
+          [
+            {"name":"X","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+            {"name":"map","kind":"required","type":["size=:,3","numeric"]},
+            {"name":"RECT","kind":"ordered","type":[["size=1,4","numeric","vector"], ["images.spatialref.Rectangle"]]}
+          ]
+        ]
+      }
+    ],
+  "outputs":
+  [
+    {"name":"BW","type":["logical"]}
+  ]
+},
+
+"imcrop3":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"],["categorical"]]},
+    {"name":"Cuboid","kind":"required","type":[["size=1,6","numeric","vector"], ["images.spatialref.Cuboid"]]}
+  ],
+  "outputs":
+  [
+    {"name":"VOUT","type":[["numeric"],["categorical"]]}
+  ]
+},
+
+"imbinarize":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"Method","kind":"required","type":"choices={'adaptive'}"},
+    {"name":"Sensitivity","kind":"namevalue","type":"numeric"},
+    {"name":"ForegroundPolarity","kind":"namevalue","type":"choices={'bright','dark'}"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":["logical"]}
+  ]
+},
+
+"imdiffuseest":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["double"],["single"]]},
+    {"name":"Connectivity", "kind":"namevalue", "type":"choices={'maximal','minimal'}"},
+    {"name":"ConductionMethod", "kind":"namevalue", "type":"choices={'exponential','quadratic'}"}
+  ],
+  "outputs":
+  [
+    {"name":"gradientThreshold", "type":[["uint8"],["uint16"],["int16"],["double"],["single"]]},
+    {"name":"numberOfIterations", "type":"double"}
+  ]
+},
+
+"imdiffusefilt":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"GradientThreshold", "kind":"namevalue", "type":"numeric"},
+    {"name":"NumberOfIterations", "kind":"namevalue", "type":"numeric"},
+    {"name":"Connectivity", "kind":"namevalue", "type":"choices={'maximal','minimal'}"},
+    {"name":"ConductionMethod", "kind":"namevalue", "type":"choices={'exponential','quadratic'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]}
+  ]
+},
+
+"imdilate":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }
+                    ]
+                ]
+            
+            }
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":[["numeric"], ["logical"]]}
+        ]
+    },
+
+"imerase":
+{
+    "inputs":
+    [
+        {"name":"A", "kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+        {"name":"win", "kind":"required","type":[["size=1,4","numeric","vector"], ["images.spatialref.Rectangle"]]},
+        {"name":"FillValues","kind":"namevalue","type":[["numeric","vector","numel=3"],["numeric"]]}
+    ]
+},
+
+"imerode":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }, 
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" }
+                    ],
+                    [
+                        { "name":"I", "kind":"required", "type":[["numeric"], ["logical"]] },
+                        { "name":"SE", "kind":"required", "type":[ ["scalar", "strel"], 
+                                                                   ["scalar", "offsetstrel"],
+                                                                   ["numeric"], ["logical"] ] },
+                        { "name":"shape", "kind":"positional", "type":"choices={'same', 'full'}" },
+                        { "name":"packopt", "kind":"positional", "type":"choices={'notpacked', 'ispacked'}" },
+                        { "name":"m", "kind":"positional", "type":[["double", "positive", "scalar", "integer"]] }
+                    ]
+                ]
+            
+            }
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":[["numeric"], ["logical"]]}
+        ]
+    },
+    
+"imfill":
+{    
+  "inputs":
+    [
+        {"name":"BW", "kind":"required", "type":["logical"]},
+        {"name":"holes", "kind":"ordered", "type":"choices={'holes'}"}
+    ],
+  "outputs":
+    [
+        {"name":"BW2", "type":["logical"]}
+    ]
+},
+
+"imfill":
+{    
+  "inputs":
+    [
+        {"name":"BW", "kind":"required", "type":["logical"]},
+        {"name":"conn", "kind":"positional", "type":"choices={4,6,8,18,26}"},
+        {"name":"holes", "kind":"ordered", "type":"choices={'holes'}"}
+    ],
+  "outputs":
+    [
+        {"name":"BW2", "type":["logical"]}
+    ]
+},
+
+"imfill":
+{    
+  "inputs":
+    [
+        {"name":"BW", "kind":"required", "type":["logical"]},
+        {"name":"locations", "kind":"positional", "type":[["numeric","~scalar"],["choices={0}"]]},
+        {"name":"conn", "kind":"ordered", "type":"choices={4,6,8,18,26}"}
+    ],
+  "outputs":
+    [
+        {"name":"BW2", "type":["logical"]},
+        {"name":"locations_out", "type":"numeric"}
+    ]
+},
+
+
+"imfill":
+{
+  "inputs":
+    [
+        {"name":"I", "kind":"required", "type":[["single"],["double"],["int8"],["int16"],["int32"],["int64"],["uint8"],["uint16"],["uint32"],["uint64"]]},
+        {"name":"conn", "kind":"ordered", "type":"choices={4,6,8,18,26}"}
+    ],
+  "outputs":
+    [
+        {"name":"BW2", "type":["logical"]}
+    ]
+},
+
+"imfilter":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                        {"name":"h", "kind":"required", "type":"double"},
+                        {"name":"padding", "kind":"positional", "type":[ ["numeric", "scalar"], 
+                                                                         ["choices={'symmetric', 'replicate', 'circular'}"] ] },
+                        {"name":"outputSize", "kind":"positional", "type":"choices={'same', 'full'}"},
+                        {"name":"filterOperation", "kind":"positional", "type":"choices={'corr', 'conv'}"}
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                        {"name":"h", "kind":"required", "type":"double"},
+                        {"name":"padding", "kind":"positional", "type":[ ["numeric", "scalar"], 
+                                                                         ["choices={'symmetric', 'replicate', 'circular'}"] ] },
+                        {"name":"filterOperation", "kind":"positional", "type":"choices={'corr', 'conv'}"},
+                        {"name":"outputSize", "kind":"positional", "type":"choices={'same', 'full'}"}
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                        {"name":"h", "kind":"required", "type":"double"},
+                        {"name":"outputSize", "kind":"positional", "type":"choices={'same', 'full'}"},
+                        {"name":"padding", "kind":"positional", "type":[ ["numeric", "scalar"], 
+                                                                         ["choices={'symmetric', 'replicate', 'circular'}"] ] },
+                        {"name":"filterOperation", "kind":"positional", "type":"choices={'corr', 'conv'}"}
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                        {"name":"h", "kind":"required", "type":"double"},
+                        {"name":"outputSize", "kind":"positional", "type":"choices={'same', 'full'}"},
+                        {"name":"filterOperation", "kind":"positional", "type":"choices={'corr', 'conv'}"},
+                        {"name":"padding", "kind":"positional", "type":[ ["numeric", "scalar"], 
+                                                                         ["choices={'symmetric', 'replicate', 'circular'}"] ] }
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                        {"name":"h", "kind":"required", "type":"double"},
+                        {"name":"filterOperation", "kind":"positional", "type":"choices={'corr', 'conv'}"},
+                        {"name":"padding", "kind":"positional", "type":[ ["numeric", "scalar"], 
+                                                                         ["choices={'symmetric', 'replicate', 'circular'}"] ] },
+                        {"name":"outputSize", "kind":"positional", "type":"choices={'same', 'full'}"}
+                    ],
+                    [
+                        {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                        {"name":"h", "kind":"required", "type":"double"},
+                        {"name":"filterOperation", "kind":"positional", "type":"choices={'corr', 'conv'}"},
+                        {"name":"outputSize", "kind":"positional", "type":"choices={'same', 'full'}"},
+                        {"name":"padding", "kind":"positional", "type":[ ["numeric", "scalar"], 
+                                                                         ["choices={'symmetric', 'replicate', 'circular'}"] ] }
+                    ]
+
+                ]
+            }
+        ],
+        "outputs":
+        [
+            {"name":"b", "type":[["numeric"], ["logical"]]}
+        ]
+    },
+
+"imfindcircles":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"required","type":[["uint8"],["uint16"],["double"],["logical"],["single"],["int16"]]},
+    {"name":"Radius range","kind":"required","type":"numeric"},
+    {"name":"ObjectPolarity","kind":"namevalue","type":"choices={'bright','dark'}"},
+    {"name":"Method","kind":"namevalue","type":"choices={'PhaseCode','TwoStage'}"},
+    {"name":"Sensitivity","kind":"namevalue","type":"numeric"},
+    {"name":"EdgeThreshold","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"Centers","type":"numeric"},
+    {"name":"Radii","type":"numeric"},
+    {"name":"Metric","type":"numeric"}
+  ]
+},
+
+"imflatfield":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"required","type":[["uint8"],["uint16"],["double"],["single"],["int16"]]},
+    {"name":"Sigma","kind":"required","type":"numeric"},
+    {"name":"Mask","kind":"ordered","type":"logical"},
+    {"name":"FilterSize","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["uint8"],["uint16"],["double"],["single"],["int16"]]}
+  ]
+},
+
+"imfuse":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":"numeric"},
+    {"name":"B", "kind":"required", "type":"numeric"},
+    {"name":"method", "kind":"ordered", "type":"choices={'falsecolor','blend','diff','montage'}"},
+    {"name":"Scaling", "kind":"namevalue", "type":"choices={'independent','joint','none'}"},
+    {"name":"ColorChannels", "kind":"namevalue", "type":[["choices={'green-magenta','red-cyan'}"], ["numeric","size=1,3","integer",">=0","<=2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"C","type":"uint8"}
+  ]
+},
+
+"imfuse":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":"numeric"},
+    {"name":"RA", "kind":"required", "type":"imref2d"},
+    {"name":"B", "kind":"required", "type":"numeric"},
+    {"name":"RB", "kind":"required", "type":"imref2d"},
+    {"name":"method", "kind":"ordered", "type":"choices={'falsecolor','blend','diff','montage'}"},
+    {"name":"Scaling", "kind":"namevalue", "type":"choices={'independent','joint','none'}"},
+    {"name":"ColorChannels", "kind":"namevalue", "type":[["choices={'green-magenta','red-cyan'}"], ["numeric","size=1,3","integer",">=0","<=2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"C", "type":"uint8"},
+    {"name":"RC", "type":"imref2d"}
+  ]
+},
+
+"imgaborfilt":
+    {
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+            [
+              [
+                {"name":"A","kind":"required","type":["numeric","2d"]},
+                {"name":"wavelength","kind":"required","type":["numeric","scalar",">=2"]},
+                {"name":"orientation","kind":"required","type":["numeric","scalar",">=0","<=360"]},
+                {"name":"SpatialFrequencyBandwidth","kind":"namevalue","type":["numeric","scalar"]},
+                {"name":"SpatialAspectRatio","kind":"namevalue","type":["numeric","scalar"]}
+              ],
+              [
+                {"name":"A","kind":"required","type":["numeric","2d"]},
+                {"name":"gaborbank","kind":"required","type":"gabor"}
+              ]
+            ]
+      }
+    ],
+
+  "outputs":
+  [
+    {"name":"mag", "type":"double"},
+    {"name":"phase", "type":"double"}
+  ]
+},
+
+"imgaussfilt":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":"numeric"},
+    {"name":"SIGMA", "kind":"ordered", "type":[["numeric","scalar"], ["numeric","size=1,2","positive"]]},
+    {"name":"FilterSize", "kind":"namevalue", "type":[["numeric","scalar","odd","integer"], ["numeric","size=1,2","positive","odd","integer"]]},
+    {"name":"Padding", "kind":"namevalue", "type":[["choices={'replicate','circular','symmetric'}"], ["numeric","scalar"]]},
+    {"name":"FilterDomain", "kind":"namevalue", "type":"choices={'spatial','frequency','auto'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"numeric"}
+  ]
+},
+
+"imgaussfilt3":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":"numeric"},
+    {"name":"SIGMA", "kind":"ordered", "type":[["numeric","scalar"], ["numeric","size=1,2","positive"]]},
+    {"name":"FilterSize", "kind":"namevalue", "type":[["numeric","scalar","odd","integer"], ["numeric","size=1,3","positive","odd","integer"]]},
+    {"name":"Padding", "kind":"namevalue", "type":[["choices={'replicate','circular','symmetric'}"], ["numeric","scalar"]]},
+    {"name":"FilterDomain", "kind":"namevalue", "type":"choices={'spatial','frequency','auto'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"numeric"}
+  ]
+},    
+
+"imgradient":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"I", "kind":"required", "type":[ ["numeric", "2d"], ["logical", "2d"] ] },
+                        {"name":"method", "kind":"positional", "type":"choices={'sobel', 'prewitt', 'central', 'intermediate', 'roberts'}"}
+                    ],
+                    [
+                        {"name":"Gx", "kind":"required", "type":[ ["numeric", "2d"], ["logical", "2d"] ] },
+                        {"name":"Gy", "kind":"required", "type":[ ["numeric", "2d"], ["logical", "2d"] ] }
+                    ]
+                ]
+            }
+        ],
+        "outputs":
+        [
+            {"name":"Gmag", "type":[["single", "2d"], ["double", "2d"]]},
+            {"name":"Gdir", "type":[["single", "2d"], ["double", "2d"]]}
+        ]
+    },
+
+"imgradientxy":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"METHOD", "kind":"ordered", "type":"choices={'sobel','prewitt','central','intermediate'}"}
+  ],
+  "outputs":
+  [
+    {"name":"Gx", "type":"numeric"},
+    {"name":"Gy", "type":"numeric"}
+  ]
+},
+
+"imhistmatch":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"required","type":[["uint8"],["uint16"],["double"],["single"],["int16"]]},
+    {"name":"REF","kind":"required","type":[["uint8"],["uint16"],["double"],["single"],["int16"]]},
+    {"name":"NBINS","kind":"ordered","type":"numeric"},
+    {"name":"Method","kind":"namevalue","type":"choices={'uniform','polynomial'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["uint8"],["uint16"],["double"],["single"],["int16"]]},
+    {"name":"hgram","type":["double"]}
+  ]
+},
+
+"imimposemin":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":"numeric"},
+    {"name":"BW","kind":"required","type":[["numeric"],["logical"]]},
+    {"name":"conn","kind":"ordered","type":[["choices={4,6,8,18,26}"],["double","size=3,3,:,3"],["logical","~numeric","size=3,3,:,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"J","type":"numeric"}
+  ]
+},
+
+"imlincomb":
+{
+  "inputs":
+  [
+    {"name":"A1", "kind":"required", "type":"numeric"},
+    {"name":"K1", "kind":"required", "type":["numeric","scalar"]},
+    {"name":"outputClass", "kind":"positional", "type":"choices={'uint8','int8','uint16','int16','uint32','int32','single','double'}"}
+  ],
+  "outputs":
+  [
+    {"name":"Z","type":"numeric"}
+  ]
+},
+
+"imlocalbrighten":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"],["single"],["double"]]},
+    {"name":"amount", "kind":"ordered", "type":[["scalar"],["numeric"]]},
+    {"name":"AlphaBlend", "kind":"namevalue", "type":[["numeric"],["logical"]]}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":[["uint8"],["uint16"],["single"],["double"]]},
+    {"name":"D", "type":[["single"],["double"]]}
+  ]
+},
+"immse":
+{
+  "inputs":
+  [
+    {"name":"X", "kind":"required", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"Y", "kind":"required", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]}
+  ]
+},    
+
+"imnlmfilt":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"ComparisonWindowSize", "kind":"namevalue", "type":"numeric"},
+    {"name":"DegreeOfSmoothing", "kind":"namevalue", "type":"numeric"},
+    {"name":"SearchWindowSize", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"numeric"},
+    {"name":"DegreeOfSmoothing","type":["double"]}
+  ]
+},
+
+"imopen":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]},
+                        {"name":"SE", "kind":"required", "type":[["scalar", "strel"], ["scalar", "offsetstrel"]]}
+                    ],
+                    [
+                        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]},
+                        {"name":"nhood", "kind":"required", "type":[["numeric"], ["logical"]]}
+                    ]
+                ]
+
+            }
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":[["numeric"], ["logical"]]}
+        ]
+    },
+
+"imoverlay":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["uint16"], ["single"], ["double"], ["logical"]]},
+    {"name":"BW", "kind":"required", "type":"logical"},
+    {"name":"COLOR", "kind":"ordered", "type":[["numeric","numel=3"],["char"],["string"]]}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":"uint8"}
+  ]
+},
+ 
+"imreducehaze":
+{
+  "inputs":
+  [
+    {"name":"X", "kind":"required", "type":[["uint8"],["uint16"],["single"],["double"]]},
+    {"name":"amount", "kind":"ordered", "type":"numeric"},
+    {"name":"Method", "kind":"namevalue", "type":"choices={'approxdcp','simpledcp'}"},
+    {"name":"AtmosphericLight", "kind":"namevalue", "type":"numeric"},
+    {"name":"ContrastEnhancement", "kind":"namevalue", "type":"choices={'global','boost','none'}"},
+    {"name":"BoostAmount", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"D", "type":[["uint8"],["uint16"],["single"],["double"]]},
+    {"name":"T", "type":[["single"],["double"]]},
+    {"name":"L", "type":[["single"],["double"]]}
+  ]
+},
+
+"imregconfig":
+{
+  "inputs":
+  [
+    {"name":"CONFIGNAME", "kind":"required", "type":"choices={'monomodal','multimodal'}"}
+  ],
+  "outputs":
+  [
+    {"name":"OPTIMIZER", "type":[["registration.optimizer.OnePlusOneEvolutionary"],["registration.optimizer.RegularStepGradientDescent"]]},
+    {"name":"METRIC", "type":[["registration.metric.MattesMutualInformation"],["registration.metric.MeanSquares"]]}
+  ]
+},
+
+"imregcorr":
+{
+  "inputs":
+  [
+    {"name":"MOVING", "kind":"required", "type":[["numeric","2d"],["numeric","size=:,:,3"]]},
+    {"name":"RMOVING", "kind":"ordered", "type":["imref2d","scalar"]},
+    {"name":"FIXED", "kind":"required", "type":[["numeric","2d"],["numeric","size=:,:,3"]]},
+    {"name":"RFIXED", "kind":"ordered", "type":["imref2d","scalar"]},
+    {"name":"TRANSFORMTYPE", "kind":"ordered", "type":"choices={'rigid','similarity','translation'}"},
+    {"name":"Window", "kind":"namevalue", "type":["logical","scalar"]},
+    {"name":"Method", "kind":"namevalue", "type":"choices={'gradcorr','phasecorr'}"}
+  ]
+},
+
+"imregdemons":
+{
+  "inputs":
+  [
+    {"name":"MOVING", "kind":"required", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"FIXED", "kind":"required", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"N", "kind":"ordered", "type":["integer","positive","vector"]},
+    {"name":"AccumulatedFieldSmoothing", "kind":"namevalue", "type":["numeric","scalar","positive"]},
+    {"name":"PyramidLevels", "kind":"namevalue", "type":["numeric","scalar","integer","positive"]},
+    {"name":"DisplayWaitbar", "kind":"namevalue", "type":["logical","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"D", "type":"numeric"},
+    {"name":"MOVING_REG", "type":[["numeric","2d"],["numeric","3d"]]}
+  ]
+},
+
+"imregionalmax":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["numeric"],["logical"]]},
+    {"name":"conn","kind":"ordered","type":[["choices={4,6,8,18,26}"],["numeric","size=3,3,:,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":"logical"}
+  ]
+},
+
+"imregionalmin":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["numeric"],["logical"]]},
+    {"name":"conn","kind":"ordered","type":[["choices={4,6,8,18,26}"],["numeric","size=3,3,:,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":"logical"}
+  ]
+},
+
+"imregister":
+{
+  "inputs":
+  [
+    {"name":"MOVING", "kind":"required", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"RMOVING", "kind":"ordered", "type":[["imref2d","scalar"],["imref3d","scalar"]]},
+    {"name":"FIXED", "kind":"required", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"RFIXED", "kind":"ordered", "type":[["imref2d","scalar"],["imref3d","scalar"]]},
+    {"name":"TRANSFORMTYPE", "kind":"required", "type":"choices={'affine','rigid','similarity','translation'}"},
+    {"name":"OPTIMIZER", "kind":"required", "type":[["registration.optimizer.OnePlusOneEvolutionary","scalar"],["registration.optimizer.RegularStepGradientDescent","scalar"]]},
+    {"name":"METRIC", "kind":"required", "type":[["registration.metric.MattesMutualInformation","scalar"],["registration.metric.MeanSquares","scalar"]]},
+    {"name":"DisplayOptimization", "kind":"namevalue", "type":["logical","scalar"]},
+    {"name":"InitialTransformation", "kind":"namevalue", "type":[["affinetform2d","scalar"],["affinetform3d","scalar"],["affine2d","scalar"],["affine3d","scalar"]]},
+    {"name":"PyramidLevels", "kind":"namevalue", "type":["numeric","scalar","integer","positive"]}
+  ],
+  "outputs":
+  [
+    {"name":"MOVING_REG", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"R_REG", "type":[["imref2d","scalar"],["imref3d","scalar"]]}
+  ]
+},
+
+"imregmtb":
+{
+  "inputs":
+  [
+    {"name":"M1", "kind":"required", "type":[["uint8"],["uint16"],["single"],["double"]]},
+    {"name":"M2", "kind":"required", "type":[["uint8"],["uint16"],["single"],["double"]]}
+  ],
+ "outputs":
+  [
+    {"name":"R1", "type":[["uint8"],["uint16"],["single"],["double"]]},
+    {"name":"shifts", "type":[["double"]]}
+  ]
+},
+
+"imregtform":
+{
+  "inputs":
+  [
+    {"name":"MOVING", "kind":"required", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"RMOVING", "kind":"ordered", "type":[["imref2d","scalar"],["imref3d","scalar"]]},
+    {"name":"FIXED", "kind":"required", "type":[["numeric","2d"],["numeric","3d"]]},
+    {"name":"RFIXED", "kind":"ordered", "type":[["imref2d","scalar"],["imref3d","scalar"]]},
+    {"name":"TRANSFORMTYPE", "kind":"required", "type":"choices={'affine','rigid','similarity','translation'}"},
+    {"name":"OPTIMIZER", "kind":"required", "type":[["registration.optimizer.OnePlusOneEvolutionary","scalar"],["registration.optimizer.RegularStepGradientDescent","scalar"]]},
+    {"name":"METRIC", "kind":"required", "type":[["registration.metric.MattesMutualInformation","scalar"],["registration.metric.MeanSquares","scalar"]]},
+    {"name":"DisplayOptimization", "kind":"namevalue", "type":["logical","scalar"]},
+    {"name":"InitialTransformation", "kind":"namevalue", "type":[["affinetform2d","scalar"],["affinetform3d","scalar"],["affine2d","scalar"],["affine3d","scalar"]]},
+    {"name":"PyramidLevels", "kind":"namevalue", "type":["numeric","scalar","integer","positive"]}
+  ],
+  "outputs":
+  [
+    {"name":"TFORM", "type":["affine2d","scalar"]}
+  ]
+},
+
+"imresize3":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+            [
+              [
+                {"name":"V","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+                {"name":"Scale","kind":"required","type":[["numeric","scalar"],["numeric","size=1,3"]]},
+                {"name":"Method","kind":"namevalue","type":"choices={'nearest','linear','cubic'}"},
+                {"name":"AntiAliasing","kind":"namevalue","type":"logical"},
+                {"name":"OutputSize","kind":"namevalue","type":["numeric","size=1,3"]}
+              ],
+              [
+                {"name":"V","kind":"required","type":["categorical"]},
+                {"name":"Scale","kind":"required","type":[["numeric","scalar"],["numeric","size=1,3"]]},
+                {"name":"Method","kind":"namevalue","type":"choices={'nearest'}"},
+                {"name":"OutputSize","kind":"namevalue","type":["numeric","size=1,3"]}
+              ]
+            ]
+      }
+    ],
+  "outputs":
+  [
+    {"name":"B","type":"numeric"}
+  ]
+},
+
+"imrotate":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+          [
+            {"name":"A","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["logical"],["double"],["single"]]},
+            {"name":"Angle","kind":"required","type":[["numeric","scalar"]]},
+            {"name":"Method","kind":"ordered","type":"choices={'nearest','bilinear','bicubic'}"},
+            {"name":"BBOX","kind":"ordered","type":"choices={'loose','crop'}"}
+          ],
+          [
+            {"name":"A","kind":"required","type":[["categorical"]]},
+            {"name":"Angle","kind":"required","type":[["numeric","scalar"]]},
+            {"name":"Method","kind":"ordered","type":"choices={'nearest'}"},
+            {"name":"BBOX","kind":"ordered","type":"choices={'loose','crop'}"}
+          ]
+        ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["numeric"],["logical"],["categorical"]]}
+  ]
+},
+
+"imrotate3":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+          [
+            {"name":"V","kind":"required","type":[["uint8", "3d"],["uint16", "3d"],["uint32", "3d"],["int8", "3d"],["int16", "3d"],["int32", "3d"],["logical", "3d"],["double", "3d"],["single", "3d"]]},
+            {"name":"Angle","kind":"required","type":["numeric","scalar"]},
+            {"name":"W","kind":"required","type":["size=1,3","numeric","vector"]},
+            {"name":"Method","kind":"ordered","type":"choices={'nearest','linear','cubic'}"},
+            {"name":"BBOX","kind":"ordered","type":"choices={'loose','crop'}"},
+            {"name":"FillValues","kind":"namevalue","type":["numeric", "scalar"]}
+          ],
+          [
+            {"name":"V","kind":"required","type":["categorical","3d"]},
+            {"name":"Angle","kind":"required","type":["numeric","scalar"]},
+            {"name":"W","kind":"required","type":["size=1,3","numeric","vector"]},
+            {"name":"Method","kind":"ordered","type":"choices={'nearest'}"},
+            {"name":"BBOX","kind":"ordered","type":"choices={'loose','crop'}"},
+            {"name":"FillValues","kind":"namevalue","type":[["char"],["string"],["missing"]]}
+          ]
+        ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["numeric"],["logical"],["categorical"]]}
+  ]
+},
+
+"iradon":
+{
+  "inputs":
+  [
+    {"name":"R", "kind":"required", "type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"theta", "kind":"required", "type":[["numeric","scalar"],["numeric","vector"]]},
+    {"name":"interp", "kind":"ordered", "type":"choices={'nearest','linear','spline','pchip','v5cubic'}"},
+    {"name":"filter", "kind":"ordered", "type":"choices={'Ram-Lak','Shepp-Logan','Cosine','Hamming','Hann','None'}"},
+    {"name":"frequencyScaling", "kind":"ordered", "type":[["double","scalar",">0","<=1"]]},
+    {"name":"outputSize", "kind":"ordered", "type":["numeric","scalar","integer"]}
+  ],
+  "outputs":
+  [
+    {"name":"I", "type":"numeric"},
+    {"name":"H", "type":"numeric"}
+  ]
+},
+
+"imsegfmm":
+{
+  "inputs":
+  [
+    {"name":"W","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"C","kind":"required","type":"numeric"},
+    {"name":"R","kind":"required","type":"numeric"},
+    {"name":"THRESH","kind":"required","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":"numeric"}
+  ]
+},
+
+"imsegfmm":
+{
+  "inputs":
+  [
+    {"name":"W","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"C","kind":"required","type":"numeric"},
+    {"name":"R","kind":"required","type":"numeric"},
+    {"name":"P","kind":"required","type":"numeric"},
+    {"name":"THRESH","kind":"required","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":"numeric"}
+  ]
+},
+
+"imsegfmm":
+{
+  "inputs":
+  [
+    {"name":"W","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["double"],["single"]]},
+    {"name":"MASK","kind":"required","type":"numeric"},
+    {"name":"THRESH","kind":"required","type":"numeric"},
+    {"name":"C","kind":"ordered","type":"numeric"},
+    {"name":"R","kind":"ordered","type":"numeric"},
+    {"name":"P","kind":"ordered","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW","type":"numeric"}
+  ]
+},
+
+"imsplit":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":"numeric"}
+  ]
+},
+
+"imsegkmeans":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["uint8"],["uint16"],["single"],["int8"],["int16"]]},
+    {"name":"k","kind":"required","type":"numeric"},
+    {"name":"NormalizeInput","kind":"namevalue","type":"logical"},
+    {"name":"NumAttempts","kind":"namevalue","type":"numeric"},
+    {"name":"MaxIterations","kind":"namevalue","type":"numeric"},
+    {"name":"Threshold","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"L","type":[["uint8"],["uint16"],["single"],["int8"],["int16"]]},
+    {"name":"C","type":[["uint8"],["uint16"],["single"],["int8"],["int16"]]}
+  ]
+},
+
+"imsegkmeans3":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["uint8"],["uint16"],["single"],["int8"],["int16"]]},
+    {"name":"k","kind":"required","type":"numeric"},
+    {"name":"NormalizeInput","kind":"namevalue","type":"logical"},
+    {"name":"NumAttempts","kind":"namevalue","type":"numeric"},
+    {"name":"MaxIterations","kind":"namevalue","type":"numeric"},
+    {"name":"Threshold","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"L","type":[["uint8"],["uint16"],["single"],["int8"],["int16"]]},
+    {"name":"C","type":[["uint8"],["uint16"],["single"],["int8"],["int16"]]}
+  ]
+},
+
+"imsharpen":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":["numeric"]},
+    {"name":"Radius", "kind":"namevalue", "type":["double","scalar","real","positive"]},
+    {"name":"Amount", "kind":"namevalue", "type":["double","scalar","real",">=0"]},
+    {"name":"Threshold", "kind":"namevalue", "type":["double","scalar","real",">=0","<=1"]}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":["inferredFrom=A"]}
+  ]
+},
+
+"imtophat":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]},
+                        {"name":"SE", "kind":"required", "type":[["scalar", "strel"], ["scalar", "offsetstrel"]]}
+                    ],
+                    [
+                        {"name":"I", "kind":"required", "type":[["numeric"], ["logical"]]},
+                        {"name":"nhood", "kind":"required", "type":[["numeric"], ["logical"]]}
+                    ]
+                ]
+
+            }
+        ],
+        "outputs":
+        [
+            {"name":"J", "type":["inferredFrom=I"]}
+        ]
+    },
+
+"imtranslate":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+  
+                {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                {"name":"translation", "kind":"ordered", "type":"numeric"},
+                {"name":"method", "kind":"ordered", "type":"choices={'cubic','linear','nearest'}"},
+                {"name":"OutputView", "kind":"namevalue", "type":"choices={'same','full'}"},
+                {"name":"FillValues", "kind":"namevalue", "type":"numeric"}
+            ],
+            [
+  
+                {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+                {"name":"RA", "kind":"required", "type":[["imref2d"],["imref3d"]]},
+                {"name":"translation", "kind":"ordered", "type":"numeric"},
+                {"name":"method", "kind":"ordered", "type":"choices={'cubic','linear','nearest'}"},
+                {"name":"OutputView", "kind":"namevalue", "type":"choices={'same','full'}"},
+                {"name":"FillValues", "kind":"namevalue", "type":"numeric"}
+            ],
+            [
+  
+                {"name":"A", "kind":"required", "type":[["categorical"]]},
+                {"name":"translation", "kind":"ordered", "type":"numeric"},
+                {"name":"method", "kind":"ordered", "type":"choices={'nearest'}"},
+                {"name":"OutputView", "kind":"namevalue", "type":"choices={'same','full'}"},
+                {"name":"FillValues", "kind":"namevalue", "type":[["char"],["string"],["missing"]]}
+            ],
+            [
+  
+                {"name":"A", "kind":"required", "type":[["categorical"]]},
+                {"name":"RA", "kind":"required", "type":[["imref2d"],["imref3d"]]},
+                {"name":"translation", "kind":"ordered", "type":"numeric"},
+                {"name":"method", "kind":"ordered", "type":"choices={'nearest'}"},
+                {"name":"OutputView", "kind":"namevalue", "type":"choices={'same','full'}"},
+                {"name":"FillValues", "kind":"namevalue", "type":[["char"],["string"],["missing"]]}
+            ]
+            
+        ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":[["numeric"],["logical"],["categorical"]]}
+  ]
+},
+
+"imwarp":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"RA", "kind":"ordered", "type":[["imref2d"],["imref3d"]]},
+    {"name":"TFORM", "kind":"required", "type":[["affinetform2d"],["affinetform3d"],["affine2d"],["affine3d"],["geometricTransform2d"],["geometricTransform3d"],["projective2d"],["rigid2d"],["rigid3d"],["images.geotrans.PiecewiseLinearTransformation2D"],["images.geotrans.PolynomialTransformation2D"],["images.geotrans.LocalWeightedMeanTransformation2D"],["numeric","size=:,:,2"],["numeric","size=:,:,:,3"]]},
+    {"name":"INTERP", "kind":"ordered", "type":"choices={'nearest', 'linear', 'cubic'}"},
+    {"name":"OutputView", "kind":"namevalue", "type":[["imref2d"],["imref3d"]]},
+    {"name":"FillValues", "kind":"namevalue", "type":"numeric"},
+    {"name":"SmoothEdges", "kind":"namevalue", "type":["logical","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":[["numeric"],["logical"]]},
+    {"name":"RB", "type":[["imref2d"],["imref3d"]]}
+  ]
+},
+
+"imwarp":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":"categorical"},
+    {"name":"RA", "kind":"ordered", "type":[["imref2d"],["imref3d"]]},
+    {"name":"TFORM", "kind":"ordered", "type":[["affinetform2d"],["affinetform3d"],["affine2d"],["affine3d"],["geometricTransform2d"],["geometricTransform3d"],["projective2d"],["rigid2d"],["rigid3d"],["images.geotrans.PiecewiseLinearTransformation2D"],["images.geotrans.PolynomialTransformation2D"],["images.geotrans.LocalWeightedMeanTransformation2D"]]},
+    {"name":"INTERP", "kind":"ordered", "type":"choices={'nearest'}"},
+    {"name":"OutputView", "kind":"namevalue", "type":[["imref2d"],["imref3d"]]},
+    {"name":"FillValues", "kind":"namevalue", "type":"missing"},
+    {"name":"SmoothEdges", "kind":"namevalue", "type":["logical","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"categorical"},
+    {"name":"RB", "type":[["imref2d"],["imref3d"]]}
+  ]
+},
+
+"inpaintCoherent":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int8"],["int16"],["double"],["single"]]},
+    {"name":"mask", "kind":"required", "type":["logical"]},
+    {"name":"SmoothingFactor", "kind":"namevalue", "type":"numeric"},
+    {"name":"Radius", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":[["uint8"],["uint16"],["int8"],["int16"],["double"],["single"]]}
+  ]
+},
+
+"inpaintExemplar":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["double"],["single"]]},
+    {"name":"mask", "kind":"required", "type":["logical"]},
+    {"name":"FillOrder", "kind":"namevalue", "type":"choices={'gradient','tensor'}"},
+    {"name":"PatchSize", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":[["uint8"],["uint16"],["double"],["single"]]}
+  ]
+},
+
+"integralImage":
+{
+    "inputs":
+    [
+        {"name":"I", "kind":"required", "type":["real","2d"]},
+        {"name":"orientation", "kind":"ordered", "type":"choices:{'upright','rotated'}"}
+    ]
+},
+
+"jaccard":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+      [
+        [
+          {"name":"BW1","kind":"required","type":"logical"},
+          {"name":"BW2","kind":"required","type":"logical"}
+        ],
+        [
+          {"name":"L1","kind":"required","type":"double"},
+          {"name":"L2","kind":"required","type":"double"}
+        ],
+        [
+          {"name":"C1","kind":"required","type":"categorical"},
+          {"name":"C2","kind":"required","type":"categorical"}
+        ]
+      ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"SIMILARITY","type":"double"}
+  ]
+},
+
+"jitterColorHSV":
+{
+    "inputs":
+    [
+        {"name":"A", "kind":"required", "type":"numeric"},
+        {"name":"Contrast", "kind":"namevalue", "type":"numeric"},
+        {"name":"Brightness", "kind":"namevalue", "type":"numeric"},
+        {"name":"Hue", "kind":"namevalue", "type":"numeric"},
+        {"name":"Saturation", "kind":"namevalue", "type":"numeric"}
+    ]
+},
+
+"label2rgb":
+{
+  "inputs":
+  [
+    {"name":"L", "kind":"required", "type":[["numeric"], ["logical"],["categorical"]]},
+    {"name":"cmap", "kind":"ordered", "type":[["numeric","size=:,3"],["char"],["string"]]},
+    {"name":"zerocolor", "kind":"ordered", "type":[["numeric","numel=3"],["char"],["string"]]},
+    {"name":"order", "kind":"ordered","type":"choices={'noshuffle','shuffle'}"},
+    {"name":"OutputFormat", "kind":"namevalue","type":"choices={'image','triplets'}"}
+  ],
+  "outputs":
+  [
+    {"name":"RGB","type":[["uint8"]]}
+  ]
+},
+
+"labelmatrix":
+    {
+        "inputs":
+        [
+            {"name":"CC", "kind":"required", "type":[ ["struct" ,
+                                                       "@(x) all( ismember({'Connectivity', 'ImageSize', 'NumObjects', 'PixelIdxList'}, fieldnames(x)') )"] ] }
+        ],
+        "outputs":
+        [
+            {"name":"L", "type":[ ["uint8", "nonnegative"], 
+                                  ["uint16", "nonnegative"], 
+                                  ["uint32", "nonnegative"], 
+                                  ["double", "nonnegative"] ] }
+        ]
+
+    },
+    
+"labeloverlay":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"L", "kind":"required", "type":[["categorical"],["logical"],["uint8"], ["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"Colormap", "kind":"namevalue", "type":"numeric"},
+    {"name":"IncludedLabels", "kind":"namevalue","type":"numeric"},
+    {"name":"Transparency", "kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["uint8"]]}
+  ]
+},
+
+"lazysnapping":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"L", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"FOREMASK", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"BACKMASK", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"Connectivity", "kind":"namevalue", "type":"numeric"},
+    {"name":"EdgeWeightScaleFactor", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"numeric"}
+  ]
+},
+
+"localcontrast":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"required","type":[["uint8"],["uint16"],["int8"],["int16"],["single"]]},
+    {"name":"edgeThreshold","kind":"positional","type":"numeric"},
+    {"name":"amount","kind":"ordered","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["uint8"],["uint16"],["int8"],["int16"],["single"]]}
+  ]
+},
+
+"locallapfilt":
+{
+  "inputs":
+  [
+    {"name":"A","kind":"required","type":[["uint8"],["uint16"],["int8"],["int16"],["single"]]},
+    {"name":"sigma","kind":"required","type":"numeric"},
+    {"name":"alpha","kind":"required","type":"numeric"},
+    {"name":"beta","kind":"ordered","type":"numeric"},
+    {"name":"ColorMode","kind":"namevalue","type":"choices={'luminance','separate'}"},
+    {"name":"NumIntensityLevels","kind":"namevalue","type":[["numeric"],["choices={'auto'}"]]}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["uint8"],["uint16"],["int8"],["int16"],["single"]]}
+  ]
+},
+
+"localtonemap":
+{
+  "inputs":
+  [
+    {"name":"HDR","kind":"required","type":"single"},
+    {"name":"RangeCompression","kind":"namevalue","type":"numeric"},
+    {"name":"EnhanceContrast","kind":"namevalue","type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"RGB","type":"single"}
+  ]
+},
+
+"mean2":
+{
+  "inputs":
+  [
+    {"name":"I","kind":"required","type":[["numerical"], ["logical"]]}
+  ],
+  "outputs":
+  [
+    {"name":"B","type":[["single"], ["double"]]}
+  ]
+},
+
+"mat2gray":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":"numeric"},
+	{"name":"minmax", "kind":"ordered", "type":["numeric","vector","numel=2"]}
+  ],
+  "outputs":
+  [
+	{"name":"I", "type":"double"}
+  ]
+},
+
+"measureChromaticAberration":
+{
+    "inputs":
+    [
+        { "mutuallyExclusiveGroup":
+         [
+             [
+                 {"name":"CHART", "kind":"required", "type":"esfrChart"},
+                 {"name":"ROIIndex", "kind":"namevalue", "type":"numeric"},
+                 {"name":"ROIOrientation", "kind":"namevalue", "type":"choices={'vertical','horizontal','both'}"}
+             ],
+             [
+                 {"name":"IM", "kind":"required", "type":["numeric", "size=:,:,3"]},
+                 {"name":"ROIPositions", "kind":"required", "type":["numeric", "real", "size=:,4"]}
+             ]
+         ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"aberrationTable", "type":"table"}
+    ]
+},
+
+"measureColor":
+{
+    "inputs":
+    [
+        { "mutuallyExclusiveGroup":
+         [
+             [
+                 {"name":"CHART", "kind":"required", "type":[["colorChecker"], ["esfrChart"]]}
+             ],
+             [
+                 {"name":"IM", "kind":"required", "type":[["uint8", "size=:,:,3"], ["uint16", "size=:,:,3"],["single", "size=:,:,3"], ["double", "size=:,:,3"]]},
+                 {"name":"ROIPositions", "kind":"required", "type":["numeric", "real", "size=:,4"]},
+                 {"name":"ReferenceLAB", "kind":"required", "type":[ ["single", "size=:, 3"], ["double", "size=:,3"] ]},
+                 {"name":"InputColorSpace", "kind":"namevalue", "type":"choices={'srgb','adobe-rgb-1998','prophoto-rgb'}"},
+                 {"name":"ReferenceLABWhitePoint", "kind":"namevalue", "type":[["single","size=1,3"], ["double","size=1,3"],["choices={'d65', 'a', 'c', 'e', 'd50', 'd55', 'icc'}"]]}
+             ]
+         ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"colorTable", "type":"table"},
+        {"name":"colorCorrectionMatrix", "type":"numeric"}
+    ]
+},
+
+"measureIlluminant":
+{
+    "inputs":
+    [
+        { "mutuallyExclusiveGroup":
+         [
+             [
+                 {"name":"CHART", "kind":"required", "type":[["colorChecker"], ["esfrChart"]]}
+             ],
+             [
+                 {"name":"IM", "kind":"required", "type":[["uint8", "size=:,:,3"], ["uint16", "size=:,:,3"],["single", "size=:,:,3"], ["double", "size=:,:,3"]]},
+                 {"name":"ROIPositions", "kind":"required", "type":["numeric", "real", "size=:,4"]},
+                 {"name":"InputColorSpace", "kind":"namevalue", "type":"choices={'srgb','adobe-rgb-1998','prophoto-rgb'}"}
+             ]
+         ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"illum", "type":["numeric", "size=:,3"]}
+    ]
+},
+
+"measureNoise":
+{
+    "inputs":
+    [
+        { "mutuallyExclusiveGroup":
+         [
+             [
+                 {"name":"CHART", "kind":"required", "type":"esfrChart"}
+             ],
+             [
+                 {"name":"IM", "kind":"required", "type":[["numeric", "2d"], ["numeric", "size=:,:,3"]]},
+                 {"name":"ROIPositions", "kind":"required", "type":["numeric", "real", "size=:,4"]}
+             ]
+         ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"noiseTable", "type":"table"}
+    ]
+},
+
+"measureSharpness":
+{
+    "inputs":
+    [
+        { "mutuallyExclusiveGroup":
+         [
+             [
+                 {"name":"CHART", "kind":"required", "type":"esfrChart"},
+                 {"name":"ROIIndex", "kind":"namevalue", "type":"numeric"},
+                 {"name":"ROIOrientation", "kind":"namevalue", "type":"choices={'vertical','horizontal','both'}"},
+                 {"name":"PercentResponse", "kind":"namevalue", "type":"numeric"}
+             ],
+             [
+                 {"name":"IM", "kind":"required", "type":[["numeric", "2d"], ["numeric", "size=:,:,3"]]},
+                 {"name":"ROIPositions", "kind":"required", "type":["numeric", "real", "size=:,4"]},
+                 {"name":"PercentResponse", "kind":"namevalue", "type":"numeric"}
+             ]
+         ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"sharpnessTable", "type":"table"},
+        {"name":"aggregateSharpnessTable", "type":"table"}
+    ]
+},
+
+"measureTexture":
+{
+    "inputs":
+    [
+        { "repeating":true, "tuple": 
+            [ 
+                { "name":"im", "kind":"required", "type":[["numeric", "2d"], ["numeric", "size=:,:,3"]] },
+                { "name":"textureROI", "kind":"required", "type":["numeric", "real", "size=:,4"]},
+                { "name":"uniformROI", "kind":"required", "type":["numeric", "real", "size=:,4"]}
+            ]
+        }
+    ],
+    "outputs":
+    [
+        {"name":"textureSFR", "type":"table"},
+        {"name":"testPSD", "type":"table"},
+        {"name":"referencePSD", "type":"table"}
+    ]
+},
+
+"modefilt":
+{
+  "inputs":
+  [
+		{
+		    "mutuallyExclusiveGroup":
+             [
+                [
+                    {"name":"A", "kind":"required", "type":[["numeric","2d"],["logical","2d"],["categorical", "2d"]]},
+                    {"name":"FiltSize","kind":"ordered","type":["numeric","vector","numel=2"]}
+                ],
+                [
+                    {"name":"A", "kind":"required", "type":[["numeric","3d"],["logical","3d"],["categorical", "3d"]]},
+                    {"name":"FiltSize","kind":"ordered","type":["numeric","vector","numel=3"]}
+                ]
+            ]
+		},
+    
+    {"name":"padOpt","kind":"positional","type":"choices={'symmetric','replicate','zeros'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":[["numeric"],["logical"],["categorical"]]}
+  ]
+},
+
+"multissim":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["single"],["double"],["int16"],["uint8"],["uint16"]]},
+    {"name":"Iref", "kind":"required", "type":[["single"],["double"],["int16"],["uint8"],["uint16"]]},
+    {"name":"NumScales", "kind":"namevalue", "type":[["scalar"],["numeric"]]},
+    {"name":"ScaleWeights", "kind":"namevalue", "type":[["scalar"],["numeric"]]},
+    {"name":"Sigma", "kind":"namevalue", "type":[["scalar"],["numeric"]]}
+  ],
+  "outputs":
+  [
+    {"name":"score", "type":[["single"],["double"]]},
+    {"name":"qualityMap", "type":[["single"],["double"]]}
+  ]
+},
+
+"multissim3":
+{
+  "inputs":
+  [
+    {"name":"V", "kind":"required", "type":[["single"],["double"],["int16"],["uint8"],["uint16"]]},
+    {"name":"Vref", "kind":"required", "type":[["single"],["double"],["int16"],["uint8"],["uint16"]]},
+    {"name":"NumScales", "kind":"namevalue", "type":[["scalar"],["numeric"]]},
+    {"name":"ScaleWeights", "kind":"namevalue", "type":[["scalar"],["numeric"]]},
+    {"name":"Sigma", "kind":"namevalue", "type":[["scalar"],["numeric"]]}
+  ],
+  "outputs":
+  [
+    {"name":"score", "type":[["single"],["double"]]},
+    {"name":"qualityMap", "type":[["single"],["double"]]}
+  ]
+},
+
+"multithresh":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":["numeric"]},
+    {"name":"N", "kind":"positional", "type":["numeric", "scalar", "integer", "positive"]}
+  ],
+  "outputs":
+  [
+    {"name":"thresh", "type":["inferredFrom=A"]},
+    {"name":"metric", "type":["double"]}
+  ]
+},
+
+"niqe":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["uint16"], ["int16"], ["single"], ["double"]]},
+    {"name":"Model", "kind":"ordered", "type":"niqeModel"}
+  ],
+  "outputs":
+  [
+    {"name":"Score", "type":"numeric"}
+  ]
+},
+
+"niqeModel":
+{
+  "inputs":
+  [
+    {"name":"Mean", "kind":"required", "type":"numeric"},
+    {"name":"Covariance", "kind":"required", "type":"numeric"},
+    {"name":"BlockSize", "kind":"required", "type":"numeric"},
+    {"name":"SharpnessThreshold", "kind":"required", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"Model", "type":"niqeModel"}
+  ]
+},
+
+"nlfilter":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric", "2d"], ["logical", "2d"]]},
+    {"name":"indexed", "kind":"ordered", "type":"choices={'indexed'}"},
+    {"name":"blocksize", "kind":"required", "type":["numeric", "positive", "size=1,2", "integer"]},
+    {"name":"fun", "kind":"required", "type":"function_handle"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":"numeric"}
+  ]
+},
+
+"normxcorr2":
+{
+  "inputs":
+  [
+    {"name":"template", "kind":"required", "type":[["numeric","real","2d"],["logical","2d"]]},
+    {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]}
+  ],
+  "outputs":
+  [
+    {"name":"C", "type":["double"]}
+  ]
+},
+
+"obliqueslice":
+{
+  "inputs":
+  [
+    {"name":"V","kind":"required","type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["logical"],["double"],["single"],["categorical"]]},
+    {"name":"point", "kind":"required", "type":["numeric"]},
+    {"name":"normal", "kind":"required", "type":["numeric"]},
+    {"name":"Method", "kind":"namevalue", "type":"choices={'nearest','linear'}"},
+    {"name":"OutputSize", "kind":"namevalue", "type":"choices={'limit','full'}"},
+    {"name":"FillValues", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"S", "type":[["uint8"],["uint16"],["uint32"],["int8"],["int16"],["int32"],["logical"],["double"],["single"],["categorical"]]},
+    {"name":"XData", "type":["double"]},
+    {"name":"YData", "type":["double"]},
+    {"name":"ZData", "type":["double"]}
+  ]
+},
+
+"ordfilt2":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"order","kind":"required","type":["numeric", "scalar", "integer", "positive"]},
+    {"name":"domain","kind":"required","type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"S","kind":"ordered","type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"padOpt","kind":"ordered","type":"choices={'symmetric','zeros'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":["inferredFrom=A"]}
+  ]
+},
+
+"padarray":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric"],["logical"],["categorical"]]},
+    {"name":"padsize", "kind":"ordered", "type":"numeric"},
+    {"name":"padval", "kind":"ordered", "type":"choices={'circular','replicate','symmetric'}"},
+    {"name":"direction", "kind":"ordered", "type":"choices={'both','post','pre'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":[["numeric"],["logical"],["categorical"]]}
+  ]
+},
+
+"poly2label":
+{
+  "inputs":
+  [
+    {"name":"roiPositions", "kind":"required", "type":["cell","vector"]},
+    {"name":"roiLabelIDs", "kind":"required", "type":["numeric","vector"]},
+    {"name":"sizeOrRef", "kind":"required", "type":[["imref2d"],["numeric","vector"]]}
+  ],
+  "outputs":
+  [
+    {"name":"L", "type":"numeric"}
+  ]
+},
+
+"poly2mask":
+{
+  "inputs":
+  [
+    {"name":"X", "kind":"required", "type":["double","vector"]},
+    {"name":"Y", "kind":"required", "type":["double","vector"]},
+    {"name":"M", "kind":"required", "type":["double","scalar"]},
+    {"name":"N", "kind":"required", "type":["double","scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"BW", "type":"logical"}
+  ]
+},    
+
+"polyToBlockedImage":
+{
+  "inputs":
+  [
+    {"name":"roiPositions", "kind":"required", "type":["cell","vector"]},
+    {"name":"roiLabelIDs", "kind":"required", "type":["numeric","vector"]},
+    {"name":"imageSize", "kind":"required", "type":["numeric","vector","positive","integer"]},
+    {"name":"Adapter", "kind":"namevalue", "type":"images.blocked.Adapter"},
+    {"name":"OutputLocation", "kind":"namevalue", "type":[["char"],["string"]]},
+    {"name":"BlockSize", "kind":"namevalue", "type":["numeric","vector","positive","integer","@(x) numel(x)>1"]},
+    {"name":"WorldStart", "kind":"namevalue", "type":["numeric","vector","@(x) numel(x)>1"]},
+    {"name":"WorldEnd", "kind":"namevalue", "type":["numeric","vector","@(x) numel(x)>1"]},
+    {"name":"DisplayWaitbar", "kind":"namevalue", "type":["logical", "scalar"]}
+  ],
+  "outputs":
+  [
+    {"name":"L", "type":"blockedImage"}
+  ]
+},
+    
+"piqe":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["uint16"], ["int16"], ["single"], ["double"]]}
+  ],
+  "outputs":
+  [
+    {"name":"Score", "type":"numeric"},
+    {"name":"ActivityMask", "type":"logical"},
+    {"name":"NoticeableArtifactsMask", "type":"logical"},
+    {"name":"NoiseMask", "type":"logical"}
+  ]
+},
+
+"plotChromaticity":
+{
+  "inputs":
+  [
+    {"name":"colorTable", "kind":"optional", "type":"table"},
+    {"name":"BrightnessThreshold", "kind":"namevalue", "type":["numeric","<=1",">=0"]},
+    {"name":"ColorSpace", "kind":"namevalue", "type":"choices={'xy','uv'}"},
+	{"name":"displayROIIndex", "kind":"namevalue", "type":"logical"},
+	{"name":"Parent", "kind":"namevalue", "type":"matlab.graphics.axis.Axes"},
+    {"name":"View", "kind":"namevalue", "type":"choices={2, 3}"}
+  ]
+},
+
+"plotSFR":
+{
+  "inputs":
+  [
+    {"name":"sharpnessMeasurementTable", "kind":"required", "type":"table"},
+	{"name":"ROIIndex", "kind":"namevalue", "type":"numeric"},
+	{"name":"displayLegend", "kind":"namevalue", "type":"logical"},
+	{"name":"displayTitle", "kind":"namevalue", "type":"logical"},
+	{"name":"Parent", "kind":"namevalue", "type":"matlab.graphics.axis.Axes"}
+  ]
+},
+
+"projtform2d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=3,3"], ["double", "size=2,3"],
+      ["single", "size=3,3"], ["single", "size=2,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["projtform2d"]}
+  ]
+},
+
+"projtform2d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform2d"], ["rigidtform2d"],
+      ["simtform2d"], ["affinetform2d"], ["projtform2d"]]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["projtform2d"]}
+  ]
+},
+
+"psnr":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"], ["uint16"], ["int16"], ["single"], ["double"], ["dlarray"]]},
+    {"name":"REF", "kind":"required", "type":[["uint8"], ["uint16"], ["int16"], ["single"], ["double"], ["dlarray"]]},
+      {"name":"PEAKVAL", "kind":"ordered", "type":["numeric","scalar"]},
+    {"name":"DataFormat", "kind":"namevalue", "type":[["string"], ["char"]]}
+  ],
+  "outputs":
+  [
+    {"name":"PEAKSNR", "type":[["double","scalar"], ["single","scalar"], ["dlarray","scalar"]]},
+    {"name":"SNR", "type":[["double","scalar"], ["single","scalar"], ["dlarray","scalar"]]}
+  ]
+},
+
+"radon":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"theta", "kind":"ordered", "type":[["numeric","scalar"],["numeric","vector"]]}
+  ],
+  "outputs":
+  [
+      {"name":"R", "type":"double"},
+      {"name":"xp", "type":"double"}
+  ]
+},
+
+"randomAffine2d":
+{
+  "inputs":
+  [
+	{"name":"XReflection", "kind":"namevalue", "type":"logical"},
+	{"name":"YReflection", "kind":"namevalue", "type":"logical"},
+	{"name":"Rotation", "kind":"namevalue", "type":"numeric"},
+	{"name":"Scale", "kind":"namevalue", "type":"numeric"},
+	{"name":"XShear", "kind":"namevalue", "type":"numeric"},
+	{"name":"YShear", "kind":"namevalue", "type":"numeric"},
+	{"name":"XTranslation", "kind":"namevalue", "type":"numeric"},
+	{"name":"YTranslation", "kind":"namevalue", "type":"numeric"}
+  ]
+},
+
+"randomAffine3d":
+{
+  "inputs":
+  [
+	{"name":"XReflection", "kind":"namevalue", "type":"logical"},
+	{"name":"YReflection", "kind":"namevalue", "type":"logical"},
+	{"name":"ZReflection", "kind":"namevalue", "type":"logical"},
+	{"name":"Rotation", "kind":"namevalue", "type":"numeric"},
+	{"name":"Scale", "kind":"namevalue", "type":"numeric"},
+	{"name":"Shear", "kind":"namevalue", "type":"numeric"},
+	{"name":"XTranslation", "kind":"namevalue", "type":"numeric"},
+	{"name":"YTranslation", "kind":"namevalue", "type":"numeric"},
+	{"name":"ZTranslation", "kind":"namevalue", "type":"numeric"}
+  ]
+},
+
+"randomWindow2d":
+{
+    "inputs":
+    [
+        {"mutuallyExclusiveGroup":
+            [
+                [
+                    {"name":"sz", "kind":"required","type":[["numeric","size=1,3","positive","integer"],["numeric","size=1,2","positive","integer"]]},
+                    {"name":"targetSize", "kind":"required","type":["numeric"]}
+                ],
+                [
+                    {"name":"sz", "kind":"required","type":[["numeric","size=1,3","positive","integer"],["numeric","size=1,2","positive","integer"]]},
+                    {"name":"Scale","kind":"namevalue","type":["<=1",">=0","numeric","size=1,2"]},
+                    {"name":"DimensionRatio","kind":"namevalue","type":[">=0","size=2,2","numeric"]}
+                ]
+            ]
+        }
+    ]   
+},
+
+"rangefilt":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"nhood", "kind":"positional", "type":[["numeric"],["logical"]]}
+  ]
+},
+
+"regionprops":
+{
+  "inputs":
+  [
+    
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"Option", "kind":"ordered", "type":"choices={'table','struct'}"},
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+            ],
+            [
+                {"name":"Option", "kind":"ordered", "type":"choices={'table','struct'}"},
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'basic'}"}
+            ],
+            [
+                {"name":"Option", "kind":"ordered", "type":"choices={'table','struct'}"},
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"Properties", "kind":"ordered","repeating":true, "type":"choices={'Area', 'BoundingBox', 'Centroid','ConvexArea', 'ConvexHull','ConvexImage', 'Circularity', 'Eccentricity', 'EquivDiameter','EulerNumber', 'Extent', 'Extrema', 'FilledArea','FilledImage','Image','MaxFeretProperties', 'MinFeretProperties', 'MajorAxisLength', 'MinorAxisLength', 'Orientation','Perimeter','PixelList', 'PixelIdxList','Solidity','SubarrayIdx','MaxIntensity', 'MeanIntensity', 'MinIntensity','PixelValues', 'WeightedCentroid'}"}
+            ],
+
+            [
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+            ],
+            [
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'basic'}"}
+            ],
+            [
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"Properties", "kind":"ordered", "repeating":true, "type":"choices={'Area', 'BoundingBox', 'Centroid','ConvexArea', 'ConvexHull','ConvexImage', 'Circularity', 'Eccentricity', 'EquivDiameter','EulerNumber', 'Extent', 'Extrema', 'FilledArea','FilledImage','Image','MaxFeretProperties', 'MinFeretProperties', 'MajorAxisLength', 'MinorAxisLength', 'Orientation','Perimeter','PixelList', 'PixelIdxList','Solidity','SubarrayIdx','MaxIntensity', 'MinIntensity', 'MeanIntensity', 'PixelValues', 'WeightedCentroid'}"}
+            ],
+
+            [
+                {"name":"Option", "kind":"ordered", "type":"choices={'table','struct'}"},
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+            ],
+            [
+                {"name":"Option", "kind":"ordered", "type":"choices={'table','struct'}"},
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'basic'}"}
+            ],
+            [
+                {"name":"Option", "kind":"ordered", "type":"choices={'table','struct'}"},
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+                {"name":"Properties", "kind":"ordered","repeating":true, "type":"choices={'Area', 'BoundingBox', 'Centroid','ConvexArea', 'ConvexHull','ConvexImage', 'Circularity', 'Eccentricity', 'EquivDiameter','EulerNumber', 'Extent', 'Extrema', 'FilledArea','FilledImage','Image','MaxFeretProperties', 'MinFeretProperties', 'MajorAxisLength', 'MinorAxisLength', 'Orientation','Perimeter','PixelList', 'PixelIdxList','Solidity','SubarrayIdx','MaxIntensity','MinIntensity', 'MeanIntensity', 'PixelValues', 'WeightedCentroid'}"}
+            ],
+
+            [
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+            ],
+            [
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+                {"name":"Properties", "kind":"ordered", "type":"choices={'basic'}"}
+            ],
+            [
+                {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+                {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+                {"name":"Properties", "kind":"ordered", "repeating":true,"type":"choices={'Area', 'BoundingBox', 'Centroid','ConvexArea', 'ConvexHull','ConvexImage', 'Circularity', 'Eccentricity', 'EquivDiameter','EulerNumber', 'Extent', 'Extrema', 'FilledArea','FilledImage','Image','MaxFeretProperties', 'MinFeretProperties', 'MajorAxisLength', 'MinorAxisLength', 'Orientation','Perimeter','PixelList','PixelIdxList','Solidity','SubarrayIdx','MaxIntensity','MinIntensity', 'MeanIntensity', 'PixelValues', 'WeightedCentroid'}"}
+            ]
+         ]   
+    }
+  ],
+  "outputs":
+  [
+    {"name":"Out", "type":[["table"],["struct"]]}
+  ]
+},
+
+"regionprops3":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+    {"name":"Properties", "repeating":true, "kind":"ordered", "type":"choices={'Volume', 'Centroid','BoundingBox','SubarrayIdx', 'Image', 'EquivDiameter', 'Extent', 'VoxelIdxList', 'VoxelList', 'PrincipalAxisLength', 'Orientation', 'EigenVectors', 'EigenValues', 'ConvexVolume', 'ConvexHull', 'ConvexImage', 'Solidity', 'SurfaceArea'}"}
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"table"}
+  ]
+},
+
+"regionprops3":
+{
+  "inputs": 
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+    {"name":"V", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"Properties", "repeating":true, "kind":"ordered", "type":"choices={'Volume', 'Centroid','BoundingBox','SubarrayIdx', 'Image', 'EquivDiameter', 'Extent', 'VoxelIdxList', 'VoxelList', 'PrincipalAxisLength', 'Orientation', 'EigenVectors', 'EigenValues', 'ConvexVolume', 'ConvexHull', 'ConvexImage', 'Solidity', 'SurfaceArea', 'VoxelValues', 'WeightedCentroid', 'MeanIntensity', 'MinIntensity', 'MaxIntensity'}"}
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"table"}
+  ]
+},
+
+"regionprops3":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+    {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"table"}
+  ]
+},
+
+"regionprops3":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+    {"name":"Properties", "kind":"ordered", "type":"choices={'basic'}"}
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"table"}
+  ]
+},
+
+"regionprops3":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+    {"name":"V", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"Properties", "kind":"ordered", "type":"choices={'all'}"}
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"table"}
+  ]
+},
+
+"regionprops3":
+{
+  "inputs":
+  [
+    {"name":"BW", "kind":"required", "type":[["logical"],["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"],["struct"],["categorical"]]},
+    {"name":"V", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"Properties", "kind":"ordered", "type":"choices={'basic'}"}
+  ],
+  "outputs":
+  [
+    {"name":"stats", "type":"table"}
+  ]
+},
+
+"rigidtform2d":
+{
+  "inputs":
+  [
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform2d"]}
+  ]
+},
+
+"rigidtform2d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=3,3"], ["double", "size=2,3"],
+      ["single", "size=3,3"], ["single", "size=2,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform2d"]}
+  ]
+},
+
+"rigidtform2d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform2d"], ["rigidtform2d"],
+      ["simtform2d"], ["affinetform2d"], ["projtform2d"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform2d"]}
+  ]
+},
+
+"rigidtform2d":
+{
+  "inputs":
+  [
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,2"], 
+      ["single", "size=1,2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform2d"]}
+  ]
+},
+
+"rigidtform2d":
+{
+  "inputs":
+  [
+    {"name":"R", "kind":"required", "type":[["double", "size=2,2"],
+      ["single", "size=2,2"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,2"], 
+      ["single", "size=1,2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform2d"]}
+  ]
+},
+
+"rigidtform2d":
+{
+  "inputs":
+  [
+    {"name":"RotationAngle", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,2"], 
+      ["single", "size=1,2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform2d"]}
+  ]
+},
+
+"rigidtform3d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=4,4"], ["double", "size=3,4"],
+      ["single", "size=4,4"], ["single", "size=3,4"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform3d"]}
+  ]
+},
+
+"rigidtform3d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform3d"], ["rigidtform3d"],
+      ["simtform3d"], ["affinetform3d"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform3d"]}
+  ]
+},
+
+"rigidtform3d":
+{
+  "inputs":
+  [
+    {"name":"R", "kind":"required", "type":[["double", "size=3,3"],
+      ["single", "size=3,3"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,3"], 
+      ["single", "size=1,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform3d"]}
+  ]
+},
+
+"rigidtform3d":
+{
+  "inputs":
+  [
+    {"name":"eulerAngles", "kind":"required", "type":[["double", "size=1,3"],
+      ["single", "size=1,3"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,3"], 
+      ["single", "size=1,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["rigidtform3d"]}
+  ]
+},
+
+"rigid2d":
+{
+    "inputs":
+    [
+        {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"T", "kind": "positional","type":[["single","size=3,3"],["double","size=3,3"]]}
+            ],
+            [
+                {"name":"rot", "kind": "positional","type":[["single","size=2,2"],["double","size=2,2"]]},
+                {"name":"trans", "kind": "positional", "type": [["single","size=1,2"],["double","size=1,2"]]}
+            ]
+        ]
+        }
+    ]
+},
+
+"rigid3d":
+{
+    "inputs":
+    [
+        {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"T", "kind": "positional","type":[["single","size=4,4"],["double","size=4,4"]]}
+            ],
+            [
+                {"name":"rot", "kind": "positional","type":[["single","size=3,3"],["double","size=3,3"]]},
+                {"name":"trans", "kind": "positional", "type": [["single","size=1,3"],["double","size=1,3"]]}
+            ]
+        ]
+        }
+    ]
+},
+
+"roipoly":
+{
+  "inputs":
+  [
+  ],
+
+ "outputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"BW", "type":["logical","2d"]},
+                {"name":"xi2", "type":["numeric","vector"]},
+                {"name":"yi2", "type":["numeric","vector"]}
+            ],
+            [
+                {"name":"xrefout", "type": ["numeric","size=1,2"]},
+                {"name":"yrefout", "type": ["numeric","size=1,2"]},
+                {"name":"BW", "type":["numeric","2d"]},
+                {"name":"xi2", "type":["numeric","vector"]},
+                {"name":"yi2", "type":["numeric","vector"]}
+            ]
+        ]
+    }
+  ]
+},
+
+"roipoly":
+{
+  "inputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"I", "kind":"required", "type":[["numeric","2d"],["numeric","size=:,:,3"]]},
+                {"name":"xi", "kind":"ordered", "type":["numeric","vector"]},
+                {"name":"yi", "kind":"ordered", "type":["numeric","vector"]}
+            ],
+            [
+                {"name":"xref", "kind": "required", "type": ["numeric","size=1,2"]},
+                {"name":"yref", "kind": "required", "type": ["numeric","size=1,2"]},
+                {"name":"I", "kind":"required", "type":[["numeric","2d"],["numeric","size=:,:,3"]]},
+                {"name":"xi", "kind":"required", "type":["numeric","vector"]},
+                {"name":"yi", "kind":"required", "type":["numeric","vector"]}
+            ]
+        ]
+    }
+  ],
+
+ "outputs":
+  [
+    {"mutuallyExclusiveGroup":
+        [
+            [
+                {"name":"BW", "type":["logical","2d"]},
+                {"name":"xi2", "type":["numeric","vector"]},
+                {"name":"yi2", "type":["numeric","vector"]}
+            ],
+            [
+                {"name":"xrefout", "type": ["numeric","size=1,2"]},
+                {"name":"yrefout", "type": ["numeric","size=1,2"]},
+                {"name":"BW", "type":["numeric","2d"]},
+                {"name":"xi2", "type":["numeric","vector"]},
+                {"name":"yi2", "type":["numeric","vector"]}
+            ]
+        ]
+    }
+  ]
+},
+
+"simtform2d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=3,3"], ["double", "size=2,3"],
+      ["single", "size=3,3"], ["single", "size=2,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform2d"]}
+  ]
+},
+
+"simtform2d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform2d"], ["rigidtform2d"],
+      ["simtform2d"], ["affinetform2d"], ["projtform2d"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform2d"]}
+  ]
+},
+
+"simtform2d":
+{
+  "inputs":
+  [
+    {"name":"Scale", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"R", "kind":"required", "type":[["double", "size=2,2"],
+      ["single", "size=2,2"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,2"], 
+      ["single", "size=1,2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform2d"]}
+  ]
+},
+
+"simtform2d":
+{
+  "inputs":
+  [
+    {"name":"Scale", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},  
+    {"name":"RotationAngle", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,2"], 
+      ["single", "size=1,2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform2d"]}
+  ]
+},
+
+"simtform3d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=4,4"], ["double", "size=3,4"],
+      ["single", "size=4,4"], ["single", "size=3,4"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform3d"]}
+  ]
+},
+
+"simtform3d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform3d"], ["rigidtform3d"],
+      ["simtform3d"], ["affinetform3d"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform3d"]}
+  ]
+},
+
+"simtform3d":
+{
+  "inputs":
+  [
+    {"name":"Scale", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"R", "kind":"required", "type":[["double", "size=3,3"],
+      ["single", "size=3,3"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,3"], 
+      ["single", "size=1,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform3d"]}
+  ]
+},
+
+"simtform3d":
+{
+  "inputs":
+  [
+    {"name":"Scale", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},  
+    {"name":"eulerAngles", "kind":"required", "type":[["double", "size=1,3"],
+      ["single", "size=1,3"]]},
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,3"], 
+      ["single", "size=1,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["simtform3d"]}
+  ]
+},
+
+"strel":
+    {
+        "inputs":
+        [
+            { "mutuallyExclusiveGroup":
+                [
+                    [
+                        {"name":"nhood", "kind":"required", "type":[["numeric", "logical"]]}
+                    ],
+                    [
+                        {"name":"'arbitrary'", "kind":"required", "type":[["char", "choices={'arbitrary'}"]]},
+                        {"name":"nhood", "kind":"required", "type":[["numeric"], ["logical"]]}
+                    ],
+                    [
+                        {"name":"'diamond'", "kind":"required", "type":[["char", "choices={'diamond'}"]]},
+                        {"name":"r", "kind":"required", "type":[["double", "scalar", "positive", "integer"]]}
+                    ],
+                    [
+                        {"name":"'disk'", "kind":"required", "type":[["char", "choices={'disk'}"]]},
+                        {"name":"r", "kind":"required", "type":[["double", "scalar", "positive", "integer"]]},
+                        {"name":"n", "kind":"required", "type":"choices={0, 4, 6, 8}"}
+                    ],
+                    [
+                        {"name":"'octagon'", "kind":"required", "type":[["char", "choices={'octagon'}"]]},
+                        {"name":"r", "kind":"required", "type":[["double", "positive", "@(x) mod(x, 3) == 0"]]}
+                    ],
+                    [
+                        {"name":"'line'", "kind":"required", "type":[["char", "choices={'line'}"]]},
+                        {"name":"len", "kind":"required", "type":[["double", "scalar", "positive"]]},
+                        {"name":"deg", "kind":"required", "type":[["double", "scalar"]]}
+                    ],
+                    [
+                        {"name":"'rectangle'", "kind":"required", "type":[["char", "choices={'rectangle'}"]]},
+                        {"name":"dims", "kind":"required", "type":[["double", "positive", "integer", "vector", "numel=2"]]}
+                    ],
+                    [
+                        {"name":"'square'", "kind":"required", "type":[["char", "choices={'square'}"]]},
+                        {"name":"w", "kind":"required", "type":[["double", "scalar", "positive", "integer"]]}
+                    ],
+                    [
+                        {"name":"'cube'", "kind":"required", "type":[["char", "choices={'cube'}"]]},
+                        {"name":"w", "kind":"required", "type":[["double", "scalar", "positive", "integer"]]}
+                    ],
+                    [
+                        {"name":"'cuboid'", "kind":"required", "type":[["char", "choices={'cuboid'}"]]},
+                        {"name":"dims", "kind":"required", "type":[["double", "positive", "integer", "vector", "numel=3"]]}
+                    ],
+                    [
+                        {"name":"'sphere'", "kind":"required", "type":[["char", "choices={'sphere'}"]]},
+                        {"name":"r", "kind":"required", "type":[["double", "scalar", "positive", "integer"]]}
+                    ]
+                ]
+            }
+        ],
+        "outputs":
+        [
+            {"name":"SE", "type":[["strel"], ["scalar"]]}
+        ]
+    },
+
+"stretchlim":
+    {
+        "inputs":
+        [
+            {"name":"I", "kind":"required", "type":[
+                                                    ["uint8", "real", "3d"],
+                                                    ["uint16", "real", "3d"],
+                                                    ["int16", "real", "3d"],
+                                                    ["single", "real", "3d"],
+                                                    ["double", "real", "3d"] ] },
+            {"name":"tol", "kind":"positional", "type": [ [ "numeric", 
+                                                            "vector", "numel=2", 
+                                                            ">=0", "<=1", 
+                                                            "@(x) x(2) > x(1)" ] ] }
+        ],
+        "outputs":
+        [
+             {"name":"lowhigh", "type":[["double", "size=2, 1"], ["double", "size=2, 3"]] }
+        ]
+    },
+"std2":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]}
+  ]
+},
+
+"superpixels":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"N", "kind":"required", "type":"numeric"},
+    {"name":"Compactness", "kind":"namevalue", "type":"numeric"},
+    {"name":"IsInputLab", "kind":"namevalue", "type":[["logical"], ["numeric"]]},
+    {"name":"Method", "kind":"namevalue", "type":"choices={'slic0','slic'}"},
+    {"name":"NumIterations", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"L", "type":"numeric"},
+    {"name":"NumLabels", "type":"numeric"}
+  ]
+},
+
+"superpixels3":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["uint8"],["int8"], ["uint16"], ["int16"], ["uint32"], ["int32"], ["single"], ["double"]]},
+    {"name":"N", "kind":"required", "type":"numeric"},
+    {"name":"Compactness", "kind":"namevalue", "type":"numeric"},
+    {"name":"Method", "kind":"namevalue", "type":"choices={'slic0','slic'}"},
+    {"name":"NumIterations", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"L", "type":"numeric"},
+    {"name":"NumLabels", "type":"numeric"}
+  ]
+},
+
+"tonemapfarbman":
+{
+  "inputs":
+  [
+    {"name":"HDR", "kind":"required", "type":[["single"], ["double"]]},
+    {"name":"RangeCompression", "kind":"namevalue", "type":"numeric"},
+    {"name":"Saturation", "kind":"namevalue", "type":"numeric"},
+    {"name":"Exposure", "kind":"namevalue", "type":"numeric"},
+    {"name":"NumberOfScales", "kind":"namevalue", "type":"numeric"},
+    {"name":"Weights", "kind":"namevalue", "type":"numeric"}
+  ],
+  "outputs":
+  [
+    {"name":"LDR","type":"uint8"}
+  ]
+},
+
+"transltform2d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=3,3"], ["double", "size=2,3"],
+      ["single", "size=3,3"], ["single", "size=2,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform2d"]}
+  ]
+},
+
+"transltform2d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform2d"], ["rigidtform2d"],
+      ["simtform2d"], ["affinetform2d"], ["projtform2d"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform2d"]}
+  ]
+},
+
+"transltform2d":
+{
+  "inputs":
+  [
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,2"], 
+      ["single", "size=1,2"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform2d"]}
+  ]
+},
+
+"transltform2d":
+{
+  "inputs":
+  [
+    {"name":"tx", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"ty", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]}          
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform2d"]}
+  ]
+},
+
+"transltform3d":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["double", "size=4,4"], ["double", "size=3,4"],
+      ["single", "size=4,4"], ["single", "size=3,4"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform3d"]}
+  ]
+},
+
+"transltform3d":
+{
+  "inputs":
+  [
+    {"name":"tformIn", "kind":"required", "type":[["transltform3d"], ["rigidtform3d"],
+      ["simtform3d"], ["affinetform3d"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform3d"]}
+  ]
+},
+
+"transltform3d":
+{
+  "inputs":
+  [
+    {"name":"Translation", "kind":"required", "type":[["double", "size=1,3"], 
+      ["single", "size=1,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform3d"]}
+  ]
+},
+
+"transltform3d":
+{
+  "inputs":
+  [
+    {"name":"tx", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"ty", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]},
+    {"name":"tz", "kind":"required", "type":[["double", "size=1,1"],
+      ["single", "size=1,1"]]}            
+  ],
+  "outputs":
+  [
+    {"name":"tform", "type":["transltform3d"]}
+  ]
+},
+
+"watershed":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"CONN", "kind":"positional", "type":["numeric"]}
+  ],
+  "outputs":
+  [
+    {"name":"L","type":"numeric"}
+  ]
+},
+
+"medfilt2":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["numeric","2d"],["logical","2d"]]},
+    {"name":"MN","kind":"ordered","type":["numeric","vector","numel=2", "positive", "integer"]},
+    {"name":"padOpt","kind":"ordered","type":"choices={'symmetric','zeros','indexed'}"}
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":["inferredFrom=I"]}
+  ]
+},
+
+"imnoise":
+{
+  "inputs":
+  [
+    { "mutuallyExclusiveGroup":
+      [
+          [
+            {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["single"],["double"]]},
+            {"name":"'gaussian'", "kind":"required", "type":[["char", "choices={'gaussian'}"]]},
+            {"name":"M", "kind":"ordered", "type":[["double", "scalar",">=0","<=1"]]},
+            {"name":"var_gauss", "kind":"ordered", "type":[["double", "scalar",">=0","<=1"]]}
+          ],
+          [
+            {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["single"],["double"]]},
+            {"name":"'localvar'", "kind":"required", "type":[["char", "choices={'localvar'}"]]},
+            {"name":"var_local", "kind":"ordered", "type":[["double"]]}
+          ],
+          [
+            {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["single"],["double"]]},
+            {"name":"'localvar'", "kind":"required", "type":[["char", "choices={'localvar'}"]]},
+            {"name":"IMAGE_INTENSITY", "kind":"ordered", "type":[["double", "vector"]]},
+            {"name":"VAR", "kind":"ordered", "type":[["double", "scalar",">=0","<=1"]]}
+          ],
+          [
+            {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["single"],["double"]]},
+            {"name":"'poisson'", "kind":"required", "type":[["char", "choices={'poisson'}"]]}
+          ],                           
+          [
+            {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["single"],["double"]]},
+            {"name":"'salt & pepper'", "kind":"required", "type":[["char", "choices={'salt & pepper'}"]]},
+            {"name":"d", "kind":"ordered", "type":[["double", "scalar",">=0","<=1"]]}
+          ],          
+          [
+            {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["int16"],["single"],["double"]]},
+            {"name":"'speckle'", "kind":"required", "type":[["char", "choices={'speckle'}"]]},
+            {"name":"var_speckle", "kind":"ordered", "type":[["double", "scalar",">=0","<=1"]]}
+          ]          
+      ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":["inferredFrom=I"]}
+  ]
+},
+
+"improfile":
+{
+  "inputs":
+  [
+    {
+      "mutuallyExclusiveGroup":
+      [
+        [
+          {"name":"N", "kind":"required", "type":[["double", "scalar"]]},
+          {"name":"method","kind":"ordered","type":"choices={'nearest','bilinear','bicubic'}"}
+        ],
+        [
+          {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["uint16"],["int16"],["single"],["double"]]},
+          {"name":"xi", "kind":"required", "type":[["double", "vector"]]},
+          {"name":"yi", "kind":"required", "type":[["double", "vector"]]},
+          {"name":"N", "kind":"ordered", "type":[["double", "scalar"]]},
+          {"name":"method","kind":"ordered","type":"choices={'nearest','bilinear','bicubic'}"}
+        ],
+        [          
+          {"name":"xref", "kind":"required", "type":[["double", "vector"]]},
+          {"name":"yref", "kind":"required", "type":[["double", "vector"]]},
+          {"name":"I", "kind":"required", "type":[["logical"],["uint8"],["uint16"],["int16"],["single"],["double"]]},
+          {"name":"xi", "kind":"required", "type":[["double", "vector"]]},
+          {"name":"yi", "kind":"required", "type":[["double", "vector"]]},
+          {"name":"N", "kind":"ordered", "type":[["double", "scalar"]]},
+          {"name":"method","kind":"ordered","type":"choices={'nearest','bilinear','bicubic'}"}
+        ]
+      ]
+    }
+  ],
+  "outputs":[
+    {"name":"CX", "type":["double", "row"]},
+    {"name":"CY", "type":["double", "row"]},
+    {"name":"C", "type":["double"]},
+    {"name":"xi2", "type":["double", "vector"]},
+    {"name":"yi2", "type":["double", "vector"]}
+  ]
+},
+
+"wiener2":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["double","2d"],["single","2d"],["int16","2d"],["uint16","2d"],["uint8","2d"]]},
+    {"name":"MN","kind":"ordered","type":["numeric","vector","numel=2", "positive","integer"]},
+    {"name":"NOISE", "kind":"ordered", "type":[["double", "scalar"]]}
+  ],
+  "outputs":
+  [
+    {"name":"J", "type":["inferredFrom=I"]},
+    {"name":"noise_out", "type":["double", "scalar"]}
+  ]
+},
+
+"bwareafilt":
+{
+  "inputs":
+  [
+    {
+      "mutuallyExclusiveGroup":
+      [
+        [    
+          {"name":"BW", "kind":"required", "type":[["logical","2d","~numeric"]]},
+          {"name":"RANGE","kind":"required","type":["numeric","row","numel=2"]},
+          {"name":"CONN", "kind":"ordered", 
+            "type":[
+              ["choices={4, 8}"], 
+              ["logical", "~numeric", "@(x) all(size(x) == 3)"]
+            ] 
+          }
+        ],
+        [    
+          {"name":"BW", "kind":"required", "type":[["logical","2d", "~numeric"]]},
+          {"name":"N","kind":"required","type":["double","scalar","positive","integer"]},
+          {"name":"KEEP","kind":"ordered","type":"choices={'largest','smallest'}"},
+          {"name":"CONN", "kind":"ordered", 
+            "type":[
+              ["choices={4, 8}"], 
+              ["logical", "~numeric", "@(x) all(size(x) == 3)"]
+            ] 
+          }
+        ]        
+      ]
+    }
+  ],
+  "outputs":
+  [
+    {"name":"BW2", "type":["logical", "2d"]}
+  ]
+},
+
+"imreconstruct":
+{
+  "inputs":
+  [
+    {"name":"MARKER", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"MASK", "kind":"required", "type":[["numeric"],["logical"]]},
+    {"name":"CONN", "kind":"ordered", 
+      "type":[
+        ["choices={4, 8, 6, 18, 26}"], 
+        ["double", "@(x) all(size(x) == 3)"],
+        ["logical", "~numeric", "@(x) all(size(x) == 3)"] 
+      ] 
+    }
+  ],
+  "outputs":
+  [
+    {"name":"IM", "type":["inferredFrom=MARKER"]}
+  ]
+},
+
+"affine2d":
+{
+  "inputs":
+  [
+    {"name":"T","kind":"optional","type":[["single", "size=3,3"], ["double", "size=3,3"]]}
+  ],
+  "outputs":
+  [
+    {"name":"TFORM","type":["affine2d"]}
+  ]
+},
+
+"medfilt3":
+{
+  "inputs":
+  [
+    {"name":"A", "kind":"required", "type":[["numeric","3d"],["logical","3d"]]},
+    {"name":"MNP","kind":"ordered","type":["numeric","vector","numel=3","positive","integer"]},
+    {"name":"padopt","kind":"ordered","type":"choices={'symmetric','zeros','replicate'}"}
+  ],
+  "outputs":
+  [
+    {"name":"B", "type":["inferredFrom=A"]}
+  ]
+},
+
+"demosaic":
+{
+  "inputs":
+  [
+    {"name":"I", "kind":"required", "type":[["uint8"],["uint16"],["uint32"]]},
+    {"name":"sensorAlignment","kind":"required","type":"choices={'gbrg','grbg','bggr','rggb'}"}
+  ],
+  "outputs":
+  [
+    {"name":"RGB", "type":["inferredFrom=I"]}
+  ]
+},
+
+    "imblend":
+    {
+        "inputs":
+        [    
+            {"name":"fimg", "kind":"required", "type":[["uint8"],["uint16"],["uint32"],["int16"],["single"],["double"]]},
+            {"name":"bimg", "kind":"required", "type":[["uint8"],["uint16"],["uint32"],["int16"],["single"],["double"]]},
+            {"name":"mask", "kind":"ordered", "type":["logical"]},
+            {"mutuallyExclusiveGroup":
+             [
+                 [
+                    {"name":"Mode", "kind":"namevalue", "type":[["choices={'Alpha'}"]]},
+                    {"name":"ForegroundOpacity", "kind":"namevalue", "type":[["single"], ["double"]]},
+                     {"name":"Location", "kind": "namevalue","type":["numeric","vector","numel=2","integer"]}
+                 ],
+                 [
+                    {"name":"Mode", "kind":"namevalue", "type":[["choices={'Guided'}"]]},
+                    {"name":"FilterSize", "kind":"namevalue", "type": [["numeric","vector","size=1,2","positive","integer"], ["numeric","vector","size=1,1","positive","integer"]]},
+                    {"name":"Location", "kind": "namevalue","type":["numeric","vector","numel=2","integer"]}
+                 ],
+                 [
+                    {"name":"Mode", "kind":"namevalue",  "type":[["choices={'Min', 'Max', 'Average', 'Overlay'}"]]},
+                    {"name":"Location", "kind": "namevalue","type":["numeric","vector","numel=2","integer"]}
+                 ]
+             ]
+            }
+            ],
+        "outputs":
+        [
+            {"name":"Iout", "type":["inferredFrom=bimg"]}
+        ]
+    }
+
+}
