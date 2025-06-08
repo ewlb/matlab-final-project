@@ -1,5 +1,0 @@
-result(numel(<IMDS_VAR_NAME>.Files)) = struct();
-% Initialize fields with []
-for ind =1:numel(workSpaceFields)
-    [result.(workSpaceFields{ind})] = deal([]);
-end

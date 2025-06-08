@@ -1,1 +1,0 @@
-obj = final_all();
