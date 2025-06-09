@@ -57,7 +57,10 @@ classdef final_all < handle
 
         BossAppearTimes = [16, 13, 10]
 
-        FireballFrames = {} % Store the fireball animation frames
+        FireballFrames = cell(1, 5)  % 原始火球幀
+        BossFireballFrames = {}      % 預旋轉的BOSS火球圖片
+        NumFireballAngles = 120      % 火球角度數量（與玩家子彈相同）
+        FireballAngleStep = 360 / 120
 
         % basePath dynamically
         basePath = fileparts(mfilename('fullpath'));
@@ -154,6 +157,8 @@ classdef final_all < handle
         EnemyAttackFrames = {} % 敵人攻擊動畫幀
         EnemyAttackAnimationSpeed = 0.1 % 攻擊動畫速度
         EnemyHurtFrames = {}
+
+
 
     end
 
@@ -1116,7 +1121,6 @@ classdef final_all < handle
             % 載入爆炸動畫幀
             obj.loadExplosionFrames();
 
-            obj.FireballFrames = cell(1, 5);
             obj.loadPlayerBulletFrames();
 
             for i = 1:5
@@ -1138,6 +1142,7 @@ classdef final_all < handle
                     obj.FireballFrames{i} = struct('Image', img, 'Alpha', []);
                 end
             end
+            obj.loadBossFireballFrames();
 
             % 確保計時器處於運行狀態
             if isempty(obj.Timer) || ~isvalid(obj.Timer)
@@ -1407,10 +1412,10 @@ classdef final_all < handle
             %                 'IsFlashing', false, ...
             %                 'FlashTimer', [] ...
             %                 );
-            % 
+            %
             %             % 創建敵人圖形
             %             newEnemy.Graphic = obj.createEnemyGraphic(newEnemy.Position, i);
-            % 
+            %
             %             % 保存原始透明度或顏色
             %             if isa(newEnemy.Graphic, 'matlab.graphics.primitive.Image')
             %                 originalAlpha = get(newEnemy.Graphic, 'AlphaData');
@@ -1421,7 +1426,7 @@ classdef final_all < handle
             %             elseif isa(newEnemy.Graphic, 'matlab.graphics.primitive.Rectangle')
             %                 newEnemy.OriginalColor = newEnemy.Graphic.FaceColor;
             %             end
-            % 
+            %
             %             obj.Enemies(i) = newEnemy;
             %         end
             % end
@@ -1650,49 +1655,47 @@ classdef final_all < handle
                 obj.Bullets(i).Position = obj.Bullets(i).Position + obj.Bullets(i).Velocity;
                 if obj.Bullets(i).IsBossBullet && isfield(obj.Bullets(i), 'AnimationFrame')
                     % Update fireball animation
+                    % BOSS火球動畫更新（使用預旋轉圖片）
                     try
-                        % Get current size
-                        w = diff(obj.Bullets(i).Graphic.XData);
-                        h = diff(obj.Bullets(i).Graphic.YData);
+                        % 更新位置
+                        if obj.Bullets(i).IsImageBullet && isfield(obj.Bullets(i), 'ImageSize')
+                            % 使用預設的圖像大小
+                            w = obj.Bullets(i).ImageSize(1);
+                            h = obj.Bullets(i).ImageSize(2);
+                        else
+                            % 備用：獲取當前圖像大小
+                            w = diff(obj.Bullets(i).Graphic.XData);
+                            h = diff(obj.Bullets(i).Graphic.YData);
+                        end
 
+                        % 更新位置
+                        obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1) - w/2, obj.Bullets(i).Position(1) + w/2];
+                        obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2) - h/2, obj.Bullets(i).Position(2) + h/2];
 
-                        % Update position
-                        obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1) - w / 2, obj.Bullets(i).Position(1) + w / 2];
-                        obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2) - h / 2, obj.Bullets(i).Position(2) + h / 2];
-
-                        % Update animation frame
-                        obj.Bullets(i).AnimationTimer = obj.Bullets(i).AnimationTimer + 0.016; % Assuming 60 FPS
+                        % 更新動畫幀
+                        obj.Bullets(i).AnimationTimer = obj.Bullets(i).AnimationTimer + 0.016;
                         if obj.Bullets(i).AnimationTimer >= obj.Bullets(i).AnimationSpeed
-                            % Reset timer
                             obj.Bullets(i).AnimationTimer = 0;
-
-                            % Advance frame
                             obj.Bullets(i).AnimationFrame = mod(obj.Bullets(i).AnimationFrame, obj.Bullets(i).FrameCount) + 1;
 
-                            % Get next frame and rotate it
-                            frame = obj.FireballFrames{obj.Bullets(i).AnimationFrame};
-                            img = frame.Image;
-                            alpha = frame.Alpha;
+                            % 使用預旋轉的火球幀
+                            if ~isempty(obj.BossFireballFrames) && isfield(obj.Bullets(i), 'AngleIndex')
+                                frameIdx = obj.Bullets(i).AnimationFrame;
+                                angleIdx = obj.Bullets(i).AngleIndex;
 
-                            % Rotate image for direction
-                            % rotatedImg = imrotate(img, -obj.Bullets(i).Angle, 'bicubic');
-                            rotatedImg = imrotate(img, -obj.Bullets(i).Angle, 'bicubic');
-
-                            if ~isempty(alpha)
-                                rotatedAlpha = imrotate(alpha, -obj.Bullets(i).Angle, 'bicubic');
-                                obj.Bullets(i).Graphic.AlphaData = rotatedAlpha;
+                                if frameIdx <= size(obj.BossFireballFrames, 1) && angleIdx <= size(obj.BossFireballFrames, 2)
+                                    frame = obj.BossFireballFrames{frameIdx, angleIdx};
+                                    if ~isempty(frame) && isfield(frame, 'Image')
+                                        obj.Bullets(i).Graphic.CData = frame.Image;
+                                        if ~isempty(frame.Alpha)
+                                            obj.Bullets(i).Graphic.AlphaData = frame.Alpha;
+                                        end
+                                    end
+                                end
                             end
-
-                            % Update image
-                            obj.Bullets(i).Graphic.CData = rotatedImg;
-
-                            % Recalculate size and position after rotation
-                            [h, w, ~] = size(rotatedImg);
-                            obj.Bullets(i).Graphic.XData = [obj.Bullets(i).Position(1) - w / 2, obj.Bullets(i).Position(1) + w / 2];
-                            obj.Bullets(i).Graphic.YData = [obj.Bullets(i).Position(2) - h / 2, obj.Bullets(i).Position(2) + h / 2];
                         end
+
                     catch e
-                        % Failed to update graphic, mark for removal
                         bulletsToRemove(i) = true;
                         continue;
                     end
@@ -2117,59 +2120,51 @@ classdef final_all < handle
                 'Angle', 0, ...
                 'Size', 35, ...
                 'ImageSize', [0, 0], ...
-                'IsImageBullet', false);
+                'IsImageBullet', false, ...
+                'AngleIndex', 1 ...
+                );
 
             if isBossBullet && ~isempty(obj.FireballFrames)
-                % Calculate angle for rotation (in degrees, 0 = right)
+                % 使用預旋轉的BOSS火球
                 angle = atan2(direction(2), direction(1)) * 180 / pi;
+                angleIndex = mod(round(angle / obj.FireballAngleStep), obj.NumFireballAngles) + 1;
 
-                % Get the first frame
-                frame = obj.FireballFrames{1};
-                img = frame.Image;
-                alpha = frame.Alpha;
+                % 獲取預旋轉的第一幀
+                fireballFrame = obj.BossFireballFrames{1, angleIndex};
 
-                % Rotate the image to point in direction of travel
-                rotatedImg = imrotate(img, -angle);
-                if ~isempty(alpha)
-                    rotatedAlpha = imrotate(alpha, -angle);
-                else
-                    rotatedAlpha = [];
+                if ~isempty(fireballFrame)
+                    img = fireballFrame.Image;
+                    alpha = fireballFrame.Alpha;
+
+                    % 計算顯示尺寸
+                    [h, w, ~] = size(img);
+                    scaleFactor = 100 / max(h, w);
+                    displayW = w * scaleFactor;
+                    displayH = h * scaleFactor;
+
+                    % 創建火球圖形
+                    if ~isempty(alpha)
+                        h_img = image(obj.GameAxes, ...
+                            [startPos(1) - displayW/2, startPos(1) + displayW/2], ...
+                            [startPos(2) - displayH/2, startPos(2) + displayH/2], ...
+                            img, 'AlphaData', alpha);
+                    else
+                        h_img = image(obj.GameAxes, ...
+                            [startPos(1) - displayW/2, startPos(1) + displayW/2], ...
+                            [startPos(2) - displayH/2, startPos(2) + displayH/2], ...
+                            img);
+                    end
+
+                    % 設置火球屬性
+                    newBullet.Velocity = direction * 3;
+                    newBullet.Graphic = h_img;
+                    newBullet.FrameCount = size(obj.BossFireballFrames, 1);
+                    newBullet.Angle = angle;
+                    newBullet.AngleIndex = angleIndex;
+                    newBullet.Size = 25;
+                    newBullet.ImageSize = [displayW, displayH];
+                    newBullet.IsImageBullet = true;
                 end
-
-                % Calculate size and positioning
-                [h, w, ~] = size(rotatedImg);
-
-                % Create fireball image
-                hold(obj.GameAxes, 'on');
-                if ~isempty(rotatedAlpha)
-                    h_img = image(obj.GameAxes, [startPos(1) - w / 2, startPos(1) + w / 2], ...
-                        [startPos(2) - h / 2, startPos(2) + h / 2], ...
-                        rotatedImg, 'AlphaData', rotatedAlpha);
-                else
-                    h_img = image(obj.GameAxes, [startPos(1) - w / 2, startPos(1) + w / 2], ...
-                        [startPos(2) - h / 2, startPos(2) + h / 2], ...
-                        rotatedImg);
-                end
-                hold(obj.GameAxes, 'off');
-
-                % Create new bullet with all fields
-                newBullet.Velocity = direction * 3;
-                newBullet.Graphic = h_img;
-                newBullet.FrameCount = length(obj.FireballFrames);
-                newBullet.Angle = angle;
-                newBullet.Size = 25;
-                % newBullet = struct( ...
-                %     'Position', startPos, ...
-                %     'Velocity', direction*3, ...
-                %     'Damage', attackerAttack, ...
-                %     'IsBossBullet', true, ...
-                %     'Graphic', h_img, ...
-                %     'AnimationFrame', 1, ...
-                %     'FrameCount', length(obj.FireballFrames), ...
-                %     'AnimationTimer', 0, ...
-                %     'AnimationSpeed', 0.075, ...
-                %     'Angle', angle, ...
-                %     'Size', 25);
             else
                 % 玩家子彈使用預旋轉圖片
                 if ~isempty(obj.PlayerBulletFrames)
@@ -3908,7 +3903,7 @@ classdef final_all < handle
                     break;
                 end
                 if strcmp(obj.Enemies(i).Type, 'boss')
-                    continue; 
+                    continue;
                 end
 
 
@@ -4925,6 +4920,86 @@ classdef final_all < handle
                 obj.EnemyHurtFrames = {};
             end
         end
+        function loadBossFireballFrames(obj)
+            % 載入預旋轉的BOSS火球圖片
+            if isempty(obj.FireballFrames) || isempty(obj.FireballFrames{1})
+                warning('原始火球幀未載入，無法創建預旋轉火球');
+                return;
+            end
+
+            fprintf('開始生成預旋轉BOSS火球圖片...\n');
+
+            % 為每個火球幀創建所有角度的預旋轉版本
+            numFrames = length(obj.FireballFrames);
+            obj.BossFireballFrames = cell(numFrames, obj.NumFireballAngles);
+
+            for frameIdx = 1:numFrames
+                frame = obj.FireballFrames{frameIdx};
+                if isempty(frame) || ~isfield(frame, 'Image')
+                    continue;
+                end
+
+                originalImg = frame.Image;
+                originalAlpha = frame.Alpha;
+
+                % 計算旋轉所需的最大尺寸
+                [h, w, ~] = size(originalImg);
+                maxDim = ceil(sqrt(h^2 + w^2)); % 對角線長度
+
+                % 創建帶邊距的圖像
+                paddedSize = maxDim + 20; % 額外增加20像素邊距
+                paddedImg = zeros(paddedSize, paddedSize, size(originalImg, 3), 'like', originalImg);
+
+                % 將原圖放在中心
+                startY = floor((paddedSize - h) / 2) + 1;
+                startX = floor((paddedSize - w) / 2) + 1;
+                paddedImg(startY:startY+h-1, startX:startX+w-1, :) = originalImg;
+
+                % 處理Alpha通道
+                if ~isempty(originalAlpha)
+                    paddedAlpha = zeros(paddedSize, paddedSize, 'like', originalAlpha);
+                    paddedAlpha(startY:startY+h-1, startX:startX+w-1) = originalAlpha;
+                else
+                    paddedAlpha = [];
+                end
+
+                for angleIdx = 1:obj.NumFireballAngles
+                    % 計算旋轉角度
+                    angle = (angleIdx - 1) * obj.FireballAngleStep;
+
+                    try
+                        % 旋轉帶邊距的圖像
+                        rotatedImg = imrotate(paddedImg, -angle, 'bicubic', 'crop');
+
+                        % 旋轉透明度通道
+                        if ~isempty(paddedAlpha)
+                            rotatedAlpha = imrotate(paddedAlpha, -angle, 'bicubic', 'crop');
+                        else
+                            rotatedAlpha = [];
+                        end
+
+                        % 存儲預旋轉的火球
+                        obj.BossFireballFrames{frameIdx, angleIdx} = struct( ...
+                            'Image', rotatedImg, ...
+                            'Alpha', rotatedAlpha ...
+                            );
+
+                    catch ME
+                        warning('創建預旋轉火球失敗 (幀:%d, 角度:%d): %s', frameIdx, angleIdx, ME.message);
+                        % 使用填充後的原始圖像作為備用
+                        obj.BossFireballFrames{frameIdx, angleIdx} = struct( ...
+                            'Image', paddedImg, ...
+                            'Alpha', paddedAlpha ...
+                            );
+                    end
+                end
+            end
+
+            fprintf('BOSS火球預旋轉圖片生成完成！\n');
+        end
+
+
+
 
 
     end
