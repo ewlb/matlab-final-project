@@ -19,9 +19,9 @@ classdef final_all < handle
         gameWidth = 1000
         gameHeight = 700
 
-        LevelUnlocked = [true, false, false]; % 第1關預設可點擊，其餘預設鎖定
+        LevelUnlocked = [true, true, true]; % 第1關預設可點擊，其餘預設鎖定
         LevelButtons % 用來儲存 uibutton 物件的 handle
-        LevelsCleared = [false, false, false];
+        LevelsCleared = [true, true, true];
 
         % 遊戲核心元素
         GameAxes
@@ -479,29 +479,29 @@ classdef final_all < handle
                     end
 
                     % 檢查敵人圖形是否有效
-                    for i = 1:length(obj.Enemies)
-                        % 跳過標記為刪除的敵人
-                        if isfield(obj.Enemies(i), 'MarkedForDeletion') && obj.Enemies(i).MarkedForDeletion
-                            continue;
-                        end
-                        % TODO
-                        if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
-                            % 根據敵人類型重建圖形
-                            if strcmp(obj.Enemies(i).Type, 'boss')
-                                % 特殊處理BOSS圖形
-                                obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
-                                    'Position', [0, 0, 60, 60], ... % 更大尺寸
-                                    'FaceColor', [1, 0, 1], ... % 洋紅色
-                                    'Curvature', 0.3); % 圓角矩形
-                            else
-                                % 普通敵人圖形
-                                obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
-                                    'Position', [0, 0, 30, 30], ...
-                                    'FaceColor', 'r');
-                            end
-                            updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
-                        end
-                    end
+                    % for i = 1:length(obj.Enemies)
+                    %     % 跳過標記為刪除的敵人
+                    %     if isfield(obj.Enemies(i), 'MarkedForDeletion') && obj.Enemies(i).MarkedForDeletion
+                    %         continue;
+                    %     end
+                    %     % TODO
+                    %     if ~isfield(obj.Enemies(i), 'Graphic') || ~isvalid(obj.Enemies(i).Graphic)
+                    %         % 根據敵人類型重建圖形
+                    %         if strcmp(obj.Enemies(i).Type, 'boss')
+                    %             % 特殊處理BOSS圖形
+                    %             obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                    %                 'Position', [0, 0, 60, 60], ... % 更大尺寸
+                    %                 'FaceColor', [1, 0, 1], ... % 洋紅色
+                    %                 'Curvature', 0.3); % 圓角矩形
+                    %         else
+                    %             % 普通敵人圖形
+                    %             obj.Enemies(i).Graphic = rectangle(obj.GameAxes, ...
+                    %                 'Position', [0, 0, 30, 30], ...
+                    %                 'FaceColor', 'r');
+                    %         end
+                    %         updatePosition(obj.Enemies(i).Graphic, obj.Enemies(i).Position);
+                    %     end
+                    % end
 
                     % 更新遊戲邏輯
                     obj.updatePlayerMovement();
@@ -3901,8 +3901,8 @@ classdef final_all < handle
                 if destroyedCount >= actualDestroy
                     break;
                 end
-                if strcmp(obj.Enemies.Type,'boss')
-                    continue
+                if strcmp(obj.Enemies(i).Type, 'boss')
+                    continue; 
                 end
 
 
