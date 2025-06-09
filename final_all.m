@@ -3625,6 +3625,12 @@ classdef final_all < handle
             if ~obj.LevelsCleared(3)
                 return;
             end
+            if obj.Skill3UseCount >= obj.Skill3MaxUses
+                obj.Skill3Icon.Visible = 'off';
+                obj.Skill3Label.Visible = 'off';
+                obj.Skill3DescLabel.Visible = 'off';
+                return;
+            end
 
             if isvalid(obj.Skill3Label)
                 if obj.Skill3Cooldown > 0
