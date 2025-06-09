@@ -1021,7 +1021,7 @@ classdef final_all < handle
             end
 
             % 重置生成計時器
-            obj.EnemySpawnTimer = 0;
+            obj.EnemySpawnTimer = obj.EnemySpawnInterval;
 
             % 添加時間標籤
             obj.TimeLabel = uilabel(obj.MainFig);
