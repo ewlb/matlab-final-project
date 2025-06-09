@@ -3783,120 +3783,90 @@ classdef final_all < handle
         end
 
 
-        function destroyAllEnemies(obj, num_to_destroy)
-            % 清除所有敵人
+        function destroyAllEnemies(obj, maxDestroy)
             if isempty(obj.Enemies)
                 return;
             end
 
-            % 確保不會超出陣列範圍
-            num_to_destroy = min(num_to_destroy, length(obj.Enemies));
-
-            % 暫停敵人生成，避免競爭條件
-            oldSpawnInterval = obj.EnemySpawnInterval;
-            obj.EnemySpawnInterval = inf; % 用 inf 代表暫時不再生成
-
-            try
-                % 記錄要刪除的敵人數量
-                fprintf('技能3：準備清除 %d 個敵人（共 %d 個）\n', num_to_destroy, length(obj.Enemies));
-
-                % 檢查前 num_to_destroy 個是否含有 Boss
-                hasBoss = false;
-                for i = 1:num_to_destroy
-                    obj.Enemies(i).MarkedForDeletion = true;
-                    if isfield(obj.Enemies(i), 'Type') && strcmp(obj.Enemies(i).Type, 'boss')
-                        hasBoss = true;
-                    end
-                end
-
-                % 先把要刪除的敵人都換成「白色」作為視覺提示
-                for i = 1:num_to_destroy
-                    if isfield(obj.Enemies(i), 'Graphic') && ...
-                            ~isempty(obj.Enemies(i).Graphic) && isgraphics(obj.Enemies(i).Graphic) && isvalid(obj.Enemies(i).Graphic)
-                        obj.Enemies(i).Graphic.FaceColor = [1, 1, 1];
-                    end
-                end
-                drawnow;
-
-                % 逐個刪除圖形
-                deletedCount = 0;
-                for i = 1:num_to_destroy
-                    try
-                        % 刪除主要圖形
-                        if isfield(obj.Enemies(i), 'Graphic') && ...
-                                ~isempty(obj.Enemies(i).Graphic) && isgraphics(obj.Enemies(i).Graphic) && isvalid(obj.Enemies(i).Graphic)
-                            delete(obj.Enemies(i).Graphic);
-                            obj.Enemies(i).Graphic = [];
-                        end
-
-                        % 刪除 Boss 的技能警示（如果有的話）
-                        if isfield(obj.Enemies(i), 'SkillWarning') && ...
-                                ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning) && isvalid(obj.Enemies(i).SkillWarning)
-                            delete(obj.Enemies(i).SkillWarning);
-                            obj.Enemies(i).SkillWarning = [];
-                        end
-
-                        deletedCount = deletedCount + 1;
-                    catch ME
-                        fprintf('刪除敵人 %d 圖形時出錯：%s\n', i, ME.message);
-                        deletedCount = deletedCount + 1;
-                    end
-                end
-
-                % 從 struct 陣列中移除前 num_to_destroy 個元素
-                obj.Enemies(1:num_to_destroy) = [];
-
-                % 如果移除後變成空陣列，就用一個帶有這些欄位的 0×1 struct 來重建
-                if isempty(obj.Enemies)
-                    obj.Enemies = struct( ...
-                        'Type', {}, 'Position', {}, 'Health', {}, 'Attack', {}, ...
-                        'AttackRange', {}, 'AttackCooldown', {}, 'SkillCooldown', {}, ...
-                        'SkillMaxCooldown', {}, 'SkillWarning', {}, 'SkillWarningTimer', {}, ...
-                        'PoisonSlowed', {}, 'SlowTimer', {}, 'Graphic', {}, 'MarkedForDeletion', {});
-                end
-
-                fprintf('保留了 %d 個敵人（可能包含剛生成的 Boss）\n', length(obj.Enemies));
-                fprintf('技能3：成功清除 %d/%d 個敵人\n', deletedCount, num_to_destroy);
-                drawnow;
-
-                % 若剛剛刪掉的當中有 Boss，就直接顯示勝利畫面
-                if hasBoss
-                    obj.showVictoryScreen();
-                    obj.LevelsCleared(obj.CurrentLevel) = true;
-
-                    % 解鎖下一關0605
-                    if obj.CurrentLevel < 3
-                        obj.LevelUnlocked(obj.CurrentLevel+1) = true;
-                        obj.LevelButtons(obj.CurrentLevel+1).Enable = 'on';
-                    end
-                end
-
-            catch ME
-                fprintf('destroyAllEnemies 執行時發生嚴重錯誤：%s\n', ME.message);
-                disp(getReport(ME));
-
-                % 即使出錯，也不要把 Enemies 變成 []，而是重建成 0×1 struct
-                obj.Enemies = struct( ...
-                    'Type', {}, 'Position', {}, 'Health', {}, 'Attack', {}, ...
-                    'AttackRange', {}, 'AttackCooldown', {}, 'SkillCooldown', {}, ...
-                    'SkillMaxCooldown', {}, 'SkillWarning', {}, 'SkillWarningTimer', {}, ...
-                    'PoisonSlowed', {}, 'SlowTimer', {}, 'Graphic', {}, 'MarkedForDeletion', {});
-                if exist('hasBoss', 'var') && hasBoss
-                    obj.showVictoryScreen();
-                    obj.LevelsCleared(obj.CurrentLevel) = true;
-
-                    % 解鎖下一關0605
-                    if obj.CurrentLevel < 3
-                        obj.LevelUnlocked(obj.CurrentLevel+1) = true;
-                        obj.LevelButtons(obj.CurrentLevel+1).Enable = 'on';
-                    end
-                end
+            % 如果沒有指定最大數量，就全部消滅
+            if nargin < 2
+                maxDestroy = length(obj.Enemies);
             end
 
-            % 恢復生成設定
-            obj.EnemySpawnInterval = oldSpawnInterval;
-            obj.EnemySpawnTimer = 0;
+            % 計算實際要消滅的數量
+            actualDestroy = min(maxDestroy, length(obj.Enemies));
+            destroyedCount = 0;
+
+            % 標記要刪除的敵人
+            enemiesToRemove = false(1, length(obj.Enemies));
+
+            for i = 1:length(obj.Enemies)
+                if destroyedCount >= actualDestroy
+                    break;
+                end
+
+                % 根據圖形類型創建不同的閃爍效果
+                if isfield(obj.Enemies(i), 'Graphic') && isvalid(obj.Enemies(i).Graphic)
+                    if isa(obj.Enemies(i).Graphic, 'matlab.graphics.primitive.Rectangle')
+                        % Rectangle 對象 - 使用 FaceColor
+                        try
+                            obj.Enemies(i).Graphic.FaceColor = [1, 1, 1];
+                        catch
+                            % 如果設置失敗，跳過閃爍效果
+                        end
+
+                    elseif isa(obj.Enemies(i).Graphic, 'matlab.graphics.primitive.Image')
+                        % Image 對象 - 使用 AlphaData 或其他效果
+                        try
+                            % 創建白色閃爍效果
+                            originalAlpha = obj.Enemies(i).Graphic.AlphaData;
+                            if ~isempty(originalAlpha)
+                                % 暫時減少透明度創造閃爍效果
+                                obj.Enemies(i).Graphic.AlphaData = originalAlpha * 0.5;
+
+                                % 使用計時器恢復原始透明度
+                                timer('StartDelay', 0.1, ...
+                                    'TimerFcn', @(src,event) obj.restoreImageAlpha(obj.Enemies(i).Graphic, originalAlpha), ...
+                                    'ExecutionMode', 'singleShot');
+                            end
+                        catch
+                            % 如果 AlphaData 操作失敗，跳過閃爍效果
+                        end
+
+                    elseif isa(obj.Enemies(i).Graphic, 'matlab.graphics.chart.primitive.Line')
+                        % Line/Plot 對象 - 改變顏色
+                        try
+                            obj.Enemies(i).Graphic.MarkerFaceColor = [1, 1, 1];
+                            obj.Enemies(i).Graphic.MarkerEdgeColor = [1, 1, 1];
+                        catch
+                            % 如果設置失敗，跳過閃爍效果
+                        end
+                    end
+                end
+
+                % 標記為要刪除
+                enemiesToRemove(i) = true;
+                destroyedCount = destroyedCount + 1;
+            end
+
+            % 延遲刪除敵人（讓閃爍效果能被看到）
+            timer('StartDelay', 0.2, ...
+                'TimerFcn', @(src,event) obj.removeEnemies(enemiesToRemove), ...
+                'ExecutionMode', 'singleShot');
+
+            fprintf('技能3消滅了 %d 個敵人！\n', destroyedCount);
         end
+        function restoreImageAlpha(obj, graphic, originalAlpha)
+            % 恢復 Image 對象的原始透明度
+            if isvalid(graphic)
+                try
+                    graphic.AlphaData = originalAlpha;
+                catch
+                    % 忽略錯誤
+                end
+            end
+        end
+
 
 
         function loadSkill1Frames(obj)
