@@ -2245,6 +2245,8 @@ classdef final_all < handle
                 % 如果這是 Boss，就記錄一下讓後面顯示勝利畫面
                 if isfield(obj.Enemies(i), 'Type') && strcmp(obj.Enemies(i).Type, 'boss')
                     boss_dead = true;
+                    % 播勝利音效
+                    obj.playVictorySound();
                     % 同時把 Boss 的技能警示圖形也刪掉（如果有）
                     if ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning)
                         delete(obj.Enemies(i).SkillWarning);
