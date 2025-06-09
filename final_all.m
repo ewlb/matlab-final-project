@@ -1358,13 +1358,14 @@ classdef final_all < handle
                 'Direction', {}, 'AnimationFrame', {}, 'AnimationTimer', {}, ...
                 'IsMoving', {}, 'IsAttacking', {}, 'AttackAnimationFrame', {}, ...
                 'AttackAnimationTimer', {}, 'AttackDirection', {}, 'HasDamaged', {}, ...
-                'IsHurt', {}, 'HurtTimer', {}, 'OriginalDirection', {});
+                'IsHurt', {}, 'HurtTimer', {}, 'OriginalDirection', {}, ...
+                'OriginalAlpha', {}, 'OriginalColor', {}, 'IsFlashing', {}, 'FlashTimer', {});
 
             % switch levelNum
             %     case 1
-            %         % 近戰敵人配置
+            %         % 近戰敵人配置（如果需要）
             %         for i = 1:3
-            %             obj.Enemies(i) = struct( ...
+            %             newEnemy = struct( ...
             %                 'Type', 'melee', ...
             %                 'Position', [randi([50, 750]), 550], ...
             %                 'Health', 10, ...
@@ -1382,7 +1383,7 @@ classdef final_all < handle
             %                 'Direction', 1, ...
             %                 'AnimationFrame', 1, ...
             %                 'AnimationTimer', 0, ...
-            %                 'IsMoving', true, ...
+            %                 'IsMoving', false, ...
             %                 'IsAttacking', false, ...
             %                 'AttackAnimationFrame', 1, ...
             %                 'AttackAnimationTimer', 0, ...
@@ -1390,11 +1391,28 @@ classdef final_all < handle
             %                 'HasDamaged', false, ...
             %                 'IsHurt', false, ...
             %                 'HurtTimer', 0, ...
-            %                 'OriginalDirection', 1 ...
+            %                 'OriginalDirection', 1, ...
+            %                 'OriginalAlpha', [], ...
+            %                 'OriginalColor', [], ...
+            %                 'IsFlashing', false, ...
+            %                 'FlashTimer', [] ...
             %                 );
-            %
+            % 
             %             % 創建敵人圖形
-            %             obj.Enemies(i).Graphic = obj.createEnemyGraphic(obj.Enemies(i).Position, i);
+            %             newEnemy.Graphic = obj.createEnemyGraphic(newEnemy.Position, i);
+            % 
+            %             % 保存原始透明度或顏色
+            %             if isa(newEnemy.Graphic, 'matlab.graphics.primitive.Image')
+            %                 originalAlpha = get(newEnemy.Graphic, 'AlphaData');
+            %                 if isempty(originalAlpha)
+            %                     originalAlpha = ones(size(get(newEnemy.Graphic, 'CData'), 1), size(get(newEnemy.Graphic, 'CData'), 2));
+            %                 end
+            %                 newEnemy.OriginalAlpha = originalAlpha;
+            %             elseif isa(newEnemy.Graphic, 'matlab.graphics.primitive.Rectangle')
+            %                 newEnemy.OriginalColor = newEnemy.Graphic.FaceColor;
+            %             end
+            % 
+            %             obj.Enemies(i) = newEnemy;
             %         end
             % end
         end
@@ -1475,7 +1493,7 @@ classdef final_all < handle
                 'SlowTimer', 0, ...
                 'Graphic', [], ...
                 'MarkedForDeletion', false, ...
-                'Direction', 1, ... % 1=下, 2=上, 3=左, 4=右
+                'Direction', 1, ...
                 'AnimationFrame', 1, ...
                 'AnimationTimer', 0, ...
                 'IsMoving', false, ...
@@ -1486,18 +1504,22 @@ classdef final_all < handle
                 'HasDamaged', false, ...
                 'IsHurt', false, ...
                 'HurtTimer', 0, ...
-                'OriginalDirection', 1 ...
+                'OriginalDirection', 1, ...
+                'OriginalAlpha', [], ...
+                'OriginalColor', [], ...
+                'IsFlashing', false, ...
+                'FlashTimer', [] ...
                 );
 
 
             % ==== 4. 如果 bossImg 不為空就用 image()，否則 fallback 用紫色矩形 ====
             if ~isempty(bossImg)
-                xData = [bossCenter(1) - displayW / 2, bossCenter(1) + displayW / 2];
-                yData = [bossCenter(2) - displayH / 2, bossCenter(2) + displayH / 2];
+                xData = [bossCenter(1) - displayW/2, bossCenter(1) + displayW/2];
+                yData = [bossCenter(2) - displayH/2, bossCenter(2) + displayH/2];
                 hImg = image(obj.GameAxes, xData, yData, bossImg);
             else
                 hImg = rectangle(obj.GameAxes, ...
-                    'Position', [bossCenter(1) - displayW / 2, bossCenter(2) - displayH / 2, displayW, displayH], ...
+                    'Position', [bossCenter(1)-displayW/2, bossCenter(2)-displayH/2, displayW, displayH], ...
                     'FaceColor', [1, 0, 1], ...
                     'Curvature', 0.3);
             end
@@ -1505,6 +1527,22 @@ classdef final_all < handle
             % ==== 5. 把 handle 存回 newBoss.Graphic ====
             newBoss.Graphic = hImg;
 
+            % ==== 新增：保存原始透明度和顏色 ====
+            if isa(hImg, 'matlab.graphics.primitive.Image')
+                % 保存原始AlphaData
+                originalAlpha = get(hImg, 'AlphaData');
+                if isempty(originalAlpha)
+                    originalAlpha = ones(size(bossImg, 1), size(bossImg, 2));
+                end
+                newBoss.OriginalAlpha = originalAlpha;
+                newBoss.IsFlashing = false;  % 閃爍狀態標記
+                newBoss.FlashTimer = [];     % 閃爍計時器
+            elseif isa(hImg, 'matlab.graphics.primitive.Rectangle')
+                % 保存原始顏色
+                newBoss.OriginalColor = hImg.FaceColor;
+                newBoss.IsFlashing = false;
+                newBoss.FlashTimer = [];
+            end
             % ==== 6. 建立血條 ====
             barWidth = 100;
             barHeight = 10;
@@ -2287,6 +2325,12 @@ classdef final_all < handle
             % 清理敵人與玩家
             if ~isempty(obj.Enemies)
                 for i = 1:length(obj.Enemies)
+                    % 清理閃爍計時器
+                    if isfield(obj.Enemies(i), 'FlashTimer') && ~isempty(obj.Enemies(i).FlashTimer) && isvalid(obj.Enemies(i).FlashTimer)
+                        stop(obj.Enemies(i).FlashTimer);
+                        delete(obj.Enemies(i).FlashTimer);
+                    end
+                    % 清理圖形
                     if isfield(obj.Enemies(i), 'Graphic') && isgraphics(obj.Enemies(i).Graphic)
                         delete(obj.Enemies(i).Graphic);
                     end
@@ -2298,15 +2342,17 @@ classdef final_all < handle
                     end
                 end
             end
-            obj.Enemies = struct( ...
-                'Type', {}, 'Position', {}, 'Health', {}, 'Attack', {}, ...
-                'AttackRange', {}, 'AttackCooldown', {}, 'SkillCooldown', {}, ...
-                'SkillMaxCooldown', {}, 'SkillWarning', {}, 'SkillWarningTimer', {}, ...
-                'PoisonSlowed', {}, 'SlowTimer', {}, 'Graphic', {}, 'MarkedForDeletion', {}, ...
+            obj.Enemies = struct('Type', {}, 'Position', {}, ...
+                'Health', {}, 'Attack', {}, 'AttackRange', {}, ...
+                'AttackCooldown', {}, 'SkillCooldown', {}, ...
+                'SkillMaxCooldown', {}, 'SkillWarning', {}, ...
+                'SkillWarningTimer', {}, 'PoisonSlowed', {}, ...
+                'SlowTimer', {}, 'Graphic', {}, 'MarkedForDeletion', {}, ...
                 'Direction', {}, 'AnimationFrame', {}, 'AnimationTimer', {}, ...
                 'IsMoving', {}, 'IsAttacking', {}, 'AttackAnimationFrame', {}, ...
                 'AttackAnimationTimer', {}, 'AttackDirection', {}, 'HasDamaged', {}, ...
-                'IsHurt', {}, 'HurtTimer', {}, 'OriginalDirection', {});
+                'IsHurt', {}, 'HurtTimer', {}, 'OriginalDirection', {}, ...
+                'OriginalAlpha', {}, 'OriginalColor', {}, 'IsFlashing', {}, 'FlashTimer', {});
 
             if isfield(obj, 'Player') && ~isempty(obj.Player) && isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
                 delete(obj.Player.Graphic);
@@ -2904,60 +2950,101 @@ classdef final_all < handle
         end
 
         function createBossFlashEffect(obj, enemyIndex, flashColor, duration)
-            % BOSS或備用的閃爍效果
-            enemyGraphic = obj.Enemies(enemyIndex).Graphic;
+            % BOSS閃爍效果（修正透明度累積問題）
+
+            % 檢查敵人是否存在
+            if enemyIndex > length(obj.Enemies)
+                return;
+            end
+
+            enemy = obj.Enemies(enemyIndex);
+            enemyGraphic = enemy.Graphic;
+
+            % 如果已經在閃爍中，取消之前的計時器
+            if isfield(enemy, 'IsFlashing') && enemy.IsFlashing && ...
+                    isfield(enemy, 'FlashTimer') && ~isempty(enemy.FlashTimer) && isvalid(enemy.FlashTimer)
+                stop(enemy.FlashTimer);
+                delete(enemy.FlashTimer);
+            end
 
             if isa(enemyGraphic, 'matlab.graphics.primitive.Rectangle')
-                originalColor = enemyGraphic.FaceColor;
+                % Rectangle 類型處理
+                if ~isfield(enemy, 'OriginalColor') || isempty(enemy.OriginalColor)
+                    enemy.OriginalColor = enemyGraphic.FaceColor;
+                    obj.Enemies(enemyIndex).OriginalColor = enemy.OriginalColor;
+                end
+
                 if isvalid(enemyGraphic)
                     enemyGraphic.FaceColor = flashColor;
 
+                    obj.Enemies(enemyIndex).IsFlashing = true;
                     restoreTimer = timer( ...
                         'StartDelay', duration, ...
-                        'TimerFcn', @(src, event) obj.restoreEnemyColor(enemyGraphic, originalColor), ...
+                        'TimerFcn', @(src, event) obj.restoreEnemyColor(enemyIndex), ...
                         'ExecutionMode', 'singleShot');
+                    obj.Enemies(enemyIndex).FlashTimer = restoreTimer;
                     start(restoreTimer);
                 end
 
             elseif isa(enemyGraphic, 'matlab.graphics.primitive.Image')
+                % Image 類型處理（修正透明度問題）
                 try
-                    originalAlpha = get(enemyGraphic, 'AlphaData');
-                    if isempty(originalAlpha)
-                        originalAlpha = 1;
+                    % 如果沒有保存原始透明度，現在保存
+                    if ~isfield(enemy, 'OriginalAlpha') || isempty(enemy.OriginalAlpha)
+                        originalAlpha = get(enemyGraphic, 'AlphaData');
+                        if isempty(originalAlpha)
+                            originalAlpha = ones(size(get(enemyGraphic, 'CData'), 1), size(get(enemyGraphic, 'CData'), 2));
+                        end
+                        obj.Enemies(enemyIndex).OriginalAlpha = originalAlpha;
                     end
-                    newAlpha = originalAlpha * 0.3;
+
+                    % 使用保存的原始透明度值計算新的透明度
+                    originalAlpha = obj.Enemies(enemyIndex).OriginalAlpha;
+                    newAlpha = originalAlpha * 0.3; % 始終基於原始值計算
 
                     enemyGraphic.AlphaData = newAlpha;
 
+                    obj.Enemies(enemyIndex).IsFlashing = true;
                     restoreTimer = timer( ...
                         'StartDelay', duration, ...
-                        'TimerFcn', @(src, event) obj.restoreEnemyAlpha(enemyGraphic, originalAlpha), ...
+                        'TimerFcn', @(src, event) obj.restoreEnemyAlpha(enemyIndex), ...
                         'ExecutionMode', 'singleShot');
+                    obj.Enemies(enemyIndex).FlashTimer = restoreTimer;
                     start(restoreTimer);
-                catch
-                    % 若 AlphaData 不可用，跳過
+                catch ME
+                    warning(ME.identifier, 'BOSS閃爍效果失敗：%s', ME.message);
                 end
             end
         end
 
 
-        function restoreEnemyColor(obj, graphic, originalColor)
+        function restoreEnemyColor(obj, enemyIndex)
+            % 恢復敵人顏色（使用索引而不是直接的圖形對象）
             try
-                if isvalid(graphic) && isgraphics(graphic)
-                    graphic.FaceColor = originalColor;
+                if enemyIndex <= length(obj.Enemies) && isvalid(obj.Enemies(enemyIndex).Graphic)
+                    if isfield(obj.Enemies(enemyIndex), 'OriginalColor')
+                        obj.Enemies(enemyIndex).Graphic.FaceColor = obj.Enemies(enemyIndex).OriginalColor;
+                    end
+                    obj.Enemies(enemyIndex).IsFlashing = false;
+                    obj.Enemies(enemyIndex).FlashTimer = [];
                 end
-            catch
-                % 忽略錯誤
+            catch ME
+                warning(ME.identifier, '恢復敵人顏色失敗：%s', ME.message);
             end
         end
 
-        function restoreEnemyAlpha(obj, enemyGraphic, originalAlpha)
-            if isvalid(enemyGraphic)
-                try
-                    enemyGraphic.AlphaData = originalAlpha;
-                catch
-                    % 忽略錯誤（可能 AlphaData 為空或尺寸不同）
+        function restoreEnemyAlpha(obj, enemyIndex)
+            % 恢復敵人透明度（使用索引和保存的原始值）
+            try
+                if enemyIndex <= length(obj.Enemies) && isvalid(obj.Enemies(enemyIndex).Graphic)
+                    if isfield(obj.Enemies(enemyIndex), 'OriginalAlpha') && ~isempty(obj.Enemies(enemyIndex).OriginalAlpha)
+                        obj.Enemies(enemyIndex).Graphic.AlphaData = obj.Enemies(enemyIndex).OriginalAlpha;
+                    end
+                    obj.Enemies(enemyIndex).IsFlashing = false;
+                    obj.Enemies(enemyIndex).FlashTimer = [];
                 end
+            catch ME
+                warning(ME,identifier, '恢復敵人透明度失敗：%s', ME.message);
             end
         end
 
@@ -3972,7 +4059,7 @@ classdef final_all < handle
                 'Direction', 1, ...
                 'AnimationFrame', 1, ...
                 'AnimationTimer', 0, ...
-                'IsMoving', true, ...
+                'IsMoving', false, ...
                 'IsAttacking', false, ...
                 'AttackAnimationFrame', 1, ...
                 'AttackAnimationTimer', 0, ...
@@ -3980,7 +4067,11 @@ classdef final_all < handle
                 'HasDamaged', false, ...
                 'IsHurt', false, ...
                 'HurtTimer', 0, ...
-                'OriginalDirection', 1 ...
+                'OriginalDirection', 1, ...
+                'OriginalAlpha', [], ...
+                'OriginalColor', [], ...
+                'IsFlashing', false, ...
+                'FlashTimer', [] ...
                 );
 
             % 創建敵人圖形
