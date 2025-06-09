@@ -631,27 +631,34 @@ classdef final_all < handle
                     totalFrames = 8;
                     obj.CurrentFrame = mod(obj.CurrentFrame, totalFrames) + 1;
 
-                    % 更新身體動畫
-                    if ~isempty(obj.RunFrames)
-                        bodyFrame = obj.RunFrames{obj.CurrentDirection, obj.CurrentFrame};
-                        if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                    % 更新身體動畫 - 添加類型檢查
+                    if ~isempty(obj.RunFrames) && isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                        % 檢查玩家圖形是否為 Image 類型
+                        if isa(obj.Player.Graphic, 'matlab.graphics.primitive.Image')
+                            bodyFrame = obj.RunFrames{obj.CurrentDirection, obj.CurrentFrame};
                             obj.Player.Graphic.CData = bodyFrame.Image;
                             obj.Player.Graphic.AlphaData = bodyFrame.Alpha;
+                        else
+                            % 如果是 Rectangle 或其他類型，不執行動畫更新
+                            % 可以選擇重建為 Image 類型或保持靜態
                         end
                     end
 
-                    % 更新頭部動畫
+                    % 更新頭部動畫 - 添加類型檢查
                     if ~isempty(obj.HeadRunFrames) && isvalid(obj.HeadGraphic)
-                        headFrame = obj.HeadRunFrames{obj.CurrentDirection, obj.CurrentFrame};
-                        obj.HeadGraphic.CData = headFrame.Image;
-                        obj.HeadGraphic.AlphaData = headFrame.Alpha;
+                        if isa(obj.HeadGraphic, 'matlab.graphics.primitive.Image')
+                            headFrame = obj.HeadRunFrames{obj.CurrentDirection, obj.CurrentFrame};
+                            obj.HeadGraphic.CData = headFrame.Image;
+                            obj.HeadGraphic.AlphaData = headFrame.Alpha;
+                        end
                     end
 
                 else
                     % 靜止動畫 - 身體使用idle，頭部使用第一幀
-                    if ~isempty(obj.IdleFrames)
-                        bodyFrame = obj.IdleFrames{obj.CurrentDirection};
-                        if isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                    if ~isempty(obj.IdleFrames) && isfield(obj.Player, 'Graphic') && isvalid(obj.Player.Graphic)
+                        % 檢查玩家圖形是否為 Image 類型
+                        if isa(obj.Player.Graphic, 'matlab.graphics.primitive.Image')
+                            bodyFrame = obj.IdleFrames{obj.CurrentDirection};
                             obj.Player.Graphic.CData = bodyFrame.Image;
                             obj.Player.Graphic.AlphaData = bodyFrame.Alpha;
                         end
@@ -659,9 +666,11 @@ classdef final_all < handle
 
                     % 頭部靜止時使用跑步動畫的第一幀
                     if ~isempty(obj.HeadRunFrames) && isvalid(obj.HeadGraphic)
-                        headFrame = obj.HeadRunFrames{obj.CurrentDirection, 1};
-                        obj.HeadGraphic.CData = headFrame.Image;
-                        obj.HeadGraphic.AlphaData = headFrame.Alpha;
+                        if isa(obj.HeadGraphic, 'matlab.graphics.primitive.Image')
+                            headFrame = obj.HeadRunFrames{obj.CurrentDirection, 1};
+                            obj.HeadGraphic.CData = headFrame.Image;
+                            obj.HeadGraphic.AlphaData = headFrame.Alpha;
+                        end
                     end
                 end
             end
@@ -1343,6 +1352,7 @@ classdef final_all < handle
                 end
             end
         end
+
 
         function initEnemies(obj, levelNum)
             obj.loadEnemyAnimations();
@@ -3692,7 +3702,7 @@ classdef final_all < handle
             % --------------------------------------------
             % Step 1：本關已用次數達到上限就不執行
             if obj.Skill3UseCount >= obj.Skill3MaxUses
-                return; % 已經用滿 3 次
+                return;
             end
 
             % --------------------------------------------
@@ -3724,7 +3734,7 @@ classdef final_all < handle
             centerPos = [obj.gameWidth / 2, obj.gameHeight / 2];
             obj.createSuperExplosion(centerPos);
 
-            % Step 5：第一次批次清除所有敵人（除了 Boss 之外都直接刪掉圖形）
+            % Step 5：第一次批次清除所有敵人
             numToDestroy = length(obj.Enemies);
             obj.destroyAllEnemies(numToDestroy);
 
@@ -3891,6 +3901,10 @@ classdef final_all < handle
                 if destroyedCount >= actualDestroy
                     break;
                 end
+                if strcmp(obj.Enemies.Type,'boss')
+                    continue
+                end
+
 
                 % 根據圖形類型創建不同的閃爍效果
                 if isfield(obj.Enemies(i), 'Graphic') && isvalid(obj.Enemies(i).Graphic)
