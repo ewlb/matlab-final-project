@@ -158,6 +158,10 @@ classdef final_all < handle
         EnemyAttackAnimationSpeed = 0.1 % 攻擊動畫速度
         EnemyHurtFrames = {}
 
+        BossAttackMode = 1      % BOSS攻擊模式 (1=普通, 2=螺旋, 3=終極螺旋)
+        BossAttackTimer = 0     % BOSS攻擊模式計時器
+        BossSpecialCooldown = 0 % BOSS特殊攻擊冷卻
+
 
 
     end
@@ -1791,8 +1795,7 @@ classdef final_all < handle
 
                         % 閃爍效果
                         if ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning)
-                            % 創建閃爍效果
-                            blinkInterval = 0.2; % 每0.2秒閃爍一次
+                            blinkInterval = 0.2;
                             blinkPhase = mod(obj.Enemies(i).SkillWarningTimer, blinkInterval);
                             if blinkPhase < blinkInterval / 2
                                 obj.Enemies(i).SkillWarning.FaceAlpha = 0.5;
@@ -1803,23 +1806,21 @@ classdef final_all < handle
 
                         % 警示結束，執行技能傷害
                         if obj.Enemies(i).SkillWarningTimer <= 0
-                            % 移除警示圖形
                             if ~isempty(obj.Enemies(i).SkillWarning) && isgraphics(obj.Enemies(i).SkillWarning)
                                 warningCenter = [mean(obj.Enemies(i).SkillWarning.XData), ...
                                     mean(obj.Enemies(i).SkillWarning.YData)];
                                 delete(obj.Enemies(i).SkillWarning);
                                 obj.Enemies(i).SkillWarning = [];
-
-                                % 執行技能傷害
                                 obj.executeBossSkillDamage(i, warningCenter, 60);
                             end
                         end
                     end
 
-                    % 普通攻擊（火球）
+                    % 普通攻擊（火球）- 降低頻率以平衡遊戲
                     if obj.Enemies(i).AttackCooldown <= 0
+                        attackCooldown = 0.8; % 血量高時攻擊較慢
                         obj.fireBullet(obj.Enemies(i).Position, normalizedDirection, true, obj.Enemies(i).Attack);
-                        obj.Enemies(i).AttackCooldown = 0.5;
+                        obj.Enemies(i).AttackCooldown = attackCooldown;
                     end
 
                     % 技能攻擊邏輯
@@ -2868,7 +2869,6 @@ classdef final_all < handle
             % 3. 增加已用次數
             obj.Skill1UseCount = obj.Skill1UseCount + 1;
             fprintf('  => 執行技能1！ (是本關第 %d 次使用)\n', obj.Skill1UseCount);
-
             % 4. 隱藏圖示 (或更新 UI)
             if isvalid(obj.SkillIcon)
                 obj.SkillIcon.Visible = 'off';
@@ -3302,34 +3302,82 @@ classdef final_all < handle
         end
 
         function useBossSkill1(obj, bossIndex)
-            % BOSS技能1：範圍攻擊
-            targetPos = obj.Player.Position;
-            skillRadius = 60; % 技能範圍半徑
+            % BOSS技能攻擊邏輯
+            if bossIndex > length(obj.Enemies) || ~strcmp(obj.Enemies(bossIndex).Type, 'boss')
+                return;
+            end
 
-            % 開始警示效果
-            obj.createBossSkillWarning(bossIndex, targetPos, skillRadius);
+            boss = obj.Enemies(bossIndex);
+            bossPos = boss.Position;
+
+            % 根據BOSS血量決定攻擊模式
+            healthRatio = boss.Health / 40; % 假設BOSS最大血量為40
+
+            if healthRatio > 0.8
+                obj.executeBossNormalSkill(bossIndex);
+            elseif healthRatio > 0.4
+                obj.executeBossNormalSkill(bossIndex);
+                obj.executeBossSpiralAttack(bossIndex);
+            else
+                obj.executeBossNormalSkill(bossIndex);
+                obj.executeBossUltimateSpiral(bossIndex);
+            end
+
+            % 設置技能冷卻
+            obj.Enemies(bossIndex).SkillCooldown = obj.Enemies(bossIndex).SkillMaxCooldown;
+        end
+
+        function executeBossNormalSkill(obj, bossIndex)
+            % BOSS普通技能攻擊（原有的技能邏輯）
+            bossPos = obj.Enemies(bossIndex).Position;
+
+            % 創建警告區域
+            warningRadius = 60;
+            obj.createBossSkillWarning(bossIndex, obj.Player.Position, warningRadius);
+
+            % 設置警告持續時間
+            obj.Enemies(bossIndex).SkillWarningTimer = 1.5;
+
+            fprintf('BOSS使用普通技能攻擊！\n');
+        end
+
+        function executeBossSpiralAttack(obj, bossIndex)
+            % BOSS螺旋攻擊
+            bossPos = obj.Enemies(bossIndex).Position;
+
+            % 創建單層螺旋攻擊
+            obj.createBossSpiralFireball(bossPos, 12, 3, 0);
+
+            fprintf('BOSS使用螺旋攻擊！\n');
+        end
+
+        function executeBossUltimateSpiral(obj, bossIndex)
+            % BOSS終極螺旋攻擊
+            bossPos = obj.Enemies(bossIndex).Position;
+
+            % 創建多層螺旋攻擊
+            obj.createBossUltimateSpiral(bossPos);
+
+            fprintf('BOSS使用終極螺旋攻擊！\n');
         end
 
 
-        function createBossSkillWarning(obj, bossIndex, center, radius)
-            % 創建紅色警示效果
+
+        function createBossSkillWarning(obj, bossIndex, targetPos, radius)
+            % 創建BOSS技能警告
             wasHeld = ishold(obj.GameAxes);
             hold(obj.GameAxes, 'on');
 
-            % 創建紅色圓形警示指示器
+            % 創建圓形警告區域
             theta = linspace(0, 2*pi, 50);
-            x = center(1) + radius * cos(theta);
-            y = center(2) + radius * sin(theta);
+            x = targetPos(1) + radius * cos(theta);
+            y = targetPos(2) + radius * sin(theta);
 
-            % 創建填充圓形警示
-            warningEffect = fill(obj.GameAxes, x, y, [1, 0, 0], ... % 紅色
+            % 創建警告圖形
+            obj.Enemies(bossIndex).SkillWarning = fill(obj.GameAxes, x, y, [1, 0, 0], ...
                 'FaceAlpha', 0.3, ...
                 'EdgeColor', [1, 0, 0], ...
                 'LineWidth', 2);
-
-            % 存儲警示效果到boss
-            obj.Enemies(bossIndex).SkillWarning = warningEffect;
-            obj.Enemies(bossIndex).SkillWarningTimer = 1.0; % 警示持續1秒
 
             if ~wasHeld
                 hold(obj.GameAxes, 'off');
@@ -3337,23 +3385,32 @@ classdef final_all < handle
         end
 
         function executeBossSkillDamage(obj, bossIndex, center, radius)
-            % 執行boss技能傷害
+            % 執行BOSS技能傷害
+            % 檢查玩家是否在技能範圍內
+            distance = norm(obj.Player.Position - center);
             skillDamage = obj.Enemies(bossIndex).Attack * 1.5;
 
-            % 檢查玩家是否在範圍內
-            distance = norm(obj.Player.Position-center);
             if distance <= radius
+                % 對玩家造成傷害
                 obj.Player.Health = obj.Player.Health - skillDamage;
 
-                % 玩家受傷閃爍-deleted,TODO: use sound effect instead
+                % 播放受擊音效
+                try
+                    if ~isempty(obj.HitSEPlayer) && isvalid(obj.HitSEPlayer)
+                        if isplaying(obj.HitSEPlayer)
+                            stop(obj.HitSEPlayer);
+                            obj.HitSEPlayer.CurrentSample = 1;
+                        end
+                        play(obj.HitSEPlayer);
+                    end
+                catch
+                end
 
-                fprintf('玩家受到Boss技能攻擊，傷害：%.1f\n', skillDamage);
+                fprintf('玩家被BOSS技能擊中！剩餘血量：%d\n', obj.Player.Health);
             end
-
-            % 創建技能傷害動畫效果
             obj.createSkillAnimation(center, radius);
-
         end
+
 
         function useSkill2(obj)
             % 1. 檢查本關已使用次數是否大於等於上限
@@ -4188,7 +4245,16 @@ classdef final_all < handle
             fprintf('BOSS使用毒藥水技能，目標位置：[%.1f, %.1f]\n', targetPos(1), targetPos(2));
 
             % BOSS投擲毒藥水
+            boss = obj.Enemies(bossIndex);
+            bossPos = boss.Position;
             obj.throwBossPoisonBottle(bossPos, targetPos);
+            healthRatio = boss.Health / 40;
+            if healthRatio > 0.4
+                obj.executeBossSpiralAttack(bossIndex);
+            else
+                obj.executeBossUltimateSpiral(bossIndex);
+            end
+
         end
 
 
@@ -4998,6 +5064,32 @@ classdef final_all < handle
             fprintf('BOSS火球預旋轉圖片生成完成！\n');
         end
 
+        function createBossUltimateSpiral(obj, center)
+            % BOSS終極螺旋攻擊（使用火球）
+            for layer = 1:2
+                obj.createBossSpiralFireball(center, 8, 2 + layer, layer * 30);
+            end
+        end
+
+        function createBossSpiralFireball(obj, center, bulletCount, speed, initialRotation)
+            % 創建螺旋火球攻擊
+            if nargin < 5
+                initialRotation = 0;
+            end
+
+            % 使用遊戲時間來創建旋轉效果
+            rotationOffset = obj.ElapsedTime * 90; % 根據遊戲時間旋轉
+
+            for i = 1:bulletCount
+                angle = (i-1) * 360/bulletCount + initialRotation + rotationOffset;
+                direction = [cosd(angle), sind(angle)];
+
+                % 使用現有的fireBullet函數創建火球
+                obj.fireBullet(center, direction * speed, true, obj.Player.Attack);
+            end
+        end
+
+
 
 
 
@@ -5005,7 +5097,6 @@ classdef final_all < handle
     end
 end
 
-% 更新位置輔助函數：支援 rectangle 與 image 物件
 function updatePosition(graphicObj, pos)
 if ~isvalid(graphicObj)
     warning('嘗試更新無效的圖形對象');
